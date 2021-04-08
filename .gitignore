@@ -1,0 +1,12 @@
+*.log
+*.pyc
+*.pyo
+.DS_Store
+.cache
+.idea
+/**/__pychache__
+/**/_build
+/**/_public
+bazel-*
+tmp/
+public/

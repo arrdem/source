@@ -1,0 +1,26 @@
+# A global prelude for all BUILD[.bazel] files
+
+load("//tools/python:defs.bzl",
+     "py_library",
+     "py_binary",
+     "py_unittest",
+     "py_pytest",
+     "py_resources",
+)
+
+load("@arrdem_source_pypi//:requirements.bzl",
+     py_requirement="requirement"
+)
+
+load("@bazel_skylib//rules:copy_file.bzl",
+    "copy_file",
+)
+
+load("//tools/build_rules:cp.bzl",
+     "cp",
+     "copy_filegroups"
+)
+
+load("//tools/build_rules:webp.bzl",
+     "webp_image",
+)
