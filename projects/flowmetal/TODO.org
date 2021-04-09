@@ -1,0 +1,46 @@
+#+TITLE: Flowmetal TODOs
+
+* parser
+** TODO Rework the tokens in terms of spans instead of just start points :tokens:parser:
+Having start and end information allows for textual display of ranges and other
+potentially interesting error formatting. Requires some refactoring.
+
+** TODO Implement load() in the parser :parser:
+At present the parser can parse well enough, but it returns a token tree
+intended for use in refactoring and autoformatting tools not a direct 'ast' list
+tree which is how load() is supposed to behave.
+
+Figure out how to "mixin" implicit unwrapping of token boxes to values when
+loading insted of reading.
+
+** DONE Implement parser support for :- type ascriptions :parser:
+Maybe this is a special case of keywords, maybe it isn't. Support ⊢ as an alternative. Maybe |- ?
+
+** TODO Think about the difference between reading "data" and reading expression/code syntax :parser:
+EDN suggests these two things are largely the same ... but they clearly aren't.
+
+** TODO Do I want to implement #_ reader discard support? :parser:
+Reader discard is a convenient alternative to commenting a bunch of stuff out,
+but does require a fair bit of complexity in the parser to support properly.
+
+** TODO Do I want to implement #?() reader conditional support? :parser:
+Reader conditionals are cool for feature expressions and multiple platforms, but
+are of unclear value given that I only have one target for the forseeable and
+Flowmetal is already supposed to be a platform agnostic sort of thing.
+
+** DONE Finish out float support
+** DONE Implement strings
+** TODO Think about what multiple grammars / dialects look like
+* TODO Look at Python SQL ORMs :server:storage:
+- Must support PostgresQL
+- Must support SQLite
+
+The goal is to be able to run the "leader" servers off of postgres and have local
+state stores for wokers stored in sqlite using large amounts of the same schema.
+Being able to get marshalling and unmarshalling to JSON 'for free' would be
+lovely.
+
+* TODO Look at Flask OpenAPI spec stuff :server:
+- Ideally want to go spec first
+- Must be able to provide validation
+- Would be nice to be able to use the spec to drive implementing the app (mounting functions to routes)

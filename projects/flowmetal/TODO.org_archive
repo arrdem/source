@@ -1,0 +1,39 @@
+#    -*- mode: org -*-
+
+
+Archived entries from file /home/arrdem/doc/hobby/programming/lang/python/flowmetal/TODO.org
+
+
+* DONE Implement parse() separately in the parser
+  :PROPERTIES:
+  :ARCHIVE_TIME: 2020-06-14 Sun 11:34
+  :ARCHIVE_FILE: ~/doc/hobby/programming/lang/python/flowmetal/TODO.org
+  :ARCHIVE_CATEGORY: TODO
+  :ARCHIVE_TODO: DONE
+  :END:
+Relates to implementing load()
+
+When we have a workable load which generates data, we'll want a read() which
+generates a syntax tree so that we don't discard that API entirely.
+
+
+* DONE Parser test suite
+  :PROPERTIES:
+  :ARCHIVE_TIME: 2020-06-14 Sun 11:34
+  :ARCHIVE_FILE: ~/doc/hobby/programming/lang/python/flowmetal/TODO.org
+  :ARCHIVE_CATEGORY: TODO
+  :ARCHIVE_TODO: DONE
+  :END:
+- Cover the various scanners
+- Cover the position tracking machinery
+
+
+* DONE Get pytest set up
+  :PROPERTIES:
+  :ARCHIVE_TIME: 2020-06-14 Sun 11:34
+  :ARCHIVE_FILE: ~/doc/hobby/programming/lang/python/flowmetal/TODO.org
+  :ARCHIVE_CATEGORY: TODO
+  :ARCHIVE_TODO: DONE
+  :END:
+As it says on the tim
+
