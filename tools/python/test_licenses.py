@@ -26,6 +26,7 @@ LICENSES_BY_LOWERNAME = {
     "apache 2.0": "License :: OSI Approved :: Apache Software License",
     "apache": "License :: OSI Approved :: Apache Software License",
     "bsd 3 clause": "License :: OSI Approved :: BSD License",
+    "bsd 3-clause": "License :: OSI Approved :: BSD License",
     "bsd": "License :: OSI Approved :: BSD License",
     "gplv3": "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
     "http://www.apache.org/licenses/license-2.0": "License :: OSI Approved :: Apache Software License",
