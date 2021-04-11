@@ -121,7 +121,7 @@ def reliable_remote_job(make_request,
   resp.raise_for_status()
   job = job_from_response(resp)
 
-# If the user gave us a circuit breaker, use that to bound our waiting.
+  # If the user gave us a circuit breaker, use that to bound our waiting.
   with callback_timeout or forever():
     try:
       await cb.event
