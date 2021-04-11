@@ -188,6 +188,11 @@ def reboot(host):
   )
 ```
 
+The magic here is twofold.
+First the user or program author is in complete control of the retrying behavior.
+This code could be factored differently to treat it explicitly as a Future, constructed implicitly by `create_job_request` and consumed by user code.
+Second we're able to take the incredibly operationally complex reliability and HTTP callback interaction almost as an afterthought.
+
 ## License
 
 Mirrored from https://git.arrdem.com/arrdem/flowmetal
