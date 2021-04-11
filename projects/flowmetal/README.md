@@ -74,6 +74,8 @@ A Flowmetal setup would look something like this -
                 +--------------------------+
 ```
 
+## An example
+
 A Flowmetal program could look something like this -
 
 ``` python
