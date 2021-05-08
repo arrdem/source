@@ -1,0 +1,13 @@
+# -*- mode: conf -*-
+
+# Core records
+{% for link in local.public_v4s %}
+@           {{ ttl }} IN A {{ link }}
+www         {{ ttl }} IN A {{ link }}
+registry    {{ ttl }} IN A {{ link }}
+mirror      {{ ttl }} IN A {{ link }}
+buildcache  {{ ttl }} IN A {{ link }}
+{% endfor %}
+
+# Gitlab
+gitlab      {{ ttl }} IN A {{ sroo.public_v4 }}

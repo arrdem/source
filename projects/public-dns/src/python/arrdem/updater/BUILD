@@ -1,0 +1,12 @@
+python_binary(
+  name='updater',
+	source='__main__.py',
+	dependencies=[
+	  "//src/resources/zonefiles",
+		"//src/python/gandi",
+		"//3rdparty/python:requests",
+		"//3rdparty/python:jinja2",
+		"//3rdparty/python:PyYAML",
+		"//3rdparty/python:meraki",
+	]
+)

@@ -1,0 +1,20 @@
+version: '3.7'
+
+services:
+  cron:
+    image: registry.apartment.arrdem.com:5000/arrdem.updater:latest
+    deploy:
+      replicas: 0
+      restart_policy:
+        condition: none
+      labels:
+        - swarm.cronjob.enable=true
+        - "swarm.cronjob.schedule=0 */10 * * * *"
+        - swarm.cronjob.skip-running=false
+        - node.platform.arch == x86_64
+    secrets:
+      - public-dns.yml
+
+secrets:
+  public-dns.yml:
+    file: ../../../../config.yml

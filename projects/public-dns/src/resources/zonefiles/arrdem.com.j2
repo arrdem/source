@@ -1,0 +1,20 @@
+# -*- mode: conf -*-
+
+# Core records
+{% for addr in local.public_v4s %}
+@           {{ ttl }} IN A {{ addr }}
+www         {{ ttl }} IN A {{ addr }}
+git         {{ ttl }} IN A {{ addr }}
+paperbrainz {{ ttl }} IN A {{ addr }}
+{% endfor %}
+
+# Service setup
+@                   10800 IN MX    10 in1-smtp.messagingengine.com.
+@                   10800 IN MX    20 in2-smtp.messagingengine.com.
+mesmtp._domainkey   10800 IN TXT      "v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC/arz66E8pNtYK+jWh57KkT+/bIp2iO9JEVb+9xqb9Z/R/l6zvFsUm5voKdhEJKsYkb35xpWJ699HbXWTENzWCLOvFxpPx8+MOh5i5gQDEg7P8vHfs5dDwj+dH5wQHcYTYPOIm5PFdkKemGwzHayFFOGhr5Xgf4PuiohtWZZSxzwIDAQAB"
+
+email.lists         10800 IN CNAME    mailgun.org.
+lists               10800 IN MX    10 mxa.mailgun.org.
+lists               10800 IN MX    10 mxb.mailgun.org.
+lists               10800 IN TXT      "v=spf1 include:mailgun.org ~all"
+mx._domainkey.lists 10800 IN TXT      "k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCcbCDs5bW+LWM9cWLbQTPTCNoiSe7giSFISx9LIU9LBSeE8483wQhx6FMe7jOR3+4njEpIyFtyOrz3ol2JdH+R7d/ZoeUeQekU7/paF90ZS5hvE2wyKCtVFCmBevxI73pcH0JUXZe9/VCTRGtt5Ksny4cBrhMwWQGk5UFyUfBGOQIDAQAB"

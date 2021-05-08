@@ -1,0 +1,8 @@
+.*
+3rdparty
+src
+test
+README.md
+pants
+pants.ini
+etc
