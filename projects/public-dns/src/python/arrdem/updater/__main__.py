@@ -2,6 +2,35 @@
 A quick and dirty public DNS script, super tightly coupled to my infrastructure.
 """
 
+import sys
+import os
+
+def module_not_found_helper(excepthook):
+    def _helper(type, value, traceback):
+        if isinstance(value, ModuleNotFoundError):
+            path_fragment = value.name.replace(".", os.path.sep)
+            flag = False
+            for e in sys.path:
+                init = os.path.join(e, path_fragment, "__init__.py")
+                namedfile = os.path.join(e, path_fragment + ".py")
+                if os.path.exists(init):
+                    print(f"Found candidate {init}", file=sys.stderr)
+                    flag |= True
+                else:
+                    print(f"{init} does not exist")
+
+                if os.path.exists(namedfile):
+                    print(f"Found candidate {namedfile}", file=sys.stderr)
+                    flag |= True
+                else:
+                    print(f"{namedfile} does not exist")
+            if not flag:
+                print(f"Found no candidates on the PYTHONPATH", file=sys.stderr)
+        excepthook(type, value, traceback)
+    return _helper
+
+sys.excepthook = module_not_found_helper(sys.excepthook)
+
 import argparse
 import re
 from pprint import pprint

@@ -10,3 +10,4 @@
 bazel-*
 tmp/
 public/
+projects/public-dns/config.yml

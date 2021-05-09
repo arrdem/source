@@ -1,6 +1,8 @@
+aiohttp==3.7.4.post0
 alabaster==0.7.12
 anosql==1.0.2
 appdirs==1.4.4
+async-timeout==3.0.1
 attrs==20.3.0
 autoflake==1.4
 Babel==2.9.0
@@ -24,7 +26,9 @@ livereload==2.6.3
 lxml==4.6.3
 m2r==0.2.1
 MarkupSafe==1.1.1
+meraki==1.7.2
 mistune==0.8.4
+multidict==5.1.0
 mypy-extensions==0.4.3
 openapi-schema-validator==0.1.5
 openapi-spec-validator==0.3.0
@@ -45,6 +49,7 @@ pytest-pudb==0.7.0
 pytz==2021.1
 PyYAML==5.4.1
 recommonmark==0.7.1
+redis==3.5.3
 regex==2021.4.4
 requests==2.25.1
 six==1.15.0
@@ -70,3 +75,4 @@ urllib3==1.26.4
 urwid==2.1.2
 wcwidth==0.2.5
 yamllint==1.26.1
+yarl==1.6.3
