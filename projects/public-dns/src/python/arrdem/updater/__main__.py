@@ -4,43 +4,19 @@ A quick and dirty public DNS script, super tightly coupled to my infrastructure.
 
 import sys
 import os
-
-def module_not_found_helper(excepthook):
-    def _helper(type, value, traceback):
-        if isinstance(value, ModuleNotFoundError):
-            path_fragment = value.name.replace(".", os.path.sep)
-            flag = False
-            for e in sys.path:
-                init = os.path.join(e, path_fragment, "__init__.py")
-                namedfile = os.path.join(e, path_fragment + ".py")
-                if os.path.exists(init):
-                    print(f"Found candidate {init}", file=sys.stderr)
-                    flag |= True
-                else:
-                    print(f"{init} does not exist")
-
-                if os.path.exists(namedfile):
-                    print(f"Found candidate {namedfile}", file=sys.stderr)
-                    flag |= True
-                else:
-                    print(f"{namedfile} does not exist")
-            if not flag:
-                print(f"Found no candidates on the PYTHONPATH", file=sys.stderr)
-        excepthook(type, value, traceback)
-    return _helper
-
-sys.excepthook = module_not_found_helper(sys.excepthook)
-
 import argparse
 import re
 from pprint import pprint
 
+for e in sys.path:
+    print(e)
+
+from gandi.client import GandiAPI
+
 import jinja2
 import pkg_resources
 import yaml
-
-from gandi.client import GandiAPI
-from meraki import meraki
+import meraki
 
 
 RECORD_LINE_PATTERN = re.compile(
@@ -59,8 +35,7 @@ def update(m, k, f, *args, **kwargs):
 
 
 def parse_zone_record(line):
-  match = RECORD_LINE_PATTERN.search(line)
-  if match:
+  if match := RECORD_LINE_PATTERN.search(line):
     dat = match.groupdict()
     dat = update(dat, "rrset_ttl", int)
     dat = update(dat, "rrset_values", lambda x: [x])
@@ -91,13 +66,13 @@ def records_equate(lr, rr):
     return True
 
 
-def template_and_parse_zone(template_name, template_bindings):
-  assert template_name is not None
+def template_and_parse_zone(template_file, template_bindings):
+  assert template_file is not None
   assert template_bindings is not None
 
-  dat = pkg_resources.resource_string("zonefiles", template_name).decode("utf-8")
-  dat = jinja2.Template(dat).render(**template_bindings)
-  
+  with open(template_file) as f:
+    dat = jinja2.Template(f.read()).render(**template_bindings)
+
   uncommitted_records = []
   for line in dat.splitlines():
     if line and not line[0] == "#":
@@ -154,18 +129,23 @@ def diff_zones(left_zone, right_zone):
 
 
 parser = argparse.ArgumentParser(description="\"Dynamic\" DNS updating for self-hosted services")
-parser.add_argument("--config", dest="config_file")
+parser.add_argument("--config", dest="config_file", required=True)
+parser.add_argument("--templates", dest="template_dir", required=True)
 parser.add_argument("--dry-run", dest="dry", action="store_true", default=False)
 
 def main():
   args = parser.parse_args()
-  config = yaml.load(open(args.config_file, "r"))
+  config = yaml.safe_load(open(args.config_file, "r"))
 
+  dashboard = meraki.DashboardAPI(config["meraki"]["key"])
+  net = config["meraki"]["network"]
+  org = config["meraki"]["organization"]
+  device = config["meraki"]["router_serial"]
 
-  uplinks = meraki.getdeviceuplink(config["meraki"]["key"],
-                                   config["meraki"]["network"],
-                                   config["meraki"]["router_serial"],
-                                   True)
+  uplinks = dashboard.appliance.getOrganizationApplianceUplinkStatuses(
+    organizationId=org,
+    serials=[device]
+  )[0]["uplinks"]
 
   template_bindings = {
     "local": {
@@ -183,7 +163,7 @@ def main():
       task = {"template": task + ".j2",
               "zones": [task]}
 
-    computed_zone = template_and_parse_zone(task["template"], template_bindings)
+    computed_zone = template_and_parse_zone(os.path.join(args.template_dir, task["template"]), template_bindings)
 
     for zone_name in task["zones"]:
       try:
