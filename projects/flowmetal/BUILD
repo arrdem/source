@@ -2,9 +2,20 @@ package(default_visibility = ["//visibility:public"])
 
 py_library(
     name = "lib",
-    srcs = glob(["src/python/**/*.py"]),
+    srcs = [
+        "src/python/**/*.py"
+    ],
     imports = ["src/python"],
     deps = [
-        py_requirement("prompt-toolkit"),
     ]
+)
+
+py_binary(
+    name = "server",
+    deps = [
+        ":lib",
+        py_requirement("click"),
+        py_requirement("redis"),
+    ],
+    main = "src/python/flowmetal/server/__main__.py",
 )

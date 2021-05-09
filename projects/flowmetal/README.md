@@ -225,13 +225,15 @@ In another language like Javascript or LUA, you could probably get this down to 
 -- the retrying behavior as specified.
 
 client = Client("http://service.local", api_key="...")
+retry_config = {} -- Fake, obviously
+with_retry = retry(retry_config)
 
-job = retry()(
+job = with_retry(
    funtion ()
      return client.start_plan(...)
    end)()
 
-result = retry()(
+result = with_retry(
    function()
      if job.complete() then
        return job.get()
@@ -243,6 +245,27 @@ The insight here is that the "callback" function we're defining in the Python ex
 In fact choosing the arbitrary names `r_get_job` and `r_create_job` puts more load on the programmer and the reader.
 Python's lack of block anonymous procedures precludes us from cramming the `if complete then get` operation or anything more complex into a `lambda` without some serious syntax crimes.
 
+Using [PEP-0342](https://www.python.org/dev/peps/pep-0342/#new-generator-method-send-value), it's possible to implement arbitrary coroutines in Python by `.send()`ing values to generators which may treat `yield` statements as rvalues for receiving remotely sent inputs.
+This makes it possible to explicitly yield control to a remote interpreter, which will return or resume the couroutine with a result value.
+
+Microsoft's [Durable Functions](https://docs.microsoft.com/en-us/azure/azure-functions/durable/durable-functions-overview?tabs=python) use exactly this behavor to implement durable functions.
+The "functions" provided by the API return sentinels which can be yielded to an external interpreter, which triggers processing and returns control when there are results.
+This is [interpreter effect conversion pattern (Extensible Effects)](http://okmij.org/ftp/Haskell/extensible/exteff.pdf) as seen in Haskell and other tools; applied.
+
+
+``` python
+import azure.functions as func
+import azure.durable_functions as df
+
+def orchestrator_function(context: df.DurableOrchestrationContext):
+    x = yield context.call_activity("F1", None)
+    y = yield context.call_activity("F2", x)
+    z = yield context.call_activity("F3", y)
+    result = yield context.call_activity("F4", z)
+    return result
+
+main = df.Orchestrator.create(orchestrator_function)
+```
 
 ### Durability challenges
 
