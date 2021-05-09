@@ -137,8 +137,7 @@ def main():
   args = parser.parse_args()
   config = yaml.safe_load(open(args.config_file, "r"))
 
-  dashboard = meraki.DashboardAPI(config["meraki"]["key"])
-  net = config["meraki"]["network"]
+  dashboard = meraki.DashboardAPI(config["meraki"]["key"], output_log=False)
   org = config["meraki"]["organization"]
   device = config["meraki"]["router_serial"]
 
