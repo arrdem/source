@@ -71,7 +71,7 @@ class Driver(ABC):
                  message_space="_",
                  message_author=""):
         """Initialize the driver."""
-)
+
     @abstractmethod
     def create_message(self,
                        message: str,
