@@ -98,14 +98,15 @@ VALUES (?, ?, ?, ?);
 """
 
 
-
 class SQLiteDriver:
-    def __init__(self,
-                 filename="~/.ratchet.sqlite3",
-                 sqlite_timeout=1000,
-                 message_ttl=60000,
-                 message_space="_",
-                 message_author=f"{os.getpid()}@{socket.gethostname()}"):
+    def __init__(
+        self,
+        filename="~/.ratchet.sqlite3",
+        sqlite_timeout=1000,
+        message_ttl=60000,
+        message_space="_",
+        message_author=f"{os.getpid()}@{socket.gethostname()}",
+    ):
         self._path = os.path.expanduser(filename)
         self._sqlite_timeout = sqlite_timeout
         self._message_ttl = message_ttl
@@ -120,14 +121,11 @@ class SQLiteDriver:
         conn.executescript(SCHEMA_SCRIPT)
 
     def _connection(self):
-        return sql.connect(self._filename,
-                           timeout=self._sqlite_timeout)
+        return sql.connect(self._filename, timeout=self._sqlite_timeout)
 
-    def create_message(self,
-                       message: str,
-                       ttl: int = None,
-                       space: str = None,
-                       author: str = None):
+    def create_message(
+        self, message: str, ttl: int = None, space: str = None, author: str = None
+    ):
         """Create a single message."""
 
         ttl = ttl or self._message_ttl
@@ -138,11 +136,9 @@ class SQLiteDriver:
             cursor.execute(CREATE_MESSAGE_SCRIPT, author, space, ttl, message)
             return cursor.lastrowid
 
-    def create_event(self,
-                     timeout: int,
-                     ttl: int = None,
-                     space: str = None,
-                     author: str = None):
+    def create_event(
+        self, timeout: int, ttl: int = None, space: str = None, author: str = None
+    ):
         """Create a (pending) event."""
 
         ttl = ttl or self._message_ttl

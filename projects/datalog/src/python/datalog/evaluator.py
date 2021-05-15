@@ -20,8 +20,8 @@ from datalog.types import (
 def match(tuple, expr, bindings=None):
     """Attempt to construct lvar bindings from expr such that tuple and expr equate.
 
-  If the match is successful, return the binding map, otherwise return None.
-  """
+    If the match is successful, return the binding map, otherwise return None.
+    """
 
     bindings = bindings.copy() if bindings is not None else {}
     for a, b in zip(expr, tuple):
@@ -43,9 +43,9 @@ def match(tuple, expr, bindings=None):
 
 def apply_bindings(expr, bindings, strict=True):
     """Given an expr which may contain lvars, substitute its lvars for constants returning the
-  simplified expr.
+    simplified expr.
 
-  """
+    """
 
     if strict:
         return tuple((bindings[e] if isinstance(e, LVar) else e) for e in expr)
@@ -56,10 +56,10 @@ def apply_bindings(expr, bindings, strict=True):
 def select(db: Dataset, expr, bindings=None, _recursion_guard=None, _select_guard=None):
     """Evaluate an expression in a database, lazily producing a sequence of 'matching' tuples.
 
-  The dataset is a set of tuples and rules, and the expression is a single tuple containing lvars
-  and constants. Evaluates rules and tuples, returning
+    The dataset is a set of tuples and rules, and the expression is a single tuple containing lvars
+    and constants. Evaluates rules and tuples, returning
 
-  """
+    """
 
     def __select_tuples():
         # As an opt. support indexed scans, which is optional.
@@ -170,8 +170,8 @@ def select(db: Dataset, expr, bindings=None, _recursion_guard=None, _select_guar
 def join(db: Dataset, clauses, bindings, pattern=None, _recursion_guard=None):
     """Evaluate clauses over the dataset, joining (or antijoining) with the seed bindings.
 
-  Yields a sequence of tuples and LVar bindings for which all joins and antijoins were satisfied.
-  """
+    Yields a sequence of tuples and LVar bindings for which all joins and antijoins were satisfied.
+    """
 
     def __join(g, clause):
         for ts, bindings in g:

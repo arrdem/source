@@ -26,5 +26,7 @@ setup(
     ],
     # Package setup
     package_dir={"": "src/python"},
-    packages=["datalog",],
+    packages=[
+        "datalog",
+    ],
 )

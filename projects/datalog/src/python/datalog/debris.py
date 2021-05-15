@@ -16,8 +16,8 @@ def constexpr_p(expr):
 
 class Timing(object):
     """
-  A context manager object which records how long the context took.
-  """
+    A context manager object which records how long the context took.
+    """
 
     def __init__(self):
         self.start = None
@@ -36,8 +36,8 @@ class Timing(object):
 
     def __call__(self):
         """
-    If the context is exited, return its duration. Otherwise return the duration "so far".
-    """
+        If the context is exited, return its duration. Otherwise return the duration "so far".
+        """
 
         from datetime import datetime
 

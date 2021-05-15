@@ -25,8 +25,19 @@ def test_id_query(db_cls):
         Constant("a"),
         Constant("b"),
     )
-    assert not select(db_cls([], []), ("a", "b",))
-    assert select(db_cls([ab], []), ("a", "b",)) == [((("a", "b"),), {},)]
+    assert not select(
+        db_cls([], []),
+        (
+            "a",
+            "b",
+        ),
+    )
+    assert select(db_cls([ab], []), ("a", "b",)) == [
+        (
+            (("a", "b"),),
+            {},
+        )
+    ]
 
 
 @pytest.mark.parametrize("db_cls,", DBCLS)
@@ -47,7 +58,17 @@ def test_lvar_unification(db_cls):
 
     d = read("""edge(b, c). edge(c, c).""", db_cls=db_cls)
 
-    assert select(d, ("edge", "X", "X",)) == [((("edge", "c", "c"),), {"X": "c"})]
+    assert (
+        select(
+            d,
+            (
+                "edge",
+                "X",
+                "X",
+            ),
+        )
+        == [((("edge", "c", "c"),), {"X": "c"})]
+    )
 
 
 @pytest.mark.parametrize("db_cls,", DBCLS)
@@ -105,12 +126,12 @@ no-b(X, Y) :-
 def test_nested_antijoin(db_cls):
     """Test a query which negates a subquery which uses an antijoin.
 
-  Shouldn't exercise anything more than `test_antjoin` does, but it's an interesting case since you
-  actually can't capture the same semantics using a single query. Antijoins can't propagate positive
-  information (create lvar bindings) so I'm not sure you can express this another way without a
-  different evaluation strategy.
+    Shouldn't exercise anything more than `test_antjoin` does, but it's an interesting case since you
+    actually can't capture the same semantics using a single query. Antijoins can't propagate positive
+    information (create lvar bindings) so I'm not sure you can express this another way without a
+    different evaluation strategy.
 
-  """
+    """
 
     d = read(
         """

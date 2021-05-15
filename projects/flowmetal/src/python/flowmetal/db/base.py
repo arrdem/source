@@ -2,7 +2,7 @@
 An abstract or base Flowmetal DB.
 """
 
-from abc import abc, abstractmethod, abstractproperty, abstractclassmethod, abstractstaticmethod
+from abc import abstractclassmethod, abstractmethod
 
 
 class Db(ABC):

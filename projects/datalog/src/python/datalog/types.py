@@ -66,8 +66,8 @@ class Dataset(object):
 class CachedDataset(Dataset):
     """An extension of the dataset which features a cache of rule produced tuples.
 
-  Note that this cache is lost when merging datasets - which ensures correctness.
-  """
+    Note that this cache is lost when merging datasets - which ensures correctness.
+    """
 
     # Inherits tuples, rules, merge
 
@@ -90,11 +90,11 @@ class CachedDataset(Dataset):
 class TableIndexedDataset(CachedDataset):
     """An extension of the Dataset type which features both a cache and an index by table & length.
 
-  The index allows more efficient scans by maintaining 'table' style partitions.
-  It does not support user-defined indexing schemes.
+    The index allows more efficient scans by maintaining 'table' style partitions.
+    It does not support user-defined indexing schemes.
 
-  Note that index building is delayed until an index is scanned.
-  """
+    Note that index building is delayed until an index is scanned.
+    """
 
     # From Dataset:
     #   tuples, rules, merge
@@ -126,11 +126,11 @@ class TableIndexedDataset(CachedDataset):
 
 class PartlyIndexedDataset(TableIndexedDataset):
     """An extension of the Dataset type which features both a cache and and a full index by table,
-  length, tuple index and value.
+    length, tuple index and value.
 
-  The index allows extremely efficient scans when elements of the tuple are known.
+    The index allows extremely efficient scans when elements of the tuple are known.
 
-  """
+    """
 
     # From Dataset:
     #   tuples, rules, merge

@@ -28,34 +28,82 @@ COMMENT_PATTERN = r";(([^\n\r]*)(\n\r?)?)"
 
 TOKENS = [
     # Paren (noral) lists
-    (r"\(", "PAREN_LEFT",),
-    (r"\)", "PAREN_RIGHT",),
+    (
+        r"\(",
+        "PAREN_LEFT",
+    ),
+    (
+        r"\)",
+        "PAREN_RIGHT",
+    ),
     # Bracket lists
-    (r"\[", "BRACKET_LEFT",),
-    (r"\]", "BRACKET_RIGHT",),
+    (
+        r"\[",
+        "BRACKET_LEFT",
+    ),
+    (
+        r"\]",
+        "BRACKET_RIGHT",
+    ),
     # Brace lists (maps)
-    (r"\{", "BRACE_LEFT",),
-    (r"\}", "BRACE_RIGHT",),
-    (r"\^", "META",),
-    (r"'", "SINGLE_QUOTE",),
-    (STRING_PATTERN, "STRING",),
-    (r"#", "MACRO_DISPATCH",),
+    (
+        r"\{",
+        "BRACE_LEFT",
+    ),
+    (
+        r"\}",
+        "BRACE_RIGHT",
+    ),
+    (
+        r"\^",
+        "META",
+    ),
+    (
+        r"'",
+        "SINGLE_QUOTE",
+    ),
+    (
+        STRING_PATTERN,
+        "STRING",
+    ),
+    (
+        r"#",
+        "MACRO_DISPATCH",
+    ),
     # Symbols
-    (SYMBOL_PATTERN, "SYMBOL",),
+    (
+        SYMBOL_PATTERN,
+        "SYMBOL",
+    ),
     # Numbers
-    (SIMPLE_INTEGER, "INTEGER",),
-    (FLOAT_PATTERN, "FLOAT",),
+    (
+        SIMPLE_INTEGER,
+        "INTEGER",
+    ),
+    (
+        FLOAT_PATTERN,
+        "FLOAT",
+    ),
     # Keywords
     #
     # Note: this is a dirty f'n hack in that in order for keywords to work, ":"
     # has to be defined to be a valid keyword.
-    (r":" + SYMBOL_PATTERN + "?", "KEYWORD",),
+    (
+        r":" + SYMBOL_PATTERN + "?",
+        "KEYWORD",
+    ),
     # Whitespace
     #
     # Note that the whitespace token will contain at most one newline
-    (r"(\n\r?|[,\t ]*)", "WHITESPACE",),
+    (
+        r"(\n\r?|[,\t ]*)",
+        "WHITESPACE",
+    ),
     # Comment
-    (COMMENT_PATTERN, "COMMENT",),
+    (
+        COMMENT_PATTERN,
+        "COMMENT",
+    ),
     # Strings
     (r'"(?P<body>(?:[^\"]|\.)*)"', "STRING"),
 ]

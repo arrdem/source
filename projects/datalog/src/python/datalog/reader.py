@@ -27,13 +27,19 @@ class Actions(object):
         return self._db_cls(tuples, rules)
 
     def make_symbol(self, input, start, end, elements):
-        return LVar("".join(e.text for e in elements),)
+        return LVar(
+            "".join(e.text for e in elements),
+        )
 
     def make_word(self, input, start, end, elements):
-        return Constant("".join(e.text for e in elements),)
+        return Constant(
+            "".join(e.text for e in elements),
+        )
 
     def make_string(self, input, start, end, elements):
-        return Constant(elements[1].text,)
+        return Constant(
+            elements[1].text,
+        )
 
     def make_comment(self, input, start, end, elements):
         return None
@@ -81,11 +87,11 @@ class Actions(object):
 class Parser(Grammar):
     """Implementation detail.
 
-  A slightly hacked version of the Parser class canopy generates, which lets us control what the
-  parsing entry point is. This lets me play games with having one parser and one grammar which is
-  used both for the command shell and for other things.
+    A slightly hacked version of the Parser class canopy generates, which lets us control what the
+    parsing entry point is. This lets me play games with having one parser and one grammar which is
+    used both for the command shell and for other things.
 
-  """
+    """
 
     def __init__(self, input, actions, types):
         self._input = input

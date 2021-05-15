@@ -8,7 +8,6 @@ parsing, linting or other use.
 
 import io
 import re
-import sys
 
 from calf.token import CalfToken
 from calf.io.reader import PeekPosReader

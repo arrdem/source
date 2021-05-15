@@ -59,9 +59,7 @@ class YamlLinter(object):
         return schema
 
     def lint_mapping(self, schema, node: Node) -> t.Iterable[str]:
-        """FIXME.
-
-        """
+        """FIXME."""
 
         if schema["type"] != "object" or not isinstance(node, MappingNode):
             yield LintRecord(
@@ -71,9 +69,7 @@ class YamlLinter(object):
                 f"Expected {schema['type']}, got {node.id} {str(node.start_mark).lstrip()}",
             )
 
-        additional_type: t.Union[dict, bool] = (
-            schema.get("additionalProperties", True)
-        )
+        additional_type: t.Union[dict, bool] = schema.get("additionalProperties", True)
         properties: dict = schema.get("properties", {})
         required: t.Iterable[str] = schema.get("required", [])
 
@@ -135,37 +131,26 @@ class YamlLinter(object):
         elif schema["type"] == "number":
             yield from self.lint_number(schema, node)
         else:
-            raise NotImplementedError(
-                f"Scalar type {schema['type']} is not supported"
-            )
+            raise NotImplementedError(f"Scalar type {schema['type']} is not supported")
 
     def lint_string(self, schema, node: Node) -> t.Iterable[str]:
         """FIXME."""
 
         if node.tag != "tag:yaml.org,2002:str":
             yield LintRecord(
-                LintLevel.MISSMATCH,
-                node,
-                schema,
-                f"Expected a string, got a {node}"
+                LintLevel.MISSMATCH, node, schema, f"Expected a string, got a {node}"
             )
 
         if maxl := schema.get("maxLength"):
             if len(node.value) > maxl:
                 yield LintRecord(
-                    LintLevel.MISSMATCH,
-                    node,
-                    schema,
-                    f"Expected a shorter string"
+                    LintLevel.MISSMATCH, node, schema, f"Expected a shorter string"
                 )
 
         if minl := schema.get("minLength"):
             if len(node.value) < minl:
                 yield LintRecord(
-                    LintLevel.MISSMATCH,
-                    node,
-                    schema,
-                    f"Expected a longer string"
+                    LintLevel.MISSMATCH, node, schema, f"Expected a longer string"
                 )
 
         if pat := schema.get("pattern"):
@@ -174,7 +159,7 @@ class YamlLinter(object):
                     LintLevel.MISSMATCH,
                     node,
                     schema,
-                    f"Expected a string matching the pattern"
+                    f"Expected a string matching the pattern",
                 )
 
     def lint_integer(self, schema, node: Node) -> t.Iterable[str]:
@@ -184,10 +169,7 @@ class YamlLinter(object):
 
         else:
             yield LintRecord(
-                LintLevel.MISSMATCH,
-                node,
-                schema,
-                f"Expected an integer, got a {node}"
+                LintLevel.MISSMATCH, node, schema, f"Expected an integer, got a {node}"
             )
 
     def lint_number(self, schema, node: Node) -> t.Iterable[str]:
@@ -197,12 +179,8 @@ class YamlLinter(object):
 
         else:
             yield LintRecord(
-                LintLevel.MISSMATCH,
-                node,
-                schema,
-                f"Expected an integer, got a {node}"
+                LintLevel.MISSMATCH, node, schema, f"Expected an integer, got a {node}"
             )
-
 
     def _lint_num_range(self, schema, node: Node, value) -> t.Iterable[str]:
         """"FIXME."""
@@ -213,7 +191,7 @@ class YamlLinter(object):
                     LintLevel.MISSMATCH,
                     node,
                     schema,
-                    f"Expected a multiple of {base}, got {value}"
+                    f"Expected a multiple of {base}, got {value}",
                 )
 
         if (max := schema.get("exclusiveMaximum")) is not None:
@@ -222,7 +200,7 @@ class YamlLinter(object):
                     LintLevel.MISSMATCH,
                     node,
                     schema,
-                    f"Expected a value less than {max}, got {value}"
+                    f"Expected a value less than {max}, got {value}",
                 )
 
         if (max := schema.get("maximum")) is not None:
@@ -231,7 +209,7 @@ class YamlLinter(object):
                     LintLevel.MISSMATCH,
                     node,
                     schema,
-                    f"Expected a value less than or equal to {max}, got {value}"
+                    f"Expected a value less than or equal to {max}, got {value}",
                 )
 
         if (min := schema.get("exclusiveMinimum")) is not None:
@@ -240,7 +218,7 @@ class YamlLinter(object):
                     LintLevel.MISSMATCH,
                     node,
                     schema,
-                    f"Expected a value greater than {min}, got {value}"
+                    f"Expected a value greater than {min}, got {value}",
                 )
 
         if (min := schema.get("minimum")) is not None:
@@ -249,7 +227,7 @@ class YamlLinter(object):
                     LintLevel.MISSMATCH,
                     node,
                     schema,
-                    f"Expected a value greater than or equal to {min}, got {value}"
+                    f"Expected a value greater than or equal to {min}, got {value}",
                 )
 
     def lint_document(self, node, schema=None) -> t.Iterable[str]:
@@ -271,10 +249,7 @@ class YamlLinter(object):
         # This is the schema that rejects everything.
         elif schema == False:
             yield LintRecord(
-                LintLevel.UNEXPECTED,
-                node,
-                schema,
-                "Received an unexpected value"
+                LintLevel.UNEXPECTED, node, schema, "Received an unexpected value"
             )
 
         # Walking the PyYAML node hierarchy

@@ -13,6 +13,7 @@ from calf.parser import parse_stream
 from calf.token import *
 from calf.types import *
 
+
 class CalfReader(object):
     def handle_keyword(self, t: CalfToken) -> Any:
         """Convert a token to an Object value for a symbol.
@@ -79,8 +80,7 @@ class CalfReader(object):
             return Vector.of(self.read(t.value))
 
         elif isinstance(t, CalfDictToken):
-            return Map.of([(self.read1(k), self.read1(v))
-                           for k, v in t.items()])
+            return Map.of([(self.read1(k), self.read1(v)) for k, v in t.items()])
 
         # Magical pairwise stuff
         elif isinstance(t, CalfQuoteToken):
@@ -119,28 +119,21 @@ class CalfReader(object):
             yield self.read1(t)
 
 
-def read_stream(stream,
-                reader: CalfReader = None):
-    """Read from a stream of parsed tokens.
-
-    """
+def read_stream(stream, reader: CalfReader = None):
+    """Read from a stream of parsed tokens."""
 
     reader = reader or CalfReader()
     yield from reader.read(stream)
 
 
 def read_buffer(buffer):
-    """Read from a buffer, producing a lazy sequence of all top level forms.
-
-    """
+    """Read from a buffer, producing a lazy sequence of all top level forms."""
 
     yield from read_stream(parse_stream(lex_buffer(buffer)))
 
 
 def read_file(file):
-    """Read from a file, producing a lazy sequence of all top level forms.
-
-    """
+    """Read from a file, producing a lazy sequence of all top level forms."""
 
     yield from read_stream(parse_stream(lex_file(file)))
 
@@ -151,6 +144,8 @@ def main():
     from calf.cursedrepl import curse_repl
 
     def handle_buffer(buff, count):
-        return list(read_stream(parse_stream(lex_buffer(buff, source=f"<Example {count}>"))))
+        return list(
+            read_stream(parse_stream(lex_buffer(buff, source=f"<Example {count}>")))
+        )
 
     curse_repl(handle_buffer)

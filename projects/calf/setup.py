@@ -25,7 +25,6 @@ setup(
             "calf-read = calf.reader:main",
             "calf-analyze = calf.analyzer:main",
             "calf-compile = calf.compiler:main",
-
             # Client/server stuff
             "calf-client = calf.client:main",
             "calf-server = calf.server:main",

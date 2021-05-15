@@ -23,10 +23,7 @@ setup(
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
     ],
-
-    scripts=[
-        "bin/datalog"
-    ],
+    scripts=["bin/datalog"],
     install_requires=[
         "arrdem.datalog~=2.0.0",
         "prompt_toolkit==2.0.9",

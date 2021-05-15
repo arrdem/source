@@ -20,23 +20,62 @@ def lex_single_token(buffer):
 @parametrize(
     "text,token_type",
     [
-        ("(", "PAREN_LEFT",),
-        (")", "PAREN_RIGHT",),
-        ("[", "BRACKET_LEFT",),
-        ("]", "BRACKET_RIGHT",),
-        ("{", "BRACE_LEFT",),
-        ("}", "BRACE_RIGHT",),
-        ("^", "META",),
-        ("#", "MACRO_DISPATCH",),
+        (
+            "(",
+            "PAREN_LEFT",
+        ),
+        (
+            ")",
+            "PAREN_RIGHT",
+        ),
+        (
+            "[",
+            "BRACKET_LEFT",
+        ),
+        (
+            "]",
+            "BRACKET_RIGHT",
+        ),
+        (
+            "{",
+            "BRACE_LEFT",
+        ),
+        (
+            "}",
+            "BRACE_RIGHT",
+        ),
+        (
+            "^",
+            "META",
+        ),
+        (
+            "#",
+            "MACRO_DISPATCH",
+        ),
         ("'", "SINGLE_QUOTE"),
-        ("foo", "SYMBOL",),
+        (
+            "foo",
+            "SYMBOL",
+        ),
         ("foo/bar", "SYMBOL"),
-        (":foo", "KEYWORD",),
-        (":foo/bar", "KEYWORD",),
-        (" ,,\t ,, \t", "WHITESPACE",),
+        (
+            ":foo",
+            "KEYWORD",
+        ),
+        (
+            ":foo/bar",
+            "KEYWORD",
+        ),
+        (
+            " ,,\t ,, \t",
+            "WHITESPACE",
+        ),
         ("\n\r", "WHITESPACE"),
         ("\n", "WHITESPACE"),
-        ("  ,    ", "WHITESPACE",),
+        (
+            "  ,    ",
+            "WHITESPACE",
+        ),
         ("; this is a sample comment\n", "COMMENT"),
         ('"foo"', "STRING"),
         ('"foo bar baz"', "STRING"),

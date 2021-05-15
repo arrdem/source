@@ -22,9 +22,9 @@ def read(text: str, db_cls=PartlyIndexedDataset):
 def q(t: Tuple[str]) -> LTuple:
     """Helper for writing terse queries.
 
-  Takes a tuple of strings, and interprets them as a logic tuple.
-  So you don't have to write the logic tuple out by hand.
-  """
+    Takes a tuple of strings, and interprets them as a logic tuple.
+    So you don't have to write the logic tuple out by hand.
+    """
 
     def _x(s: str):
         if s[0].isupper():
@@ -50,38 +50,38 @@ def __result(results_bindings):
 def select(db: Dataset, query: Tuple[str], bindings=None) -> Sequence[Tuple]:
     """Helper for interpreting tuples of strings as a query, and returning simplified results.
 
-  Executes your query, returning matching full tuples.
-  """
+    Executes your query, returning matching full tuples.
+    """
 
     return __mapv(__result, __select(db, q(query), bindings=bindings))
 
 
 def join(db: Dataset, query: Sequence[Tuple[str]], bindings=None) -> Sequence[dict]:
     """Helper for interpreting a bunch of tuples of strings as a join query, and returning simplified
-results.
+    results.
 
-  Executes the query clauses as a join, returning a sequence of tuples and binding mappings such
-  that the join constraints are simultaneously satisfied.
+      Executes the query clauses as a join, returning a sequence of tuples and binding mappings such
+      that the join constraints are simultaneously satisfied.
 
 
-  >>> db = read('''
-  ... edge(a, b).
-  ... edge(b, c).
-  ... edge(c, d).
-  ... ''')
-  >>> join(db, [
-  ...   ('edge', 'A', 'B'),
-  ...   ('edge', 'B', 'C')
-  ... ])
-  [((('edge', 'a', 'b'),
-     ('edge', 'b', 'c')),
-    {'A': 'a', 'B': 'b', 'C': 'c'}),
-   ((('edge', 'b', 'c'),
-     ('edge', 'c', 'd')),
-    {'A': 'b', 'B': 'c', 'C': 'd'}),
-   ((('edge', 'c', 'd'),
-     ('edge', 'd', 'f')),
-    {'A': 'c', 'B': 'd', 'C': 'f'})]
-  """
+      >>> db = read('''
+      ... edge(a, b).
+      ... edge(b, c).
+      ... edge(c, d).
+      ... ''')
+      >>> join(db, [
+      ...   ('edge', 'A', 'B'),
+      ...   ('edge', 'B', 'C')
+      ... ])
+      [((('edge', 'a', 'b'),
+         ('edge', 'b', 'c')),
+        {'A': 'a', 'B': 'b', 'C': 'c'}),
+       ((('edge', 'b', 'c'),
+         ('edge', 'c', 'd')),
+        {'A': 'b', 'B': 'c', 'C': 'd'}),
+       ((('edge', 'c', 'd'),
+         ('edge', 'd', 'f')),
+        {'A': 'c', 'B': 'd', 'C': 'f'})]
+    """
 
     return __mapv(__result, __join(db, [q(c) for c in query], bindings=bindings))

@@ -2,11 +2,8 @@
 The Calf parser.
 """
 
-from collections import namedtuple
 from itertools import tee
 import logging
-import sys
-from typing import NamedTuple, Callable
 
 from calf.lexer import CalfLexer, lex_buffer, lex_file
 from calf.grammar import MATCHING, WHITESPACE_TYPES
@@ -45,17 +42,18 @@ def mk_dict(contents, open=None, close=None):
         close.start_position,
     )
 
+
 def mk_str(token):
     buff = token.value
 
     if buff.startswith('"""') and not buff.endswith('"""'):
-        raise ValueError('Unterminated tripple quote string')
+        raise ValueError("Unterminated tripple quote string")
 
     elif buff.startswith('"') and not buff.endswith('"'):
-        raise ValueError('Unterminated quote string')
+        raise ValueError("Unterminated quote string")
 
     elif not buff.startswith('"') or buff == '"' or buff == '"""':
-        raise ValueError('Illegal string')
+        raise ValueError("Illegal string")
 
     if buff.startswith('"""'):
         buff = buff[3:-3]
@@ -114,15 +112,17 @@ class CalfMissingCloseParseError(CalfParseError):
     def __init__(self, expected_close_token, open_token):
         super(CalfMissingCloseParseError, self).__init__(
             f"expected {expected_close_token} starting from {open_token}, got end of file.",
-            open_token
+            open_token,
         )
         self.expected_close_token = expected_close_token
 
 
-def parse_stream(stream,
-                 discard_whitespace: bool = True,
-                 discard_comments: bool = True,
-                 stack: list = None):
+def parse_stream(
+    stream,
+    discard_whitespace: bool = True,
+    discard_comments: bool = True,
+    stack: list = None,
+):
     """Parses a token stream, producing a lazy sequence of all read top level forms.
 
     If `discard_whitespace` is truthy, then no WHITESPACE tokens will be emitted
@@ -134,11 +134,10 @@ def parse_stream(stream,
 
     stack = stack or []
 
-    def recur(_stack = None):
-        yield from parse_stream(stream,
-                                discard_whitespace,
-                                discard_comments,
-                                _stack or stack)
+    def recur(_stack=None):
+        yield from parse_stream(
+            stream, discard_whitespace, discard_comments, _stack or stack
+        )
 
     for token in stream:
         # Whitespace discarding
@@ -205,7 +204,9 @@ def parse_stream(stream,
 
             # Case of maybe matching something else, but definitely being wrong
             else:
-                matching = next(reversed([t[1] for t in stack if t[0] == token.type]), None)
+                matching = next(
+                    reversed([t[1] for t in stack if t[0] == token.type]), None
+                )
                 raise CalfUnexpectedCloseParseError(token, matching)
 
         # Atoms
@@ -216,18 +217,14 @@ def parse_stream(stream,
             yield token
 
 
-def parse_buffer(buffer,
-                 discard_whitespace=True,
-                 discard_comments=True):
+def parse_buffer(buffer, discard_whitespace=True, discard_comments=True):
     """
     Parses a buffer, producing a lazy sequence of all parsed level forms.
 
     Propagates all errors.
     """
 
-    yield from parse_stream(lex_buffer(buffer),
-                            discard_whitespace,
-                            discard_comments)
+    yield from parse_stream(lex_buffer(buffer), discard_whitespace, discard_comments)
 
 
 def parse_file(file):
