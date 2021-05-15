@@ -46,6 +46,7 @@ LICENSES_BY_LOWERNAME.update(
 APPROVED_PACKAGES = [
     "yamllint",  # WARNING: YAMLLINT IS GLP3"d.
     "Flask_Log_Request_ID",  # MIT, currently depended on as a git dep.
+    "anosql",  # BSD
 ]
 
 REQ_PATTERN = re.compile(
