@@ -1,12 +1,21 @@
 py_library(
-    name = "yamlschema",
-    srcs = [
+    name="yamlschema",
+    srcs=[
         "yamlschema.py",
     ],
-    imports = [
+    imports=[
         ".",
     ],
-    deps = [
+    deps=[
         py_requirement("PyYAML"),
-    ]
+    ],
+)
+
+py_pytest(
+    name="test_yamlschema",
+    srcs=glob(["test_*.py"]),
+    data=glob(["*.json", "*.yaml"]),
+    deps=[
+        ":yamlschema",
+    ],
 )
