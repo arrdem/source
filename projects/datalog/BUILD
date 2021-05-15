@@ -3,6 +3,9 @@ py_library(
     srcs = glob(["src/python/**/*.py"]),
     imports = [
         "src/python",
+    ],
+    visibility = [
+        "//visibility:public",
     ]
 )
 
