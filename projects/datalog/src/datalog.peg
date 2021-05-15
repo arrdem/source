@@ -1,0 +1,26 @@
+# A Datalog parser.
+#
+# The core entry point is the `dataset` rule, intended for parsing whole files.
+#
+# For convenience and consistency in implementing command shells `command` exists.
+
+grammar Datalog
+	dataset    <- (rule / comment / whitespace)*      %make_dataset
+	rule       <- clause (ws ":-" ws clauses)? "."    %make_rule
+	clauses    <- clause ("," ws clauses)?            %make_clauses
+	clause     <- negation? word "(" terms ")"        %make_clause
+	negation   <- "~"
+	terms      <- term ("," ws terms)?                %make_terms
+	term       <- string / lvar / word
+	lvar       <- [A-Z] [a-z0-9-_=<>]*                %make_symbol
+	word       <- [a-z0-9-_=<>]*                      %make_word
+  string     <- sq_string / dq_string
+  sq_string  <- "'" ([^']*) "'"                     %make_string
+	dq_string  <- "\"" ([^\"]*) "\""                  %make_string
+  ws         <- (comment / whitespace)+
+  comment    <- "%" ([^\n]*) "\n"                   %make_comment
+	whitespace <- [ \t\n]+                            %make_ws
+
+	# And now for the helper productions
+	# These are NOT reached during normal grammar parsing
+	command     <- clause (ws ":-" ws clauses)? ("." / "?" / "!")    %make_command
