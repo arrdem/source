@@ -4,7 +4,7 @@ cd "$(git rev-parse --show-toplevel)"
 
 bazel build //tools/python/...
 
-DIRS=(*)
+DIRS=(projects tools)
 
 bazel-bin/tools/python/autoflake -ir "${DIRS[@]}"
 bazel-bin/tools/python/black "${DIRS[@]}"
