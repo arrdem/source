@@ -2,10 +2,10 @@ package(default_visibility = ["//visibility:public"])
 
 py_library(
     name = "lib",
-    srcs = [
-        "src/python/**/*.py"
+    srcs = glob(["src/python/flowmetal/*.py"]),
+    imports = [
+        "src/python"
     ],
-    imports = ["src/python"],
     deps = [
     ]
 )
@@ -17,5 +17,5 @@ py_binary(
         py_requirement("click"),
         py_requirement("redis"),
     ],
-    main = "src/python/flowmetal/server/__main__.py",
+    main = "src/python/flowmetal/__main__.py",
 )
