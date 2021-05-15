@@ -45,7 +45,10 @@ class YamlLinter(object):
     def dereference(self, schema):
         """Dereference a {"$ref": ""} form."""
 
-        if ref := schema.get("$ref"):
+        if schema in [True, False]:
+            return schema
+
+        elif ref := schema.get("$ref"):
             assert ref.startswith("#/")
             path = ref.lstrip("#/").split("/")
             schema = self._schema
@@ -85,10 +88,10 @@ class YamlLinter(object):
 
         for k, v in node.value:
             if k.value in properties:
-                yield from self.lint_document(properties.get(k.value), v)
+                yield from self.lint_document(v, properties.get(k.value))
 
             elif additional_type:
-                yield from self.lint_document(additional_type, v)
+                yield from self.lint_document(v, additional_type)
 
             else:
                 yield LintRecord(
@@ -116,7 +119,7 @@ class YamlLinter(object):
         subschema = schema.get("items")
         if subschema:
             for item in node.value:
-                yield from self.lint_document(subschema, item)
+                yield from self.lint_document(item, subschema)
 
     def lint_scalar(self, schema, node: Node) -> t.Iterable[str]:
         """FIXME.
@@ -204,7 +207,7 @@ class YamlLinter(object):
     def _lint_num_range(self, schema, node: Node, value) -> t.Iterable[str]:
         """"FIXME."""
 
-        if base := schema.get("multipleOf"):
+        if (base := schema.get("multipleOf")) is not None:
             if value % base != 0:
                 yield LintRecord(
                     LintLevel.MISSMATCH,
@@ -213,7 +216,7 @@ class YamlLinter(object):
                     f"Expected a multiple of {base}, got {value}"
                 )
 
-        if max := schema.get("exclusiveMaximum"):
+        if (max := schema.get("exclusiveMaximum")) is not None:
             if value >= max:
                 yield LintRecord(
                     LintLevel.MISSMATCH,
@@ -222,7 +225,7 @@ class YamlLinter(object):
                     f"Expected a value less than {max}, got {value}"
                 )
 
-        if max := schema.get("maximum"):
+        if (max := schema.get("maximum")) is not None:
             if value > max:
                 yield LintRecord(
                     LintLevel.MISSMATCH,
@@ -231,7 +234,7 @@ class YamlLinter(object):
                     f"Expected a value less than or equal to {max}, got {value}"
                 )
 
-        if min := schema.get("exclusiveMinimum"):
+        if (min := schema.get("exclusiveMinimum")) is not None:
             if value <= min:
                 yield LintRecord(
                     LintLevel.MISSMATCH,
@@ -240,7 +243,7 @@ class YamlLinter(object):
                     f"Expected a value greater than {min}, got {value}"
                 )
 
-        if min := schema.get("minimum"):
+        if (min := schema.get("minimum")) is not None:
             if value < min:
                 yield LintRecord(
                     LintLevel.MISSMATCH,
@@ -260,20 +263,36 @@ class YamlLinter(object):
         schema = schema or self._schema  # Fixing up the schema source
         schema = self.dereference(schema)  # And dereference it if needed
 
+        # Special schemas
+        # These are schemas that accept everything.
         if schema == True or schema == {}:
             yield from []
+
+        # This is the schema that rejects everything.
+        elif schema == False:
+            yield LintRecord(
+                LintLevel.UNEXPECTED,
+                node,
+                schema,
+                "Received an unexpected value"
+            )
+
+        # Walking the PyYAML node hierarchy
         elif isinstance(node, MappingNode):
             yield from self.lint_mapping(schema, node)
+
         elif isinstance(node, SequenceNode):
             yield from self.lint_sequence(schema, node)
+
         elif isinstance(node, ScalarNode):
             yield from self.lint_scalar(schema, node)
+
         else:
-            yield from []
+            raise RuntimeError(f"Unsupported PyYAML node {type(node)}")
 
 
 def lint_node(schema, node, cls=YamlLinter):
-    """Lint a document using a schema and linter."""
+    """Lint a composed PyYAML AST node using a schema and linter."""
 
     print(repr(node))
     linter = cls(schema)
