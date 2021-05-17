@@ -49,16 +49,22 @@ class YamlLinter(object):
             return schema
 
         elif ref := schema.get("$ref"):
-            assert ref.startswith("#/")
-            path = ref.lstrip("#/").split("/")
+            document_url, path = ref.split("#")
+            # FIXME (arrdem 2021-05-17):
+            #   Build support for loading and caching schemas from elsewhere.
+            assert not document_url
+            assert path.startswith("/")
+            path = path[1:].split("/")
             schema = self._schema
             for e in path:
+                if not e:
+                    raise ValueError(f"Unable to dereference {ref}; contains empty segment!")
                 if not (schema := schema.get(e)):
-                    raise ValueError(f"Unable to dereference {ref}")
+                    raise ValueError(f"Unable to dereference {ref}; references missing sub-document!")
 
         return schema
 
-    def lint_mapping(self, schema, node: Node) -> t.Iterable[str]:
+    def lint_mapping(self, schema, node: Node) -> t.Iterable[LintRecord]:
         """FIXME."""
 
         if schema["type"] != "object" or not isinstance(node, MappingNode):
@@ -71,7 +77,7 @@ class YamlLinter(object):
 
         additional_type: t.Union[dict, bool] = schema.get("additionalProperties", True)
         properties: dict = schema.get("properties", {})
-        required: t.Iterable[str] = schema.get("required", [])
+        required: t.Iterable[LintRecord] = schema.get("required", [])
 
         for k in required:
             if k not in [_k.value for _k, _v in node.value]:
@@ -97,7 +103,7 @@ class YamlLinter(object):
                     f"Key {k.value!r} is not allowed by schema {str(node.start_mark).lstrip()}",
                 )
 
-    def lint_sequence(self, schema, node: Node) -> t.Iterable[str]:
+    def lint_sequence(self, schema, node: Node) -> t.Iterable[LintRecord]:
         """FIXME.
 
         There aren't sequences we need to lint in the current schema design, punting.
@@ -117,7 +123,7 @@ class YamlLinter(object):
             for item in node.value:
                 yield from self.lint_document(item, subschema)
 
-    def lint_scalar(self, schema, node: Node) -> t.Iterable[str]:
+    def lint_scalar(self, schema, node: Node) -> t.Iterable[LintRecord]:
         """FIXME.
 
         The only terminal we care about linting in the current schema is {"type": "string"}.
@@ -133,7 +139,7 @@ class YamlLinter(object):
         else:
             raise NotImplementedError(f"Scalar type {schema['type']} is not supported")
 
-    def lint_string(self, schema, node: Node) -> t.Iterable[str]:
+    def lint_string(self, schema, node: Node) -> t.Iterable[LintRecord]:
         """FIXME."""
 
         if node.tag != "tag:yaml.org,2002:str":
@@ -162,27 +168,27 @@ class YamlLinter(object):
                     f"Expected a string matching the pattern",
                 )
 
-    def lint_integer(self, schema, node: Node) -> t.Iterable[str]:
+    def lint_integer(self, schema, node: Node) -> t.Iterable[LintRecord]:
         if node.tag == "tag:yaml.org,2002:int":
             value = int(node.value)
             yield from self._lint_num_range(schema, node, value)
 
         else:
             yield LintRecord(
-                LintLevel.MISSMATCH, node, schema, f"Expected an integer, got a {node}"
+                LintLevel.MISSMATCH, node, schema, f"Expected an integer, got a {node.tag}"
             )
 
-    def lint_number(self, schema, node: Node) -> t.Iterable[str]:
+    def lint_number(self, schema, node: Node) -> t.Iterable[LintRecord]:
         if node.tag == "tag:yaml.org,2002:float":
             value = float(node.value)
             yield from self._lint_num_range(schema, node, value)
 
         else:
             yield LintRecord(
-                LintLevel.MISSMATCH, node, schema, f"Expected an integer, got a {node}"
+                LintLevel.MISSMATCH, node, schema, f"Expected an integer, got a {node.tag}"
             )
 
-    def _lint_num_range(self, schema, node: Node, value) -> t.Iterable[str]:
+    def _lint_num_range(self, schema, node: Node, value) -> t.Iterable[LintRecord]:
         """"FIXME."""
 
         if (base := schema.get("multipleOf")) is not None:
@@ -230,7 +236,7 @@ class YamlLinter(object):
                     f"Expected a value greater than or equal to {min}, got {value}",
                 )
 
-    def lint_document(self, node, schema=None) -> t.Iterable[str]:
+    def lint_document(self, node, schema=None) -> t.Iterable[LintRecord]:
         """Lint a document.
 
         Given a Node within a document (or the root of a document!), return a
@@ -266,15 +272,14 @@ class YamlLinter(object):
             raise RuntimeError(f"Unsupported PyYAML node {type(node)}")
 
 
-def lint_node(schema, node, cls=YamlLinter):
+def lint_node(schema, node, cls=YamlLinter) -> t.Iterable[LintRecord]:
     """Lint a composed PyYAML AST node using a schema and linter."""
 
-    print(repr(node))
     linter = cls(schema)
     yield from linter.lint_document(node)
 
 
-def lint_buffer(schema, buff: str, cls=YamlLinter):
+def lint_buffer(schema, buff: str, cls=YamlLinter) -> t.Iterable[LintRecord]:
     """Lint a buffer (string)."""
 
     with StringIO(buff) as f:
@@ -282,7 +287,7 @@ def lint_buffer(schema, buff: str, cls=YamlLinter):
     yield from lint_node(schema, node, cls=cls)
 
 
-def lint_file(schema, path, cls=YamlLinter):
+def lint_file(schema, path, cls=YamlLinter) -> t.Iterable[LintRecord]:
     """Lint a file."""
 
     with open(path) as f:
