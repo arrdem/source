@@ -1,7 +1,9 @@
 # YAML Schema
 
 A library that implements some amount of jsonschema validation against YAML document ASTs.
+
 Unlike other JSON-schema validation tools which give document path relative errors, this approach allows for line & file errors more appropriate to user-facing tools.
+yamlschema [(PyPi)](https://pypi.org/project/yamlschema/) [(Github)](https://github.com/Brightmd/yamlschema) [(source)](https://github.com/Brightmd/yamlschema/blob/master/yamlschema/lib.py) just loads the YAML document fully and punts directly to jsonschema; making it difficult-to-impossible to map errors back to source locations.
 
 ## API Overview
 
