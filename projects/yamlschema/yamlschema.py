@@ -53,7 +53,7 @@ class YamlLinter(object):
             path = ref.lstrip("#/").split("/")
             schema = self._schema
             for e in path:
-                if not (schema := path.get(e)):
+                if not (schema := schema.get(e)):
                     raise ValueError(f"Unable to dereference {ref}")
 
         return schema
