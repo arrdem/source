@@ -40,14 +40,6 @@ py_binary(
 )
 
 py_binary(
-    name = "black",
-    main = "black_shim.py",
-    deps = [
-        py_requirement("black"),
-    ]
-)
-
-py_binary(
     name = "isort",
     main = "isort_shim.py",
     deps = [
@@ -105,15 +97,6 @@ py_binary(
         py_requirement("yamllint"),
     ]
 )
-
-py_binary(
-    name = "reqsort",
-    main = "reqsort.py",
-    deps = [
-        py_requirement("click"),
-    ]
-)
-
 
 py_binary(
     name = "templater",
