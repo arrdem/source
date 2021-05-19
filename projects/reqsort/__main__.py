@@ -6,6 +6,7 @@ import re
 
 import click
 
+
 REQ_PATTERN = re.compile(
     r"(?P<pkgname>[a-zA-Z0-9_-]+)(?P<features>\[.*?\])?==(?P<version>[^\s;#]+)|(.*?#egg=(?P<eggname>[a-zA-Z0-9_-]+))"
 )
