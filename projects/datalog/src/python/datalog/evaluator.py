@@ -7,14 +7,7 @@ from itertools import chain
 
 from datalog.parser import parse
 from datalog.reader import pr_str, read
-from datalog.types import (
-    CachedDataset,
-    Constant,
-    Dataset,
-    LVar,
-    Rule,
-    TableIndexedDataset,
-)
+from datalog.types import CachedDataset, Constant, Dataset, LVar, Rule, TableIndexedDataset
 
 
 def match(tuple, expr, bindings=None):

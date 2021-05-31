@@ -3,7 +3,7 @@ Some shared scaffolding for building terminal "REPL" drivers.
 """
 
 import curses
-from curses.textpad import Textbox, rectangle
+from curses.textpad import rectangle, Textbox
 
 
 def curse_repl(handle_buffer):

@@ -6,35 +6,51 @@ import re
 
 import pytest
 import requests
+import requirements
+from requirements.requirement import Requirement
+
 
 # Licenses approved as representing non-copyleft and not precluding commercial usage.
 # This is all easy, there's a good schema here.
 APPROVED_LICENSES = [
-    "License :: OSI Approved :: MIT License",
-    "License :: OSI Approved :: Apache Software License",
-    "License :: OSI Approved :: BSD License",
-    "License :: OSI Approved :: Mozilla Public License 1.0 (MPL)",
-    "License :: OSI Approved :: Mozilla Public License 1.1 (MPL 1.1)",
-    "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)",
-    "License :: OSI Approved :: Python Software Foundation License",
-    "License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)",
-    "License :: OSI Approved :: ISC License (ISCL)",
+    MIT    := "License :: OSI Approved :: MIT License",
+    APACHE := "License :: OSI Approved :: Apache Software License",
+    BSD    := "License :: OSI Approved :: BSD License",
+    MPL10  := "License :: OSI Approved :: Mozilla Public License 1.0 (MPL)",
+    MPL11  := "License :: OSI Approved :: Mozilla Public License 1.1 (MPL 1.1)",
+    MPL20  := "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)",
+    PSFL   := "License :: OSI Approved :: Python Software Foundation License",
+    LGPL   := "License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)",
+    ISCL   := "License :: OSI Approved :: ISC License (ISCL)",
+]
+
+UNAPPROVED_LICENSES = [
+    GPL1 := "License :: OSI Approved :: GNU General Public License",
+    GPL2 := "License :: OSI Approved :: GNU General Public License v2 (GPLv2)",
+    GPL3 := "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
 ]
 
 # This data is GARBO.
 LICENSES_BY_LOWERNAME = {
-    "apache 2.0": "License :: OSI Approved :: Apache Software License",
-    "apache": "License :: OSI Approved :: Apache Software License",
-    "bsd 3 clause": "License :: OSI Approved :: BSD License",
-    "bsd 3-clause": "License :: OSI Approved :: BSD License",
-    "bsd": "License :: OSI Approved :: BSD License",
-    "gplv3": "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
-    "http://www.apache.org/licenses/license-2.0": "License :: OSI Approved :: Apache Software License",
-    "isc": "License :: OSI Approved :: ISC License (ISCL)",
-    "mit": "License :: OSI Approved :: MIT License",
-    "mpl 2.0": "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)",
-    "mpl": "License :: OSI Approved :: Mozilla Public License 1.0 (MPL)",
-    "psf": "License :: OSI Approved :: Python Software Foundation License",
+    "apache 2.0": APACHE,
+    "apache": APACHE,
+    "http://www.apache.org/licenses/license-2.0": APACHE,
+
+    "bsd 3": BSD,
+    "bsd": BSD,
+
+    "gpl": GPL1,
+    "gpl2": GPL2,
+    "gpl3": GPL3,
+
+    "isc": ISCL,
+
+    "mit": MIT,
+
+    "mpl": MPL10,
+    "mpl 2.0": MPL20,
+
+    "psf": PSFL,
 }
 
 # Mash in some cases.
@@ -49,52 +65,38 @@ APPROVED_PACKAGES = [
     "anosql",  # BSD
 ]
 
-REQ_PATTERN = re.compile(
-    r"(?P<pkgname>[a-zA-Z0-9_-]+)(?P<features>\[.*?\])?==(?P<version>[^\s;#]+)|(.*?#egg=(?P<eggname>[a-zA-Z0-9_-]+))"
-)
 
-
-def parse_requirement(line):
-    """Given a requirement return the requirement name and version as a tuple.
-
-    Only the strict `==` version pinning subset is supported.
-    Features are supported.
-    """
-
-    if m := re.match(REQ_PATTERN, line):
-        return (m.group("pkgname") or m.group("eggname")), m.group("version")
-
-
-@pytest.mark.parametrize(
-    "line,t",
-    [
-        ("foo==1.2.3", ("foo", "1.2.3")),
-        ("foo[bar]==1.2.3", ("foo", "1.2.3")),
-        ("foo[bar, baz, qux]==1.2.3", ("foo", "1.2.3")),
-        # Various stuff we should ignore
-        ("# comment line", None),
-        ("    # garbage whitespace", None),
-        ("     \t", None),
-    ],
-)
-def test_parse_requirement(line, t):
-    """The irony of testing one"s tests is not lost."""
-
-    assert parse_requirement(line) == t
-
-
-with open("tools/python/requirements.txt") as f:
-    PACKAGES = [parse_requirement(l) for l in f.readlines()]
+with open("tools/python/requirements.txt") as fd:
+    PACKAGES = list(requirements.parse(fd))
 
 
 def bash_license(ln):
-    if ln:
-        ln = re.sub("[(),]|( version)|( license)", "", ln.lower())
-        ln = LICENSES_BY_LOWERNAME.get(ln, ln)
+    while True:
+        lnn = re.sub(r"[(),]|( version)|( license)|( ?v(?=\d))|([ -]clause)", "", ln.lower())
+        if ln != lnn:
+            ln = lnn
+        else:
+            break
+
+    ln = LICENSES_BY_LOWERNAME.get(ln, ln)
     return ln
 
 
-def licenses(package, version):
+@pytest.mark.parametrize("a,b", [
+    ("MIT", MIT),
+    ("mit", MIT),
+    ("BSD", BSD),
+    ("BSD 3-clause", BSD),
+    ("BSD 3 clause", BSD),
+    ("GPL3", GPL3),
+    ("GPL v3", GPL3),
+    ("GPLv3", GPL3),
+])
+def test_bash_license(a, b):
+    assert bash_license(a) == b
+
+
+def licenses(package: Requirement):
     """Get package metadata (the licenses list) from PyPi.
 
     pip and other tools use the local package metadata to introspect licenses which requires that
@@ -104,11 +106,16 @@ def licenses(package, version):
 
     """
     l = []
+    version = next((v for op, v in package.specs if op == "=="), None)
+    print(package.name, version)
 
     # If we don't have a version (eg. forked git dep) assume we've got the same license constraints
     # as the latest upstream release. After all we can't re-license stuff.
     if not version:
-        blob = requests.get(f"https://pypi.python.org/pypi/{package}/json").json()
+        blob = requests.get(
+            f"https://pypi.org/pypi/{package.name}/json",
+            headers={"Accept": "application/json"}
+        ).json()
         if ln := bash_license(blob.get("license")):
             l.append(ln)
         else:
@@ -120,7 +127,8 @@ def licenses(package, version):
     # If we have a version, try to pull that release's metadata since it may have more/better.
     if version:
         blob = requests.get(
-            f"https://pypi.python.org/pypi/{package}/{version}/json"
+            f"https://pypi.org/pypi/{package.name}/{version}/json",
+            headers={"Accept": "application/json"}
         ).json()
         l = [
             c
@@ -134,11 +142,11 @@ def licenses(package, version):
     return l
 
 
-@pytest.mark.parametrize("package,version", PACKAGES)
-def test_approved_license(package, version):
+@pytest.mark.parametrize("package", PACKAGES)
+def test_approved_license(package):
     """Ensure that a given package is either allowed by name or uses an approved license."""
 
-    _licenses = licenses(package, version)
-    assert package in APPROVED_PACKAGES or any(
+    _licenses = licenses(package)
+    assert package.name in APPROVED_PACKAGES or any(
         l in APPROVED_LICENSES for l in _licenses
     ), f"{package} was not approved and its license(s) were unknown {_licenses!r}"

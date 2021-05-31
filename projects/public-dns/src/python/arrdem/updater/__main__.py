@@ -2,21 +2,21 @@
 A quick and dirty public DNS script, super tightly coupled to my infrastructure.
 """
 
-import sys
-import os
 import argparse
-import re
+import os
 from pprint import pprint
+import re
+import sys
+
 
 for e in sys.path:
     print(e)
 
 from gandi.client import GandiAPI
-
 import jinja2
+import meraki
 import pkg_resources
 import yaml
-import meraki
 
 
 RECORD_LINE_PATTERN = re.compile(

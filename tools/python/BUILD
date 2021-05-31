@@ -70,6 +70,7 @@ py_pytest(
     ],
     deps = [
         py_requirement("requests"),
+        py_requirement("requirements-parser"),
     ]
 )
 

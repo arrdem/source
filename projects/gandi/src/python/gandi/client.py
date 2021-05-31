@@ -2,8 +2,8 @@
 Quick and shitty Gandi REST API driver
 """
 
-import json
 from datetime import datetime
+import json
 
 import requests
 

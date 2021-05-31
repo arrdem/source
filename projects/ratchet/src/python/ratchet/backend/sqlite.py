@@ -2,12 +2,12 @@
 An implementation of the ratchet model against SQLite.
 """
 
-import os
-import sqlite3 as sql
 from contextlib import closing
+import os
 import socket
+import sqlite3 as sql
 
-from ratchet import Message, Event, Request
+from ratchet import Event, Message, Request
 
 
 SCHEMA_SCRIPT = """

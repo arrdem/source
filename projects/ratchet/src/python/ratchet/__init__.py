@@ -8,7 +8,7 @@ from abc import ABC, abstractmethod
 class Message:
     """Messages can be sent. That's it.
 
-    Messages have headers, which may 
+    Messages have headers, which may
 
     Other things can filter the stream of inbound messages and do log processing, but that's the whole basis of the
     thing.
@@ -67,57 +67,51 @@ class Driver(ABC):
     """Shared interface for Ratchet backend drivers."""
 
     @abstractmethod
-    def __init__(message_ttl=60000,
-                 message_space="_",
-                 message_author=""):
+    def __init__(message_ttl=60000, message_space="_", message_author=""):
         """Initialize the driver."""
 
     @abstractmethod
-    def create_message(self,
-                       message: str,
-                       ttl: int = None,
-                       space: str = None,
-                       author: str = None) -> Message:
+    def create_message(
+        self, message: str, ttl: int = None, space: str = None, author: str = None
+    ) -> Message:
         """Create a single message."""
 
     @abstractmethod
-    def create_event(self,
-                     timeout: int,
-                     ttl: int = None,
-                     space: str = None,
-                     author: str = None):
+    def create_event(
+        self, timeout: int, ttl: int = None, space: str = None, author: str = None
+    ):
         """Create a (pending) event."""
 
     @abstractmethod
-    def set_event(self,
-                  timeout: int,
-                  ttl: int = None,
-                  space: str = None,
-                  author: str = None):
+    def set_event(
+        self, timeout: int, ttl: int = None, space: str = None, author: str = None
+    ):
         """Attempt to mark an event as set."""
 
     @abstractmethod
-    def create_request(self,
-                       body: str,
-                       timeout: int,
-                       ttl: int = None,
-                       space: str = None,
-                       author: str = None):
+    def create_request(
+        self,
+        body: str,
+        timeout: int,
+        ttl: int = None,
+        space: str = None,
+        author: str = None,
+    ):
         """Create a (pending) request."""
 
     @abstractmethod
-    def deliver_request(self,
-                        request_id,
-                        response: str,
-                        ttl: int = None,
-                        space: str = None,
-                        author: str = None):
+    def deliver_request(
+        self,
+        request_id,
+        response: str,
+        ttl: int = None,
+        space: str = None,
+        author: str = None,
+    ):
         """Deliver a response to a (pending) request."""
 
     @abstractmethod
-    def revoke_request(self,
-                       request_id,
-                       ttl: int = None,
-                       space: str = None,
-                       author: str = None):
+    def revoke_request(
+        self, request_id, ttl: int = None, space: str = None, author: str = None
+    ):
         """Revoke a (pending) request."""

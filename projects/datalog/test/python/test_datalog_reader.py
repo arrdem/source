@@ -2,9 +2,10 @@
 Reader tests.
 """
 
+from datalog.reader import read
+
 import pytest
 
-from datalog.reader import read
 
 EXS = [
     "%foo\n",

@@ -9,9 +9,9 @@ parsing, linting or other use.
 import io
 import re
 
-from calf.token import CalfToken
-from calf.io.reader import PeekPosReader
 from calf.grammar import TOKENS
+from calf.io.reader import PeekPosReader
+from calf.token import CalfToken
 from calf.util import *
 
 

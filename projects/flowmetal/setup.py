@@ -1,5 +1,6 @@
 from setuptools import setup
 
+
 setup(
     name="arrdem.flowmetal",
     # Package metadata

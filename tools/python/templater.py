@@ -12,6 +12,7 @@ import click
 import jinja2
 import yaml
 
+
 FONTMATTER_PATTERN = re.compile(
     r"^(---\n\r?(?P<fontmatter>.*?)\n\r?---\n\r?)?(?P<content>.+)$", re.DOTALL
 )

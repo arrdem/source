@@ -2,13 +2,13 @@
 
 from datalog.easy import read, select
 from datalog.types import (
-    CachedDataset,
-    Constant,
-    Dataset,
-    LVar,
-    PartlyIndexedDataset,
-    Rule,
-    TableIndexedDataset,
+  CachedDataset,
+  Constant,
+  Dataset,
+  LVar,
+  PartlyIndexedDataset,
+  Rule,
+  TableIndexedDataset
 )
 
 import pytest

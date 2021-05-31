@@ -2,9 +2,8 @@
 Tests covering the YAML linter.
 """
 
-from yamlschema import lint_buffer
-
 import pytest
+from yamlschema import lint_buffer
 
 
 @pytest.mark.parametrize(
@@ -100,20 +99,31 @@ def test_lint_document_fails(msg, schema, obj):
     assert list(lint_buffer(schema, obj)), msg
 
 
-@pytest.mark.parametrize("msg, schema, obj", [
-    ("Basic usage of $ref",
-     {"$ref": "#/definitions/Foo",
-      "definitions": {
-          "Foo": {"type": "string"},
-      }},
-     "---\nfoo"),
-    ("Use of nested references",
-     {"$ref": "#/definitions/Foos",
-      "definitions": {
-          "Foos": {"type": "array", "items": {"$ref": "#/definitions/Foo"}},
-          "Foo": {"type": "string"},
-      }},
-     "---\n- foo\n- bar\n- baz"),
-])
+@pytest.mark.parametrize(
+    "msg, schema, obj",
+    [
+        (
+            "Basic usage of $ref",
+            {
+                "$ref": "#/definitions/Foo",
+                "definitions": {
+                    "Foo": {"type": "string"},
+                },
+            },
+            "---\nfoo",
+        ),
+        (
+            "Use of nested references",
+            {
+                "$ref": "#/definitions/Foos",
+                "definitions": {
+                    "Foos": {"type": "array", "items": {"$ref": "#/definitions/Foo"}},
+                    "Foo": {"type": "string"},
+                },
+            },
+            "---\n- foo\n- bar\n- baz",
+        ),
+    ],
+)
 def test_ref_references(msg, schema, obj):
     assert not list(lint_buffer(schema, obj)), msg

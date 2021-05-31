@@ -4,7 +4,6 @@ Tests of calf.parser
 
 import calf.parser as cp
 from conftest import parametrize
-
 import pytest
 
 

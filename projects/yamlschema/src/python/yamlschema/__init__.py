@@ -2,11 +2,11 @@
 JSONSchema linting for YAML documents.
 """
 
-import logging
-import typing as t
 from enum import Enum
 from io import StringIO
+import logging
 import re
+import typing as t
 
 import yaml
 from yaml.nodes import MappingNode, Node, ScalarNode, SequenceNode
@@ -58,9 +58,13 @@ class YamlLinter(object):
             schema = self._schema
             for e in path:
                 if not e:
-                    raise ValueError(f"Unable to dereference {ref}; contains empty segment!")
+                    raise ValueError(
+                        f"Unable to dereference {ref}; contains empty segment!"
+                    )
                 if not (schema := schema.get(e)):
-                    raise ValueError(f"Unable to dereference {ref}; references missing sub-document!")
+                    raise ValueError(
+                        f"Unable to dereference {ref}; references missing sub-document!"
+                    )
 
         return schema
 
@@ -175,7 +179,10 @@ class YamlLinter(object):
 
         else:
             yield LintRecord(
-                LintLevel.MISSMATCH, node, schema, f"Expected an integer, got a {node.tag}"
+                LintLevel.MISSMATCH,
+                node,
+                schema,
+                f"Expected an integer, got a {node.tag}",
             )
 
     def lint_number(self, schema, node: Node) -> t.Iterable[LintRecord]:
@@ -185,7 +192,10 @@ class YamlLinter(object):
 
         else:
             yield LintRecord(
-                LintLevel.MISSMATCH, node, schema, f"Expected an integer, got a {node.tag}"
+                LintLevel.MISSMATCH,
+                node,
+                schema,
+                f"Expected an integer, got a {node.tag}",
             )
 
     def _lint_num_range(self, schema, node: Node, value) -> t.Iterable[LintRecord]:

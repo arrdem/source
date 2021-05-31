@@ -5,8 +5,8 @@ The Calf parser.
 from itertools import tee
 import logging
 
-from calf.lexer import CalfLexer, lex_buffer, lex_file
 from calf.grammar import MATCHING, WHITESPACE_TYPES
+from calf.lexer import CalfLexer, lex_buffer, lex_file
 from calf.token import *
 
 

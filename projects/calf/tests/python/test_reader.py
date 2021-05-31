@@ -1,9 +1,8 @@
 """
 """
 
-from conftest import parametrize
-
 from calf.reader import read_buffer
+from conftest import parametrize
 
 
 @parametrize(
