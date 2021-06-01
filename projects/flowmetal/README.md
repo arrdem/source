@@ -267,6 +267,51 @@ def orchestrator_function(context: df.DurableOrchestrationContext):
 main = df.Orchestrator.create(orchestrator_function)
 ```
 
+Now it would seem that you could "just" automate doing rewriting that to something like this -
+
+``` python
+@df.Durable
+def main(ctx):
+    x = context.call_activity("F1", None)
+    y = context.call_activity("F2", x)
+    z = context.call_activity("F3", y)
+    return context.call_activity("F4", z)
+```
+
+There's some prior art for doing this (https://eigenfoo.xyz/manipulating-python-asts/, https://greentreesnakes.readthedocs.io/en/latest/manipulating.html#modifying-the-tree) but it's a lot of legwork for not much.
+There are also some pretty gaping correctness holes in taking the decorator based rewriting approach;
+how do you deal with rewriting imported code, or code that's in classes/behind `@property` and other such tricks?
+
+Just not worth it.
+
+Now, what we _can_ do is try to hijack the entire Python interpreter to implement the properties/tracing/history recording we want there.
+The default cpython lacks hooks for doing this, but we can write a python-in-python interpreter and "lift" the user's program into an interpreter we control, which ultimately gets most of its behavior "for free" from the underlying cpython interpreter.
+There's [an example](https://github.com/pfalcon/pyastinterp) of doing this as part of the pycopy project; although there it's more of a Scheme-style proof of metacircular self-hosting.
+
+There's a modified copy of the astinterp in `scratch/` which is capable of running a considerable subset of py2/3.9 to the point of being able to source-import many libraries including `requests` and run PyPi sourced library code along with user code under hoisted interpretation.
+
+It doesn't support coroutines/generators yet, and there's some machinery required to make it "safe" (meaningfully single-stepable; "fix"/support eval, enable user-defined import/`__import__` through the lifted python VM) but as a proof of concept of a lifted VM I'm genuinely shocked how well this works.
+
+Next questions here revolve around how to "snapshot" the state of the interpreter meaningfully, and how to build a replayable interpreter log.
+There are some specific challenges around how Python code interacts with native C code that could limit the viability of this approach, but at the absolute least this fully sandboxed Python interpreter could be used to implement whatever underlying magic could be desired and restricted to some language subset as desired.
+
+The goal is to make something like this work -
+
+``` python
+from df import Activity
+
+f1 = Activity("F1")
+f2 = Activity("F2")
+f3 = Activity("F3")
+f4 = Activity("F4")
+
+def main():
+    return f4(f3(f2(f1(None))))
+```
+
+Which may offer a possible solution to the interpreter checkpointing problem - only checkpoint "supported" operations.
+Here the `Activity().__call__` operation would have special support, as with `datetime.datetime.now()` and controlling `time.sleep()`, threading and possibly `random.Random` seeding which cannot trivially be made repeatable.
+
 ### Durability challenges
 
 FIXME - manually implementing snapshotting and recovery is hard

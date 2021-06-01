@@ -938,7 +938,7 @@ class InterpreterSystem(object):
                                 self.modules[name] = mod.ns
                                 break
                         elif os.path.isfile(e):
-                            # FIXME (arrdem 2021-05-)
+                            # FIXME (arrdem 2021-05-31)
                             raise RuntimeError("Import from .zip/.whl/.egg archives aren't supported yet")
                 else:
                     self.modules[name] = __import__(name, globals, locals, fromlist, level)
@@ -963,5 +963,5 @@ class InterpreterSystem(object):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.WARNING)
+    logging.basicConfig(level=logging.DEBUG)
     InterpreterSystem().execute(sys.argv[1])

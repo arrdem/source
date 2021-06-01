@@ -23,3 +23,6 @@ for _ in range(10):
 
 def bar(a, b, **bs):
     pass
+
+import requests
+print(len(requests.get("https://pypi.org/pypi/requests/json").text))
