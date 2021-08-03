@@ -1,0 +1,182 @@
+#!/usr/bin/env python3
+
+import sys
+
+import bussard.gen.types as t  # for types
+from bussard.reader import read
+
+
+def format_time(num):
+  week = (7 * 24 * 60 * 60)
+  day = (24 * 60 * 60)
+  hour = (60 * 60)
+  minute = 60
+
+  if num % week == 0:
+    return f"{num//week}w"
+  elif num % day == 0:
+    return f"{num//day}d"
+  elif num % hour == 0:
+    return f"{num//hour}h"
+  elif num % minute == 0:
+    return f"{num//minute}m"
+  else:
+    return f"{num}s"
+
+
+def format_comment(record):
+  return record.comment or "\n"
+
+
+def format_record_name(record, cont=None, soa=None, name_width=None):
+  name = record.name
+  if name == soa.name:
+    name = "@"
+  if cont and name == cont.name:
+    name = " " * len(cont.name)
+  if name_width:
+    name = name.ljust(name_width)
+  return name
+
+
+def format_record_ttl(record, ttl=None):
+  if ttl and record.ttl == ttl.ttl:
+    return ""
+  elif record.ttl:
+    return f"{record.ttl} "
+  else:
+    return ""
+
+
+def format_record(record, cont=None, soa=None, ttl=None, name_width=None):
+  """Given a single record, render it nicely."""
+
+  if isinstance(record, t.TTL):
+    return f"$TTL {format_time(record.ttl)}{format_comment(record)}"
+
+  elif isinstance(record, t.ORIGIN):
+    return f"$ORIGIN {record.name}{format_comment(record)}"
+
+  rname = format_record_name(record, cont=cont, soa=soa, name_width=name_width)
+  prefix = f"{rname} {format_record_ttl(record, ttl=ttl)}{record.type}"
+
+  if isinstance(record, t.SOA):
+    return f"""{prefix} SOA {record.mname} {record.rname} (
+    {record.serial: <10} ; serial
+    {format_time(record.refresh): <10} ; refresh after
+    {format_time(record.retry): <10} ; retry after
+    {format_time(record.expire): <10} ; expire after
+    {format_time(record.minimum): <10} ; negative cache
+)"""
+
+  elif isinstance(record, t.A):
+    return f"""{prefix} A {record.address: <15}{format_comment(record)}"""
+
+  elif isinstance(record, t.AAAA):
+    return f"""{prefix} AAAA {record.address: <39}{format_comment(record)}"""
+
+  elif isinstance(record, t.CNAME):
+    return f"""{prefix} CNAME {record.cname}{format_comment(record)}"""
+
+  elif isinstance(record, t.MX):
+    return f"""{prefix} MX {record.preference} {record.exchange}{format_comment(record)}"""
+
+  elif isinstance(record, t.NS):
+    return f"""{prefix} NS {record.nsdname}{format_comment(record)}"""
+
+  elif isinstance(record, t.PTR):
+    return f"""{prefix} PTR {record.ptrdname}{format_comment(record)}"""
+
+  elif isinstance(record, t.TXT):
+    return f'''{prefix} TXT "{record.txt_data}"{format_comment(record)}'''
+
+  elif isinstance(record, t.SRV):
+    return f"""{prefix} SRV {record.priority} {record.weight} {record.port} {record.target}{format_comment(record)}"""
+
+  elif isinstance(record, t.RP):
+    return f"""{prefix} RP {record.mbox_dname} {record.txt_data}{format_comment(record)}"""
+
+
+if __name__ == "__main__":
+  with open(sys.argv[1], "r") as f:
+    records = list(read(f.read()))
+
+  # Order records preferentially.
+  # $ORIGIN
+  # $TTL
+  # SOA
+  # $ORIGIN NS
+  # $ORIGIN MX
+  # then alphabetically by name.
+  # one space between groups.
+
+  origin = [r for r in records if isinstance(r, t.ORIGIN)]
+  if origin:
+    origin = origin[0]
+  else:
+    origin = None
+
+  ttl = [r for r in records if isinstance(r, t.TTL)]
+  if ttl:
+    ttl = ttl[0]
+  else:
+    ttl = None
+
+  soa = [r for r in records if isinstance(r, t.SOA)]
+  if soa:
+    soa = soa[0]
+  else:
+    soa = None
+
+  if soa and soa.name and not origin:
+    origin = t.ORIGIN(soa.name)
+
+  # Find the global nss and mxs
+  nss = [r for r in records if isinstance(r, t.NS) and r.name == origin.name]
+  mxs = [r for r in records if isinstance(r, t.MX) and r.name == origin.name]
+
+  # Sort the remaining records and comments
+  tail = [r for r in records
+          if (r != origin and r != ttl and r != soa and r not in nss and r not in mxs)]
+
+  def name_key(o):
+    if isinstance(o, str):
+      # It's a comment, sort by first word
+      return o.split()[0].replace(";", "").lower()
+    else:
+      # It's a record, return the name
+      return o.name
+
+  # Group chunks, preserving the original order.
+  chunk = []
+  chunks = [chunk]
+  for record in tail:
+    if record != "\n":
+      chunk.append(record)
+    elif chunk:
+      chunk = []
+      chunks.append(chunk)
+
+  # FIXME (arrdem 2020-02-01):
+  #   Split chunks somehow???
+  #   This is where the formater and linter diverge some.
+
+  # Now render
+  if origin.name != "@":
+    print(format_record(origin).strip())
+  if ttl:
+    print(format_record(ttl).strip())
+  print(format_record(soa, ttl=ttl, soa=soa).rstrip())
+  for ns in nss:
+    print(format_record(ns, cont=soa, ttl=ttl, soa=soa).rstrip())
+  for mx in mxs:
+    print(format_record(mx, cont=soa, ttl=ttl, soa=soa).rstrip())
+  for chunk in chunks:
+    if chunk:
+      width = max([len(r.name) if hasattr(r, "name") else 0 for r in chunk])
+      for record in chunk:
+        if isinstance(record, str):
+          print(record.rstrip())
+        else:
+          print(format_record(record, ttl=ttl, soa=soa, name_width=width).rstrip())
+    print()

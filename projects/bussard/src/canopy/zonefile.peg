@@ -1,0 +1,74 @@
+# A zonefile parser.
+#
+# Based on RFC 883, RFC 1035
+#  - Drops WKS per RFC 1123
+#  - Drops NULL per RFC 1035
+#  - Drops MG per RFC 2505
+#  - Drops MR per RFC 2505
+#  - Drops MINFO per RFC 2505
+#  + Adds SRV from RFC 2782
+#  + Adds AAAA from RFC 3596
+
+grammar Zonefile
+  # Baze zone rule
+  zone   <- _one*                        %make_zone
+  _one   <- origin / ttl / records / eol # helper for testing
+
+  # The origin and TTL special records
+  origin <- "$ORIGIN" ws name:word comment:eol  %make_origin
+  ttl    <- "$TTL" ws ttl:seconds  comment:eol  %make_ttl
+
+  # Base record rule
+  records        <- name:word (_r_repeat / comment / eol)+                %make_records
+  _r_repeat      <- ws (_r_with_ttl / _r_with_type / _r ) ws comment:eol  %make_repeat
+  _r_with_ttl    <- ttl:seconds ws (_r_with_type / _r)                    %make_record_ttl
+  _r_with_type   <- type:"IN"   ws (_r_with_ttl / _r)                     %make_record_type
+
+  ####################################################################################################
+  # Record types
+
+  # A big alternation of the supported records
+  _r <- aaaa / a / cname / txt / mx / ns / ptr / soa / srv / rp
+
+  # Oh gawd SOAs
+  soa     <- "SOA" ws mname:word ws rname:word ws "(" _ws_ serial:num _ws_ refresh:seconds _ws_ retry:seconds _ws_ expire:seconds _ws_ minimum:seconds _ws_ ")"  %make_soa
+
+  a       <- "A"     ws address:v4address                                               %make_a
+  aaaa    <- "AAAA"  ws address:v6address                                               %make_aaaa
+  cname   <- "CNAME" ws cname:word                                                      %make_cname
+  mx      <- "MX"    ws preference:num    ws exchange:word                              %make_mx
+  ns      <- "NS"    ws nsdname:word                                                    %make_ns
+  ptr     <- "PTR"   ws ptrdname:word                                                   %make_ptr
+  txt     <- "TXT"   ws txt_data:string                                                 %make_txt
+  srv     <- "SRV"   ws priority:num      ws weight:num     ws port:num ws target:word  %make_srv
+  rp      <- "RP"    ws mbox_dname:word   ws txt_dname:word                             %make_rp
+
+  ####################################################################################################
+  # Record fragments
+
+  # Massively overbroad word regex
+  word    <- [@.*_A-Za-z0-9-]+                         %make_word
+
+  # num
+  num     <- [\d]+                                     %make_num
+
+  # seconds
+  seconds   <- num sec_unit?                           %make_seconds
+  sec_unit  <- [WwDdHhMmSs]
+
+  # v4address (AKA address in RFC-1035) is a 32bi address
+  v4address <- num '.' num '.' num '.' num   %make_v4
+
+  # v6address is a 64bi aka IPV6 address
+  # This is a garbage, overbroad regex >.>
+  v6address <- [A-Za-z0-9:]+                 %make_v6
+
+  string  <- '"' [^\"]* '"'                  %make_string
+
+  # Whitespace in various forms
+  eol     <- ws (comment / newline)  %make_blank
+  _ws_    <- eol? ws?                %make_blank
+  blank   <- ws? newline             %make_blank
+  comment <- ";" [^\n]* "\n"         %make_blank
+  ws      <- [ \t]*                  %make_blank
+  newline <- [\n]                    %make_blank

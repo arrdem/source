@@ -1,0 +1,14 @@
+#!/usr/bin/env python3
+
+import sys
+
+import bussard.gen.types as t  # for types
+from bussard.reader import read
+
+
+if __name__ == "__main__":
+  with open(sys.argv[1], "r") as f:
+    records = list(read(f.read()))
+
+  for r in records:
+    print(r)
