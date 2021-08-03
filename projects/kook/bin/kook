@@ -1,0 +1,742 @@
+#!/usr/bin/env python3
+
+# See kook --help for usage.
+
+import argparse
+from datetime import datetime
+import getpass
+import json
+import re
+from subprocess import call
+import sys
+from time import sleep
+from typing import Iterable
+
+import jinja2
+from kook.client import KookClient, lock
+
+
+# Note colored is an optional dependency
+try:
+    from colored import attr, fg
+
+except ImportError:
+    # Provide stub functions
+    def fg(_):
+        return ""
+
+    def attr(_):
+        return ""
+
+
+def _var_filter_ctor(s: str):
+    if s.startswith("!"):
+        s = s[1:]
+        if ":" in s:
+            s = s.split(":", 1)
+            return ("not_match", s[0], s[1])
+        else:
+            return ("unset", s)
+    elif ":" in s:
+        return ("match", *s.split(":", 1))
+    else:
+        raise ValueError("Got invalid filter")
+
+
+def _compile_filters(filters):
+    if not filters:
+        return lambda x: True
+
+    else:
+        unset = object()
+
+        def _compile_filter(f):
+            if f[0] == "unset":
+                return lambda x: x.canonicalized_vars().get(f[1], unset) is unset
+
+            elif f[0] in ["match", "not_match"]:
+                # There's no reasonable thing such as regex antimatch, so we do a
+                # positive match and invert the result, which makes the two regex
+                # operations differ only by a complement() which python doesn't have so
+                # we do it with a lambda.
+
+                pattern = re.compile(f[2])
+
+                def _helper(x):
+                    v = x.canonicalized_vars().get(f[1], unset)
+                    if v is unset:
+                        return False
+                    else:
+                        return re.match(pattern, v) is not None
+
+                if f[0] == "match":
+                    return _helper
+                else:
+                    return lambda x: not _helper(x)
+
+        _filters = [_compile_filter(f) for f in filters]
+
+        return lambda x: all(f(x) for f in _filters)
+
+
+def _hostlist(client, opts, key=lambda h: h.name):
+    """Given the shared host/group machinery, build and return a host list."""
+
+    hosts = set()
+
+    if not opts.hosts and not opts.groups:
+        for host in client.hosts():
+            hosts.add(host)
+
+    elif opts.hosts:
+        for host in opts.hosts:
+            h = client.host(host)
+            if h is not None:
+                hosts.add(h)
+
+    elif opts.groups:
+        for group in opts.groups:
+            g = client.group(group)
+            if g is not None:
+                for h in g.hosts():
+                    hosts.add(h)
+
+    hosts = list(filter(_compile_filters(opts.var_filters), hosts))
+
+    return sorted(hosts, key=key)
+
+
+class ExtendAction(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        items = getattr(namespace, self.dest) or []
+        items.extend(values)
+        setattr(namespace, self.dest, items)
+
+
+class CommandRegistry(object):
+    def __init__(self):
+        self._registry = {}
+
+    def __call__(self, *args, **kwargs):
+        return self.register(*args, **kwargs)
+
+    def register(self, command_tuple):
+        """Intended for use as a decorator.
+
+    Registers a function into the registry as a command."""
+
+        def _wrapper(func):
+            self._registry[command_tuple] = func
+            return func
+
+        return _wrapper
+
+    def dispatch(self, command_tuple):
+        """Look up the longest prefix match, returning its function."""
+
+        match, val = None, None
+        for _tuple, func in self._registry.items():
+            if command_tuple >= _tuple and all(
+                a == b for a, b in zip(command_tuple, _tuple)
+            ):
+                if val and len(_tuple) > len(match):
+                    match, val = _tuple, func
+                elif match is None:
+                    match, val = _tuple, func
+        return match, val
+
+    def __iter__(self):
+        return iter(self._registry.items())
+
+
+REGISTRY = CommandRegistry()
+register_command = REGISTRY.__call__
+
+CMD_COLOR = 2
+
+TEMPLATE_ENVIRONMENT = jinja2.Environment()
+TEMPLATE_ENVIRONMENT.filters['datetime'] = lambda o: datetime.fromtimestamp(int(o))
+TEMPLATE_ENVIRONMENT.filters['rpad'] = lambda s, width: str(s) + " " * max(0, width - len(str(s)))
+TEMPLATE_ENVIRONMENT.filters['lpad'] = lambda s, width: " " * max(0, width - len(str(s))) + str(s)
+
+
+LIST_TEMPLATE = """{{host_name | rpad(32)}} {{ geo | rpad(9)}} {{rack | rpad(9)}} {{host_reported_address | rpad(15)}} {{host_checkin | default(-1) | datetime}} ({{host_checkin | default(-1)}})"""
+
+
+@register_command(("format",))
+def cli_format(client: KookClient, opts, args: Iterable[str]):
+    """Usage: kook format
+
+  Wipe all Kook data out of Zookeeper.
+  """
+
+    print(f"Deleted {client.config.group_prefix}")
+    if opts.execute:
+        client.delete(client.config.group_prefix, recursive=True)
+
+    print(f"Deleted {client.config.host_prefix}")
+    if opts.execute:
+        client.delete(client.config.host_prefix, recursive=True)
+
+
+def set_in(dict, path, blob):
+    if len(path) == 1:
+        dict[path[0]] = blob
+        return blob
+
+    elif len(path) > 1:
+        k = path[0]
+        if k not in dict:
+            dict[k] = {}
+        return set_in(dict[k], path[1:], blob)
+
+
+@register_command(("dump",))
+def cli_dump(client: KookClient, opts, args: Iterable[str]):
+    """Usage: kook dump
+
+    Create a JSON archive of all durable host and group datat which could be
+    loaded with the `kook load` command.
+
+    """
+
+    groups = {}
+    for g in client.groups():
+        group_json, _stat = g.fetch()
+        groups[g.name] = group_json
+
+    hosts = {}
+    for h in client.hosts():
+        host_json, _stat = h.fetch()
+        hosts[h.name] = host_json
+
+    meta = {}
+    blob = {"__meta__": meta}
+    for type, k, data in [('groups', client.config.group_prefix, groups),
+                    ('hosts', client.config.host_prefix, hosts)]:
+        meta[type] = k
+        blob[k] = data
+
+    json.dump(blob, sys.stdout, indent=2, sort_keys=True)
+
+
+@register_command(("load",))
+def cli_load(client: KookClient, opts, args: Iterable[str]):
+    """Usage: kook load [--execute]
+
+    Format the store, read a JSON archive from stdin and backfill the store from
+    the JSON archive.
+
+    """
+
+    blob = json.load(sys.stdin)
+    assert "__meta__" in blob, "Sanity check failed, no __meta__ header present!"
+    assert isinstance(blob["__meta__"], dict), "Sanity check failed, header was not a dict!"
+
+    assert "groups" in blob["__meta__"], "Sanity check failed, no 'groups' source specified in the header!"
+    assert blob["__meta__"]["groups"] in blob, "Sanity check failed, specified 'groups' source is absent!"
+    assert isinstance(blob[blob["__meta__"]["groups"]], dict), "Sanity check failed, specified 'groups' source was not a dict!"
+
+    assert "hosts" in blob["__meta__"], "Sanity check failed, no 'hosts' source specified in the header!"
+    assert blob["__meta__"]["hosts"] in blob, "Sanity check failed, specified 'hosts' source is absent!"
+    assert isinstance(blob[blob["__meta__"]["hosts"]], dict), "Sanity check failed, specified 'hosts' source was not a dict!"
+
+    cli_format(client, opts, args)  # Destroy any state currently in Kook
+
+    # Insert all groups first
+    for group_name, group_blob in blob[blob["__meta__"]["groups"]].items():
+        k, v = f"{client.config.group_prefix}/{group_name}", json.dumps(group_blob).encode("utf-8")
+        print(f"Set {k} => {v}")
+        if opts.execute:
+            client.create(k, v, makepath=True)
+
+    # Insert all groups first
+    for host_name, host_blob in blob[blob["__meta__"]["hosts"]].items():
+        k, v = f"{client.config.host_prefix}/{host_name}", json.dumps(host_blob).encode("utf-8")
+        print(f"Set {k} => {v}")
+        if opts.execute:
+            client.create(k, v, makepath=True)
+
+
+@register_command(("run",))
+def run(client: KookClient, opts, args: Iterable[str]):
+    """Usage: kook [-H <hostname> | -g <group>]+ run [-u username] [cmd ...]
+
+  Run a command on all selected hosts, printing output.
+  """
+
+    reset = attr("reset")
+
+    for h in _hostlist(client, opts):
+        with lock(h.lock):
+            cmd = [
+                "ssh",
+                "-o",
+                "ConnectTimeout=5",
+                f"{opts.user}@{h.vars().get('host_reported_address')}",
+                *args,
+            ]
+            print(fg(CMD_COLOR) + f"exec] {h.name}] " + " ".join(cmd), reset, file=sys.stderr)
+            res = call(cmd)
+            print()
+
+
+@register_command(("reboot",))
+def reboot(client: KookClient, opts, args: Iterable[str]):
+    """Usage: kook [-H <hostname> | -g <group>]+ reboot
+
+  Power cycle all the host(s), maintaining the host lock(s) to prevent other automation intervening.
+
+  """
+
+    reset = attr("reset")
+
+    for h in _hostlist(client, opts):
+        with lock(h.lock):
+            prefix = [
+                "ssh",
+                "-o",
+                "ConnectTimeout=3",
+                f"{opts.user}@{h.vars().get('host_reported_address')}",
+            ]
+            rbt = prefix + ["reboot"]
+            upt = prefix + ["uptime"]
+            print(fg(CMD_COLOR) + "exec] " + " ".join(rbt), reset, file=sys.stderr)
+            call(rbt)
+            while True:
+                sleep(5)
+                if call(upt) == 0:
+                    print()
+                    break
+
+
+########################################
+# Host CRUD
+@register_command(("host", "create"))
+def cli_host_create(client: KookClient, opts, args: Iterable[str]):
+    """Usage: kook host create <hostname>
+
+  Enter a host into the Kook service with no key/value pairs.
+
+  Attributes such as `ansible_host` and groups must be added separately.
+  """
+
+    try:
+        hostname, *_ = args
+    except ValueError:
+        return
+
+    h = client.create_host(hostname)
+    print("Created host", h, file=sys.stderr)
+
+    json.dump({"_created": [hostname]}, sys.stdout, indent=2, sort_keys=True)
+
+
+@register_command(("host", "delete"))
+def cli_host_delete(client: KookClient, opts, args: Iterable[str]):
+    """Usage: kook host delete [<hostname>]+
+
+  Delete host(s) out of the Kook service.
+  """
+
+    hosts = []
+
+    for hostname in args:
+        h = client.host(hostname)
+        if h is not None:
+            print("Deleting host", h, file=sys.stderr)
+            h.delete()
+            hosts.append(hostname)
+
+    json.dump({"_deleted": hosts}, sys.stdout, indent=2, sort_keys=True)
+
+
+@register_command(("host", "list"))
+def list_hosts(client: KookClient, opts, args: Iterable[str]):
+    """Usage: kook [-g <group>] host list [--format FMT]
+
+  If -g is provided, list hosts in the specified groups.
+  Otherwise, list all hosts.
+  """
+
+    def _key(h):
+        vars = h.canonicalized_vars()
+        return (vars.get("rack", ""), vars.get("host_address", ""))
+
+    hosts = _hostlist(client, opts, key=_key)
+
+    if opts.format:
+        t = TEMPLATE_ENVIRONMENT.from_string(opts.format)
+        for h in hosts:
+            vars = h.canonicalized_vars()
+            #print(repr(vars))
+            print(t.render(**vars))
+    else:
+        json.dump(
+            {"all": [h.name for h in hosts]}, sys.stdout, indent=2, sort_keys=True
+        )
+
+
+@register_command(("host", "details"))
+def cli_host_details(client: KookClient, opts, args: Iterable[str]):
+    """Usage: kook -H <hostname> host details
+
+  Print host details.
+  """
+
+    json.dump(
+        {
+            host.name: host.canonicalized_vars(meta=opts.meta)
+            for host in _hostlist(client, opts)
+        },
+        sys.stdout,
+        indent=2,
+        sort_keys=True,
+    )
+
+
+########################################
+# Group CRUD
+@register_command(("group", "create"))
+def cli_group_create(client: KookClient, opts, args: Iterable[str]):
+    """Usage: kook group create [<group>]+
+
+  Create the specified group (if a group of the same name does not exist).
+  """
+
+    groups = []
+    for group in args:
+        g = client.create_group(group)
+        print("Created group", g, file=sys.stderr)
+        groups.append(group)
+
+    json.dump({"_created": groups}, sys.stdout, indent=2, sort_keys=True)
+
+
+@register_command(("group", "add"))
+def cli_group_add(client: KookClient, opts, args: Iterable[str]):
+    """Usage: kook [-H <hostname> | -g <group>]+ group add <group2>
+
+  Adds all specified hosts and groups to the named group - here <group2>.
+  """
+
+    try:
+        group, *_ = args
+    except ValueError:
+        print("Usage: group add <group>", file=sys.stderr)
+        return
+
+    group_to_add = client.create_group(group)
+
+    for group in opts.groups:
+        g = client.group(group)
+        if g:
+            g.add_group(group_to_add)
+            print("Added group to group", g, file=sys.stderr)
+        else:
+            print("No such group", group, file=sys.stderr)
+
+    for host in opts.hosts:
+        h = client.host(host)
+        if f:
+            h.add_group(group_to_add)
+            print("Added group to host", h, file=sys.stderr)
+        else:
+            print("No such host", host, file=sys.stderr)
+
+
+@register_command(("group", "remove"))
+def cli_group_group(client: KookClient, opts, args: Iterable[str]):
+    """Usage: kook [-H <hostname> | -g <group>]+ group remove <group2>
+
+  Removes all specified hosts and groups from the named group - here <group2>.
+  """
+
+    try:
+        group, *_ = args
+    except ValueError:
+        print("Usage: group add <group>", file=sys.stderr)
+        return
+
+    group_to_remove = client.group(group)
+    if not group_to_remove:
+        return
+
+    for group in opts.groups:
+        g = client.group(group)
+        if g:
+            g.remove_group(group_to_remove)
+            print(f"Removed {group_to_remove} from {g}", file=sys.stderr)
+        else:
+            print("No such group", group, file=sys.stderr)
+
+    for host in opts.hosts:
+        h = client.host(host)
+        if f:
+            h.remove_group(group_to_remove)
+            print("Removed host from group", h, file=sys.stderr)
+        else:
+            print("No such host", host, file=sys.stderr)
+
+
+@register_command(("group", "list"))
+def cli_group_list(client: KookClient, opts, args: Iterable[str]):
+    """Usage: kook group list
+
+  Produce a list of all groups.
+  """
+
+    data = {"all": [g.name for g in client.groups()]}
+
+    json.dump(data, sys.stdout, indent=2, sort_keys=True)
+
+
+@register_command(("group", "details"))
+def cli_group_detail(client: KookClient, opts, args: Iterable[str]):
+    """Usage: kook [-g <group>]+ group details
+
+  Print details (vars) for each named group.
+  """
+
+    data = {}
+
+    for groupname in opts.groups:
+        group = client.group(groupname)
+        if group:
+            data[groupname] = v = group.canonicalized_vars(meta=opts.meta)
+            v["_hostvars"] = group.host_vars()
+        else:
+            print("Unable to locate group", group, file=sys.stderr)
+            data[groupname] = None
+
+    json.dump(data, sys.stdout, indent=2, sort_keys=True)
+
+
+@register_command(("group", "delete"))
+def cli_group_delete(client: KookClient, opts, args: Iterable[str]):
+    """Usage: kook group delete [<group>]+
+
+  Delete the named group(s).
+  """
+
+    groups = []
+
+    for group in args:
+        g = client.group(group)
+        if g is not None:
+            g.delete()
+            print("Deleted group", g, file=sys.stderr)
+            groups.append(group)
+
+    json.dump({"_deleted": groups}, sys.stdout, indent=2, sort_keys=True)
+
+
+########################################
+# Attribute CRUD
+@register_command(("var", "create"))
+def cli_var_add(client: KookClient, opts, args: Iterable[str]):
+    """Usage: kook [-H <hostname> | -g <group>]+ var add <var> <value>
+
+  Add a var to groups and hosts.
+  """
+
+    try:
+        key, value = args
+    except ValueError:
+        print("Usage: var create <key> <value>", file=sys.stderr)
+        return
+
+    for group in opts.groups:
+        g = client.group(group)
+        if g:
+            g.set_var(key, value)
+            print("Set var on group", g, file=sys.stderr)
+        else:
+            print("No such group", group, file=sys.stderr)
+
+    for host in opts.hosts:
+        h = client.host(host)
+        if h:
+            h.set_var(key, value)
+            print("Set var on host", h, file=sys.stderr)
+        else:
+            print("No such host", host, file=sys.stderr)
+
+
+@register_command(("var", "delete"))
+def cli_var_remove(client: KookClient, opts, args: Iterable[str]):
+    """Usage: kook [-H <hostname> | -g <group>]+ var remove <var>
+
+  Delete a var from provided group(s) and host(s).
+  """
+
+    try:
+        var, *_ = args
+    except ValueError:
+        print("Usage: var remove <var>")
+        return
+
+    for group in opts.groups:
+        g = client.group(group)
+        if g:
+            g.del_var(var)
+            print("Removed var on group", g, file=sys.stderr)
+        else:
+            print("No such group", group, file=sys.stderr)
+
+    for host in opts.hosts:
+        h = client.host(host)
+        if h:
+            h.del_var(var)
+            print("Removed var on host", h, file=sys.stderr)
+        else:
+            print("No such host", host, file=sys.stderr)
+
+
+########################################
+# And now for argparsing...
+PARSER = argparse.ArgumentParser("kook")
+PARSER.register("action", "extend", ExtendAction)
+PARSER.add_argument(
+    "-b",
+    "--bootstrap-server",
+    help="host:port at which to connect to zookeeper, overriding the config file(s)",
+)
+
+PARSER.add_argument(
+    "-u", "--user", dest="user", help="User to run as", default=getpass.getuser()
+)
+
+PARSER.add_argument(
+    "--format",
+    metavar="FORMAT",
+    dest="format",
+    default=LIST_TEMPLATE,
+)
+
+PARSER.add_argument(
+    "-1",
+    action="store_const",
+    const="{{host_name}}",
+    dest="format",
+)
+
+PARSER.add_argument(
+    "--execute",
+    dest="execute",
+    action="store_true",
+    default=False,
+    help="Execute changes instead of dryrunning them"
+)
+
+# --hosts and --groups are mutually exclusive
+HG = PARSER.add_mutually_exclusive_group()
+HG.add_argument(
+    "-H",
+    "--hosts",
+    help="Comma joined list of hostnames on which to operate. Many may be provided.",
+    # Lower, split, trim whitespace, and reduce to the first name segment
+    type=lambda s: [e.strip() for e in s.lower().split(",")],
+    action="extend",
+    dest="hosts",
+    default=[],
+)
+
+HG.add_argument(
+    "-g",
+    "--groups",
+    help="Comma joined list of group(s) on which to operate",
+    type=lambda s: [e.strip() for e in s.split(",")],
+    action="extend",
+    dest="groups",
+    default=[],
+)
+
+PARSER.add_argument(
+    "-v",
+    "--var",
+    help="Filters to applied to hosts. Either <var>:<regexp> for positive match or !<var> for unset or !<var>:<regexp> for antimatch.",
+    dest="var_filters",
+    type=_var_filter_ctor,
+    action="append",
+    default=[],
+)
+
+# --synchronization and --no-synchronization are mutually exclusive
+SG = PARSER.add_mutually_exclusive_group()
+SG.add_argument(
+    "--synchronization",
+    dest="use_synchronization",
+    default=True,
+    action="store_true",
+    help="Enable synchronization reading Kook data",
+)
+
+SG.add_argument(
+    "--no-synchronization",
+    dest="use_synchronization",
+    action="store_false",
+    help="DISABLE synchronization reading Kook data",
+)
+
+META = PARSER.add_mutually_exclusive_group()
+META.add_argument(
+    "--meta", dest="meta", action="store_true", help="Enable metadata in details"
+)
+
+META.add_argument(
+    "--no-meta",
+    dest="meta",
+    default=False,
+    action="store_false",
+    help="DISABLE metadata in details",
+)
+
+PARSER.add_argument("subcommand", nargs="+", help="The subcommand to execute.")
+
+
+def indent(str, width):
+    lines = str.strip().split("\n")
+    lines = [(" " * width) + line.strip() for line in lines]
+    return "\n".join(lines)
+
+
+PARSER.usage = "\n".join(
+    [
+        "\n  kook [-b BOOSTRAP_SERVER = zookeeper:2181] \\\n"
+        "       [-H <hostname>]* \\\n"
+        "       [-g <group>]* \\\n"
+        "       [--[no-]synchronization] \\\n"
+        "       [--[no-]meta] \\\n"
+        "       <subcommand> & args\n"
+    ]
+    + ["subcommands:\n" "--------------------------------------------------"]
+    + [
+        "\n  "
+        + " ".join(cmd)
+        + "\n"
+        + "  --------------------\n"
+        + indent(f.__doc__ or f.__name__, 4)
+        for cmd, f in iter(REGISTRY)
+    ]
+)
+
+########################################
+# And now for main...
+if __name__ == "__main__":
+    opts = PARSER.parse_args(sys.argv[1:])
+    command = tuple(opts.subcommand)
+
+    client = KookClient(
+        hosts=opts.bootstrap_server, use_synchronization=opts.use_synchronization
+    )
+
+    match, f = REGISTRY.dispatch(command)
+
+    if not opts.execute:
+        print("Running in dryrun mode, no changes will be committed", file=sys.stderr)
+
+    if f is not None:
+        f(client, opts, command[len(match) :])
+    else:
+        print(PARSER.format_usage())

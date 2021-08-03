@@ -1,0 +1,554 @@
+{
+  "/kook/group": {
+    "battery_apartment_larval": {
+      "vars": {
+        "battery": "larval",
+        "battery_password": "secret",
+        "battery_powervalue": 1,
+        "battery_system": "ups@10.0.0.22",
+        "battery_username": "monuser"
+      }
+    },
+    "chasis_ds416play": {
+      "members": [
+        "/kook/host/hieroglyph.apartment.arrdem.com"
+      ],
+      "vars": {}
+    },
+    "chasis_pi_b": {
+      "members": [
+        "/kook/host/rijom-mapul.apartment.arrdem.com",
+        "/kook/host/zipas-goloh.apartment.arrdem.com",
+        "/kook/host/fumiv-jifid.apartment.arrdem.com"
+      ],
+      "vars": {
+        "chasis": "pi_b",
+        "default_eth_iface": "eth0"
+      }
+    },
+    "chasis_pi_bp": {
+      "host_vars": {},
+      "members": [
+        "/kook/host/dazav-hutiz.apartment.arrdem.com",
+        "/kook/host/fumiv-jifid.apartment.arrdem.com",
+        "/kook/host/vavor-nahub.apartment.arrdem.com",
+        "/kook/host/girof-fomuf.apartment.arrdem.com",
+        "/kook/host/fipol-gufop.apartment.arrdem.com",
+        "/kook/host/bufih-jakib.apartment.arrdem.com",
+        "/kook/host/sibar-pupuf.apartment.arrdem.com",
+        "/kook/host/takil-bolus.apartment.arrdem.com",
+        "/kook/host/zipas-goloh.apartment.arrdem.com",
+        "/kook/host/rijom-mapul.apartment.arrdem.com",
+        "/kook/host/nalos-suvav.apartment.arrdem.com",
+        "/kook/host/kupik-totos.apartment.arrdem.com",
+        "/kook/host/fozim-tasin.apartment.arrdem.com"
+      ],
+      "vars": {
+        "chasis": "pi_bp",
+        "default_eth_iface": "eth0"
+      }
+    },
+    "chasis_ryzen0": {
+      "members": [
+        "/kook/host/pathos.apartment.arrdem.com",
+        "/kook/host/logos.apartment.arrdem.com",
+        "/kook/host/ethos.apartment.arrdem.com"
+      ],
+      "vars": {
+        "chasis": "ryzen0",
+        "default_eth_iface": "enp9s0",
+        "resources": {
+          "cpu": 4,
+          "disk": {
+            "/": "32GiB",
+            "/data": "1TiB"
+          },
+          "ram": "16GiB"
+        }
+      }
+    },
+    "geo_apartment": {
+      "host_vars": {
+        "stormclad.apartment.arrdem.com": {
+          "host_address": "10.0.0.153"
+        }
+      },
+      "members": [
+        "/kook/group/rack_apartment_test",
+        "/kook/group/rack_apartment_pis",
+        "/kook/group/rack_apartment_modes",
+        "/kook/group/rack_apartment_infra",
+        "/kook/host/stormclad.apartment.arrdem.com"
+      ],
+      "vars": {
+        "dns_resolvers": [
+          "10.0.0.32",
+          "10.0.0.33",
+          "10.0.0.34"
+        ],
+        "geo": "apartment"
+      }
+    },
+    "pdu_apartment_sucker": {
+      "host_vars": {
+        "ethos.apartment.arrdem.com": {
+          "host_address": "10.0.0.34",
+          "pdu_outlet": 1
+        },
+        "logos.apartment.arrdem.com": {
+          "host_address": "10.0.0.33",
+          "pdu_outlet": 3
+        },
+        "pathos.apartment.arrdem.com": {
+          "host_address": "10.0.0.32",
+          "pdu_outlet": 2
+        }
+      },
+      "members": [
+        "/kook/host/ethos.apartment.arrdem.com",
+        "/kook/host/pathos.apartment.arrdem.com",
+        "/kook/host/logos.apartment.arrdem.com"
+      ],
+      "vars": {
+        "pdu": "sucker",
+        "pdu_uri": "sucker.apartment.arrdem.com:23"
+      }
+    },
+    "rack_apartment_infra": {
+      "groups": [
+        "/kook/group/geo_apartment"
+      ],
+      "host_vars": {
+        "hieroglyph.apartment.arrdem.com": {
+          "host_address": "10.0.0.22"
+        },
+        "sucker.apartment.arrdem.com": {
+          "host_address": "10.0.0.16"
+        }
+      },
+      "members": [
+        "/kook/host/hieroglyph.apartment.arrdem.com",
+        "/kook/host/sucker.apartment.arrdem.com",
+        "/kook/host/chisel.apartment.arrdem.com"
+      ],
+      "vars": {
+        "rack": "infra",
+        "rack_cidr": "10.0.0.0/27"
+      }
+    },
+    "rack_apartment_modes": {
+      "groups": [
+        "/kook/group/service_apartment_resolvers",
+        "/kook/group/geo_apartment"
+      ],
+      "members": [
+        "/kook/host/logos.apartment.arrdem.com",
+        "/kook/host/ethos.apartment.arrdem.com",
+        "/kook/host/pathos.apartment.arrdem.com"
+      ],
+      "vars": {
+        "rack": "modes",
+        "rack_cidr": "10.0.0.32/29"
+      }
+    },
+    "rack_apartment_pis": {
+      "groups": [
+        "/kook/group/geo_apartment"
+      ],
+      "host_vars": {},
+      "members": [
+        "/kook/host/fumiv-jifid.apartment.arrdem.com",
+        "/kook/host/zipas-goloh.apartment.arrdem.com",
+        "/kook/host/rijom-mapul.apartment.arrdem.com",
+        "/kook/host/nalos-suvav.apartment.arrdem.com",
+        "/kook/host/kupik-totos.apartment.arrdem.com",
+        "/kook/host/fozim-tasin.apartment.arrdem.com"
+      ],
+      "vars": {
+        "rack": "pis",
+        "rack_cidr": "10.0.0.40/29"
+      }
+    },
+    "rack_apartment_test": {
+      "groups": [
+        "/kook/group/geo_apartment"
+      ],
+      "host_vars": {},
+      "members": [
+        "/kook/host/vavor-nahub.apartment.arrdem.com",
+        "/kook/host/girof-fomuf.apartment.arrdem.com",
+        "/kook/host/fipol-gufop.apartment.arrdem.com",
+        "/kook/host/bufih-jakib.apartment.arrdem.com",
+        "/kook/host/sibar-pupuf.apartment.arrdem.com",
+        "/kook/host/takil-bolus.apartment.arrdem.com"
+      ],
+      "vars": {
+        "rack": "test",
+        "rack_cidr": "10.0.0.48/28"
+      }
+    },
+    "service_apartment_git": {
+      "members": [
+        "/kook/host/ethos.apartment.arrdem.com"
+      ],
+      "vars": {}
+    },
+    "service_apartment_mirror": {
+      "members": [
+        "/kook/host/logos.apartment.arrdem.com"
+      ],
+      "vars": {}
+    },
+    "service_apartment_postgres": {
+      "members": [
+        "/kook/host/logos.apartment.arrdem.com"
+      ],
+      "vars": {}
+    },
+    "service_apartment_resolvers": {
+      "members": [
+        "/kook/group/rack_apartment_modes"
+      ],
+      "vars": {}
+    },
+    "service_apartment_www": {
+      "members": [
+        "/kook/host/ethos.apartment.arrdem.com"
+      ],
+      "vars": {}
+    },
+    "service_apartment_zookeeper": {
+      "members": [
+        "/kook/host/fumiv-jifid.apartment.arrdem.com",
+        "/kook/host/zipas-goloh.apartment.arrdem.com",
+        "/kook/host/rijom-mapul.apartment.arrdem.com",
+        "/kook/host/nalos-suvav.apartment.arrdem.com",
+        "/kook/host/kupik-totos.apartment.arrdem.com",
+        "/kook/host/fozim-tasin.apartment.arrdem.com"
+      ],
+      "vars": {},
+      "host_vars": {
+        "fumiv-jifid.apartment.arrdem.com": {
+          "zookeeper_id": 1
+        },
+        "zipas-goloh.apartment.arrdem.com": {
+          "zookeeper_id": 2
+        },
+        "rijom-mapul.apartment.arrdem.com": {
+          "zookeeper_id": 3
+        },
+        "nalos-suvav.apartment.arrdem.com": {
+          "zookeeper_id": 4
+        },
+        "kupik-totos.apartment.arrdem.com": {
+          "zookeeper_id": 5
+        },
+        "fozim-tasin.apartment.arrdem.com": {
+          "zookeeper_id": 6
+        }
+      }
+    }
+  },
+  "/kook/host": {
+    "bufih-jakib.apartment.arrdem.com": {
+      "groups": [
+        "/kook/group/chasis_pi_bp",
+        "/kook/group/rack_apartment_test"
+      ],
+      "vars": {
+        "host_address": "10.0.0.51",
+        "host_checkin": "1583735436",
+        "host_id": "2a049fb210ad40a2ae1619c4f1e2effa",
+        "host_link": "b8:27:eb:1c:00:eb",
+        "host_name": "bufih-jakib.apartment.arrdem.com",
+        "host_reported_address": "10.0.0.51",
+        "host_serial_number": "00000000b91c00eb",
+        "host_sshd_fingerprint": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILPdhyvSF20nXtoiNYwaaO09bMBRkl0jhQ5bXwUr6GvF root@bufih-jakib.apartment.arrdem.com"
+      }
+    },
+    "chisel.apartment.arrdem.com": {
+      "groups": [
+        "/kook/group/rack_apartment_infra"
+      ],
+      "vars": {
+        "host_address": "10.0.0.2",
+        "host_name": "chisel.apartment.arrdem.com"
+      }
+    },
+    "dazav-hutiz.apartment.arrdem.com": {
+      "groups": [
+        "/kook/group/chasis_pi_bp"
+      ],
+      "vars": {
+        "host_name": "dazav-hutiz.apartment.arrdem.com"
+      }
+    },
+    "ethos.apartment.arrdem.com": {
+      "groups": [
+        "/kook/group/service_apartment_www",
+        "/kook/group/service_apartment_git",
+        "/kook/group/rack_apartment_modes",
+        "/kook/group/chasis_ryzen0",
+        "/kook/group/pdu_apartment_sucker"
+      ],
+      "vars": {
+        "host_address": "10.0.0.34",
+        "host_checkin": "1588960015",
+        "host_id": "a3dbc867034b4055a8b9ba8d23af85eb",
+        "host_link": "e0:d5:5e:a0:84:65",
+        "host_name": "ethos.apartment.arrdem.com",
+        "host_reported_address": "10.0.0.34",
+        "host_serial_number": "03d502e0-045e-05a0-8406-650700080009",
+        "host_sshd_fingerprint": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDubv05J2uavdCLGaPk0GKHeWaz+BT6dEvR3IdiI/ooq root@ethos.apartment.arrdem.com.apartment.arrdem.com"
+      }
+    },
+    "fipol-gufop.apartment.arrdem.com": {
+      "groups": [
+        "/kook/group/chasis_pi_bp",
+        "/kook/group/rack_apartment_test"
+      ],
+      "vars": {
+        "host_address": "10.0.0.52",
+        "host_checkin": "1583735436",
+        "host_id": "f3de497d08c14625a0a7c8f5d30a0b8c",
+        "host_link": "b8:27:eb:7b:44:8a",
+        "host_name": "fipol-gufop.apartment.arrdem.com",
+        "host_reported_address": "10.0.0.52",
+        "host_serial_number": "00000000957b448a",
+        "host_sshd_fingerprint": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIE0i4+OkkFz9oLXF3L+U1UoxDZ8ON8n6LuKj3fdDvEPJ root@fipol-gufop.apartment.arrdem.com"
+      }
+    },
+    "fozim-tasin.apartment.arrdem.com": {
+      "groups": [
+        "/kook/group/chasis_pi_bp",
+        "/kook/group/rack_apartment_pis",
+        "/kook/group/service_apartment_zookeeper"
+      ],
+      "vars": {
+        "host_address": "10.0.0.40",
+        "host_checkin": "1588415231",
+        "host_id": "fa85dc9a95e24174ba104af3e60615e1",
+        "host_link": "b8:27:eb:0b:d6:a4",
+        "host_name": "fozim-tasin.apartment.arrdem.com",
+        "host_reported_address": "10.0.0.40",
+        "host_serial_number": "00000000fb0bd6a4",
+        "host_sshd_fingerprint": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMYjfeoBUSfymceFUKFJPcp7fmDxDp6cwzsJyp+kEGNz root@fozim-tasin.apartment.arrdem.com"
+      }
+    },
+    "fumiv-jifid.apartment.arrdem.com": {
+      "groups": [
+        "/kook/group/chasis_pi_bp",
+        "/kook/group/rack_apartment_pis",
+        "/kook/group/service_apartment_zookeeper"
+      ],
+      "vars": {
+        "host_address": "10.0.0.44",
+        "host_checkin": "1588415231",
+        "host_id": "fc63d668e4d94989901e6f2686a5682d",
+        "host_link": "b8:27:eb:54:d2:0a",
+        "host_name": "fumiv-jifid.apartment.arrdem.com",
+        "host_reported_address": "10.0.0.44",
+        "host_serial_number": "00000000cf54d20a",
+        "host_sshd_fingerprint": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMPoAOPTU4aZNQyrUGzJvy6z+w96QYZO7P8GwZl42eAK root@fumiv-jivid.apartment.arrdem.com"
+      }
+    },
+    "girof-fomuf.apartment.arrdem.com": {
+      "groups": [
+        "/kook/group/chasis_pi_bp",
+        "/kook/group/rack_apartment_test"
+      ],
+      "vars": {
+        "host_address": "10.0.0.53",
+        "host_checkin": "1583735435",
+        "host_id": "c4da3a07aee84bfd963dff6d0aacc532",
+        "host_link": "b8:27:eb:7f:db:6f",
+        "host_name": "girof-fomuf.apartment.arrdem.com",
+        "host_reported_address": "10.0.0.53",
+        "host_serial_number": "000000008e7fdb6f",
+        "host_sshd_fingerprint": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILdwdP0lYnVBOLOLFX/GAB9STY5JeDu4dCoIw0MIcgxv root@girof-fomuf.apartment.arrdem.com"
+      }
+    },
+    "hieroglyph.apartment.arrdem.com": {
+      "groups": [
+        "/kook/group/rack_apartment_infra",
+        "/kook/group/chasis_ds416play"
+      ],
+      "vars": {
+        "host_name": "hieroglyph.apartment.arrdem.com"
+      }
+    },
+    "kupik-totos.apartment.arrdem.com": {
+      "groups": [
+        "/kook/group/chasis_pi_bp",
+        "/kook/group/rack_apartment_pis",
+        "/kook/group/service_apartment_zookeeper"
+      ],
+      "vars": {
+        "host_address": "10.0.0.41",
+        "host_checkin": "1588415231",
+        "host_id": "75f74d85493f42dc840b65b6a8f3aa7b",
+        "host_link": "b8:27:eb:f5:d7:44",
+        "host_name": "kupik-totos.apartment.arrdem.com",
+        "host_reported_address": "10.0.0.41",
+        "host_serial_number": "00000000d2f5d744",
+        "host_sshd_fingerprint": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIM1o1UhMVeJLCXkmLdz2FUn85ZTZuS/fB0ERFTeT58U8 root@kupik-totos.apartment.arrdem.com"
+      }
+    },
+    "logos.apartment.arrdem.com": {
+      "groups": [
+        "/kook/group/service_apartment_mirror",
+        "/kook/group/service_apartment_postgres",
+        "/kook/group/rack_apartment_modes",
+        "/kook/group/chasis_ryzen0",
+        "/kook/group/pdu_apartment_sucker"
+      ],
+      "vars": {
+        "host_address": "10.0.0.33",
+        "host_checkin": "1588960025",
+        "host_id": "58fe0fa321254f5f992963f530ccb59d",
+        "host_link": "e0:d5:5e:a2:9d:6d",
+        "host_name": "logos.apartment.arrdem.com",
+        "host_reported_address": "10.0.0.33",
+        "host_serial_number": "58fe0fa321254f5f992963f530ccb59d",
+        "host_sshd_fingerprint": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGa4N4uvRKsRgHUHzUenlLfu5mej4XN8SRyn6YG+beq3 root@logos.apartment.arrdem.com"
+      }
+    },
+    "nalos-suvav.apartment.arrdem.com": {
+      "groups": [
+        "/kook/group/chasis_pi_bp",
+        "/kook/group/rack_apartment_pis",
+        "/kook/group/service_apartment_zookeeper"
+      ],
+      "vars": {
+        "host_address": "10.0.0.42",
+        "host_checkin": "1588415231",
+        "host_id": "2c7801c24cd74908bee951843aaf9e61",
+        "host_link": "b8:27:eb:2c:4d:ba",
+        "host_name": "nalos-suvav.apartment.arrdem.com",
+        "host_reported_address": "10.0.0.42",
+        "host_serial_number": "00000000582c4dba",
+        "host_sshd_fingerprint": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBoQNyaVG5a4so63LgeagQIolB5HlDUr+q+v5e9CnnPy root@nalos-suvav.apartment.arrdem.com"
+      }
+    },
+    "pathos.apartment.arrdem.com": {
+      "groups": [
+        "/kook/group/rack_apartment_modes",
+        "/kook/group/chasis_ryzen0",
+        "/kook/group/pdu_apartment_sucker"
+      ],
+      "vars": {
+        "host_address": "10.0.0.32",
+        "host_checkin": "1588960019",
+        "host_id": "e061b32df58c44a08e08dd767e2bd37b",
+        "host_link": "e0:d5:5e:a0:84:5f",
+        "host_name": "pathos.apartment.arrdem.com",
+        "host_reported_address": "10.0.0.32",
+        "host_serial_number": "e061b32df58c44a08e08dd767e2bd37b",
+        "host_sshd_fingerprint": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBfKQi7Y2mTykU4GYP/xg8jbWYWbsFdpVRtfDKiVbkpV root@pathos.apartment.arrdem.com"
+      }
+    },
+    "rijom-mapul.apartment.arrdem.com": {
+      "groups": [
+        "/kook/group/chasis_pi_b",
+        "/kook/group/rack_apartment_pis",
+        "/kook/group/service_apartment_zookeeper"
+      ],
+      "vars": {
+        "host_address": "10.0.0.43",
+        "host_checkin": "1588415231",
+        "host_id": "1638c72712b2448f8133d4ae3c9cf82c",
+        "host_link": "b8:27:eb:1b:20:62",
+        "host_name": "rijom-mapul.apartment.arrdem.com",
+        "host_reported_address": "10.0.0.43",
+        "host_serial_number": "00000000421b2062",
+        "host_sshd_fingerprint": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFc0m7TdPz6lFsNaeyko8TPNbaqmUdJO12NH2ha25XmU root@rijom-mapul.apartment.arrdem.com"
+      }
+    },
+    "sibar-pupuf.apartment.arrdem.com": {
+      "groups": [
+        "/kook/group/chasis_pi_bp",
+        "/kook/group/rack_apartment_test"
+      ],
+      "vars": {
+        "host_address": "10.0.0.50",
+        "host_checkin": "1583774080",
+        "host_id": "663ed032848a44b3a79041c05e837d04",
+        "host_link": "b8:27:eb:73:6b:2a",
+        "host_name": "sibar-pupuf.apartment.arrdem.com",
+        "host_reported_address": "10.0.0.50",
+        "host_serial_number": "00000000ce736b2a",
+        "host_sshd_fingerprint": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAWgtzwngCD9Vol5jubkkG6LTJ7SkHYPGD89SpSjx+2z root@sibar-pupuf.apartment.arrdem.com"
+      }
+    },
+    "stormclad.apartment.arrdem.com": {
+      "groups": [
+        "/kook/group/service_apartment_zookeeper",
+        "/kook/group/geo_apartment"
+      ],
+      "vars": {
+        "host_name": "stormclad.apartment.arrdem.com"
+      }
+    },
+    "sucker.apartment.arrdem.com": {
+      "groups": [
+        "/kook/group/rack_apartment_infra"
+      ],
+      "vars": {
+        "host_name": "sucker.apartment.arrdem.com"
+      }
+    },
+    "takil-bolus.apartment.arrdem.com": {
+      "groups": [
+        "/kook/group/chasis_pi_bp",
+        "/kook/group/rack_apartment_test"
+      ],
+      "vars": {
+        "host_address": "10.0.0.49",
+        "host_checkin": "1583735438",
+        "host_id": "5926783985a941b0bb7f1bf542e0edcf",
+        "host_link": "b8:27:eb:df:d7:d1",
+        "host_name": "takil-bolus.apartment.arrdem.com",
+        "host_reported_address": "10.0.0.49",
+        "host_serial_number": "00000000a6dfd7d1",
+        "host_sshd_fingerprint": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINygpJO5LTr+mUUEFJoZTyN85Q095fAnsarR4GNYqvEV root@takil-bolus.apartment.arrdem.com"
+      }
+    },
+    "vavor-nahub.apartment.arrdem.com": {
+      "groups": [
+        "/kook/group/chasis_pi_bp",
+        "/kook/group/rack_apartment_test"
+      ],
+      "vars": {
+        "host_address": "10.0.0.54",
+        "host_checkin": "1584852209",
+        "host_id": "4a7ed5da84d54c4ba25a05e7204ba1af",
+        "host_link": "70:88:6b:81:58:06",
+        "host_name": "vavor-nahub.apartment.arrdem.com",
+        "host_reported_address": "10.0.0.54",
+        "host_serial_number": "000000005722c20d",
+        "host_sshd_fingerprint": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILtsrXsEksmBipO7pDy1xSghJqOi5YO+ROI2F0IQeJRU root@vavor-nahub.apartment.arrdem.com"
+      }
+    },
+    "zipas-goloh.apartment.arrdem.com": {
+      "groups": [
+        "/kook/group/chasis_pi_b",
+        "/kook/group/rack_apartment_pis",
+        "/kook/group/service_apartment_zookeeper"
+      ],
+      "vars": {
+        "host_address": "10.0.0.45",
+        "host_checkin": "1588415231",
+        "host_id": "f349f4886ca9472a8213541a98569523",
+        "host_link": "b8:27:eb:e7:50:58",
+        "host_name": "zipas-goloh.apartment.arrdem.com",
+        "host_reported_address": "10.0.0.45",
+        "host_serial_number": "000000005ee75058",
+        "host_sshd_fingerprint": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFF3Iy7XsOlnvLHns0zQXsog2lRSGy9gxJnP90qeP6qN root@zipas-goloh.apartment.arrdem.com"
+      }
+    }
+  },
+  "__meta__": {
+    "groups": "/kook/group",
+    "hosts": "/kook/host"
+  }
+}

@@ -1,0 +1,136 @@
+#!/usr/bin/env python3
+
+"""
+Usage:
+  kook-inventory [--list | --host <hostname> | --import <inventory.yml>] [--[no-]synchronization]
+
+Create a Kook client, and use it to generate Ansible formatted JSON inventory.
+In keeping with the Ansible inventory protocol, requires --list or --host.
+Otherwise this message will be printed.
+"""
+
+import argparse
+import json
+import sys
+
+from kook.client import KookClient
+import yaml
+
+
+def merge(m1, m2):
+    return {**m1, **m2}
+
+
+def get_inventory(client):
+    inventory = {}
+    hostvars = {}
+    inventory["_meta"] = {"hostvars": hostvars}
+
+    # Import hosts
+    for host in client.hosts():
+        hostvars[host.name] = host.canonicalized_vars(meta=False)
+
+    for group in client.groups():
+        inventory[group.name] = {"children": [], "hosts": [], "vars": {}}
+        inventory[group.name]["children"].extend([g.name for g in group.children()])
+        inventory[group.name]["hosts"].extend([h.name for h in group.hosts()])
+
+    return inventory
+
+
+def get_host(client, hostname):
+    host = client.host(hostname)
+    if host:
+        return host.canonicalized_vars()
+
+
+def import_inventory(client, filename):
+    with open(filename, "r") as _f:
+        data = yaml.safe_load(_f)
+
+    # mapcat out all the group(s)
+    groups = list(data.items())
+    for groupname, groupdata in groups:
+        groups.extend((groupdata or {}).get("children", {}).items())
+
+    # Import all the group(s)
+    for groupname, groupdata in groups:
+        g = client.create_group(groupname)
+        print("Created,", g)
+
+        if groupdata is None:
+            continue
+
+        # Import the vars
+        for var, val in groupdata.get("vars", {}).items():
+            # Fixup my key(s)
+            if var == "ansible_host":
+                var = "host_address"
+
+            g.set_var(var, val)
+
+        # Import the direct host bindings
+        for hostname, hostvars in groupdata.get("hosts", {}).items():
+            h = client.create_host(hostname)
+            h.add_group(g)
+            print(g, "added host", h)
+
+            for var, val in (hostvars or {}).items():
+                g.set_host_var(hostname, var, val)
+
+        # Import the child group(s)
+        for childname, childvars in groupdata.get("children", {}).items():
+            child = client.create_group(childname)
+            child.add_group(g)
+            # FIXME (arrdem 2019-08-10):
+            #   Support group on child group vars?
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--synchronization",
+        dest="use_synchronization",
+        default=True,
+        action="store_true",
+    )
+    parser.add_argument(
+        "--no-synchronization", dest="use_synchronization", action="store_false"
+    )
+    parser.add_argument(
+        "--list",
+        action="store_true",
+        dest="list",
+        default=False,
+        help="Output inventory groups and hosts",
+    )
+    parser.add_argument(
+        "--host",
+        dest="host",
+        default=None,
+        metavar="HOST",
+        help="Output variables only for the given hostname",
+    )
+    parser.add_argument(
+        "--import",
+        dest="_import",
+        default=None,
+        metavar="IMPORT",
+        help="Import a YAML inventory file",
+    )
+    parser.add_argument("-b", "--bootstrap", help="Bootstrap servers list to use")
+
+    args = parser.parse_args(sys.argv[1:])
+
+    client = KookClient(
+        hosts=args.bootstrap, use_synchronization=args.use_synchronization
+    )
+
+    if args.host:
+        print(json.dumps(get_host(client, args.host), indent=2, sort_keys=True))
+    elif args.list:
+        print(json.dumps(get_inventory(client), indent=2, sort_keys=True))
+    elif args._import:
+        import_inventory(client, args._import)
+    else:
+        print(__doc__)
