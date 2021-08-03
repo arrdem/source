@@ -152,15 +152,12 @@ class InterpFuncWrap:
         return self.interp.call_func(self.node, self, *args, **kwargs)
 
 
-# Python don't fully treat objects, even those defining __call__() special
-# method, as a true callable. For example, such objects aren't automatically
-# converted to bound methods if looked up as another object's attributes.
-# As we want our "interpreted functions" to behave as close as possible to
-# real functions, we just wrap function object with a real function. An
-# alternative might have been to perform needed checks and explicitly
-# bind a method using types.MethodType() in visit_Attribute (but then maybe
-# there would be still other cases of "callable object" vs "function"
-# discrepancies).
+# Python don't fully treat objects, even those defining __call__() special method, as a true callable. For example, such
+# objects aren't automatically converted to bound methods if looked up as another object's attributes. As we want our
+# "interpreted functions" to behave as close as possible to real functions, we just wrap function object with a real
+# function. An alternative might have been to perform needed checks and explicitly bind a method using
+# types.MethodType() in visit_Attribute (but then maybe there would be still other cases of "callable object" vs
+# "function" discrepancies).
 def InterpFunc(fun):
     def func(*args, **kwargs):
         return fun.__call__(*args, **kwargs)
@@ -203,21 +200,19 @@ class ModuleInterpreter(StrictNodeVisitor):
         self.system = system
         self.fname = fname
         self.ns = self.module_ns = ModuleNS(node)
+
         # Call stack (in terms of function AST nodes).
         self.call_stack = []
-        # To implement "store" operation, we need to arguments: location and
-        # value to store. The operation itself is handled by a node visitor
-        # (e.g. visit_Name), and location is represented by AST node, but
-        # there's no support to pass additional arguments to a visitor
-        # (likely, because it would be a burden to explicit pass such
-        # additional arguments thru the chain of visitors). So instead, we
-        # store this value as field. As interpretation happens sequentially,
-        # there's no risk that it will be overwritten "concurrently".
+
+        # To implement "store" operation, we need to arguments: location and value to store. The operation itself is
+        # handled by a node visitor (e.g. visit_Name), and location is represented by AST node, but there's no support
+        # to pass additional arguments to a visitor (likely, because it would be a burden to explicit pass such
+        # additional arguments thru the chain of visitors). So instead, we store this value as field. As interpretation
+        # happens sequentially, there's no risk that it will be overwritten "concurrently".
         self.store_val = None
-        # Current active exception, for bare "raise", which doesn't work
-        # across function boundaries (and that's how we have it - exception
-        # would be caught in visit_Try, while re-rasing would happen in
-        # visit_Raise).
+
+        # Current active exception, for bare "raise", which doesn't work across function boundaries (and that's how we
+        # have it - exception would be caught in visit_Try, while re-rasing would happen in visit_Raise).
         self.cur_exc = []
 
     def push_ns(self, new_ns):
@@ -685,13 +680,10 @@ class ModuleInterpreter(StrictNodeVisitor):
         if func is builtins.super and not args:
             if not self.ns.parent or not isinstance(self.ns.parent, ClassNS):
                 raise RuntimeError("super(): no arguments")
-            # As we're creating methods dynamically outside of class, super()
-            # without argument won't work, as that requires __class__ cell.
-            # Creating that would be cumbersome (Pycopy definitely lacks
-            # enough introspection for that), so we substitute 2 implied
-            # args (which argumentless super() would take from cell and
-            # 1st arg to func). In our case, we take them from prepared
-            # bookkeeping info.
+            # As we're creating methods dynamically outside of class, super() without argument won't work, as that
+            # requires __class__ cell. Creating that would be cumbersome (Pycopy definitely lacks enough introspection
+            # for that), so we substitute 2 implied args (which argumentless super() would take from cell and 1st arg to
+            # func). In our case, we take them from prepared bookkeeping info.
             args = (self.ns.parent.cls, self.ns["self"])
 
         return func(*args, **kwargs)
@@ -826,11 +818,9 @@ class ModuleInterpreter(StrictNodeVisitor):
         if isinstance(node.ctx, ast.Load):
             res = NO_VAR
             ns = self.ns
-            # We always lookup in the current namespace (on the first
-            # iteration), but afterwards we always skip class namespaces.
-            # Or put it another way, class code can look up in its own
-            # namespace, but that's the only case when the class namespace
-            # is consulted.
+            # We always lookup in the current namespace (on the first iteration), but afterwards we always skip class
+            # namespaces. Or put it another way, class code can look up in its own namespace, but that's the only case
+            # when the class namespace is consulted.
             skip_classes = False
             while ns:
                 if not (skip_classes and isinstance(ns, ClassNS)):
@@ -843,8 +833,10 @@ class ModuleInterpreter(StrictNodeVisitor):
             if res is NONLOCAL:
                 ns = self.resolve_nonlocal(node.id, ns.parent)
                 return ns[node.id]
+
             if res is GLOBAL:
                 res = self.module_ns.get(node.id, NO_VAR)
+
             if res is not NO_VAR:
                 return res
 
@@ -852,26 +844,34 @@ class ModuleInterpreter(StrictNodeVisitor):
                 return getattr(builtins, node.id)
             except AttributeError:
                 raise NameError("name '{}' is not defined".format(node.id))
+
         elif isinstance(node.ctx, ast.Store):
             res = self.ns.get(node.id, NO_VAR)
             if res is GLOBAL:
                 self.module_ns[node.id] = self.store_val
+
             elif res is NONLOCAL:
                 ns = self.resolve_nonlocal(node.id, self.ns.parent)
                 ns[node.id] = self.store_val
+
             else:
                 self.ns[node.id] = self.store_val
+
         elif isinstance(node.ctx, ast.Del):
             res = self.ns.get(node.id, NO_VAR)
             if res is NO_VAR:
                 raise NameError("name '{}' is not defined".format(node.id))
+
             elif res is GLOBAL:
                 del self.module_ns[node.id]
+
             elif res is NONLOCAL:
                 ns = self.resolve_nonlocal(node.id, self.ns.parent)
                 del ns[node.id]
+
             else:
                 del self.ns[node.id]
+
         else:
             raise NotImplementedError
 
@@ -937,9 +937,11 @@ class InterpreterSystem(object):
                                 mod = self.load(f)
                                 self.modules[name] = mod.ns
                                 break
+
                         elif os.path.isfile(e):
                             # FIXME (arrdem 2021-05-31)
                             raise RuntimeError("Import from .zip/.whl/.egg archives aren't supported yet")
+
                 else:
                     self.modules[name] = __import__(name, globals, locals, fromlist, level)
 
