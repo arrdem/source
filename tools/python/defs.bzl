@@ -148,8 +148,10 @@ py_resources = rule(
 def py_project(name=None,
                lib_srcs=None,
                lib_deps=None,
+               lib_data=None,
                test_srcs=None,
-               test_deps=None):
+               test_deps=None,
+               test_data=None):
     """
     A helper for defining conventionally-formatted python project.
 
@@ -167,14 +169,19 @@ def py_project(name=None,
         name=name,
         srcs=lib_srcs,
         deps=lib_deps,
+        data=lib_data,
         imports=["src/python"],
+        visibility = [
+            "//visibility:public",
+        ],
     )
 
     for src in test_srcs:
         if "test_" in src:
             py_pytest(
                 name=name + ".test." + str(hash(src)).replace("-", "") + "." + src.split("/")[-1],
-                srcs=test_srcs,
-                deps=[name] + test_deps,
+                srcs=[src] + [f for f in test_srcs if "test_" not in f],
+                deps=[name] + (test_deps or []),
+                data=test_data,
                 imports=["test/python"],
             )
