@@ -44,3 +44,9 @@ As conveniences, yamlschema gives you a couple entrypoints that handle construct
   )
 ]
 ```
+
+## LICENSE
+
+Copyright Reid 'arrdem' McKenzie August 2021.
+
+Published under the terms of the MIT license.

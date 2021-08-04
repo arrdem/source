@@ -1,19 +1,7 @@
-py_library(
+py_project(
     name="yamlschema",
-    srcs=glob(["src/python/**/*.py"]),
-    imports=[
-        "src/python",
-    ],
-    deps=[
+    lib_deps=[
         py_requirement("PyYAML"),
     ],
-)
-
-py_pytest(
-    name="test_yamlschema",
-    srcs=glob(["test/python/test_*.py"]),
-    data=glob(["*.json", "*.yaml"]),
-    deps=[
-        ":yamlschema",
-    ],
+    test_data=glob(["*.json", "*.yaml"]),
 )
