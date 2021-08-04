@@ -9,4 +9,4 @@ DIRS=(projects tools)
 bazel-bin/tools/python/autoflake -ir "${DIRS[@]}"
 bazel-bin/tools/python/isort "${DIRS[@]}"
 bazel-bin/tools/python/unify --quote '"' -ir "${DIRS[@]}"
-bazel-bin/projects/reqman/reqman sort tools/python/requirements.txt
+bazel-bin/projects/reqman/reqman clean tools/python/requirements.txt
