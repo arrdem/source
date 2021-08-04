@@ -45,11 +45,19 @@ class Damm(NamedTuple):
         return f"{self.__class__.__name__}({self.value}, {self.encode(self.value)})"
 
     @classmethod
-    def encode(cls, value):
+    def checkdigit(cls, value: int) -> int:
+        """Compute a check digit for a given value."""
+
         state = 0
         for digit in str(value):
             state = cls.MATRIX[state][int(digit)]
         return state
+
+    @classmethod
+    def encode(cls, value: int) -> str:
+        """'encode' a value with a check digit."""
+
+        return f"{value}-{cls.checkdigit(value)}"
 
     @classmethod
     def verify(cls, value: str) -> bool:
@@ -59,11 +67,13 @@ class Damm(NamedTuple):
         the string is correctly Damm encoded, the Damm of the entire string will be 0.
 
         """
-        return cls.encode(int(value.replace("-", ""))) == 0
+
+        return cls.checkdigit(int(value.replace("-", ""))) == 0
 
     @classmethod
     def from_str(cls, value: str) -> "Damm":
         """Verify a Damm coded string, and return its decoding."""
+
         if match := re.fullmatch(cls.DAMM_PATTERN, value):
             given_value = match.group("value")
             computed_code = cls.encode(given_value)

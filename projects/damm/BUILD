@@ -1,20 +1,6 @@
-py_library(
+py_project(
     name = "damm",
-    srcs = [
-        "damm.py",
+    test_deps = [
+        py_requirement("hypothesis"),
     ],
-    imports = [
-        "."
-    ],
-    visibility = [
-        "//visibility:public",
-    ]
-)
-
-py_pytest(
-    name = "test_damm",
-    srcs = glob(["test_*.py"]),
-    deps = [
-        ":damm",
-    ]
 )
