@@ -6,6 +6,7 @@ load("//tools/python:defs.bzl",
      "py_unittest",
      "py_pytest",
      "py_resources",
+     "py_project",
 )
 
 load("@arrdem_source_pypi//:requirements.bzl",
