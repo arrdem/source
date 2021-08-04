@@ -198,6 +198,9 @@ path(A, B) :-
 def test_alternate_rule_lrec(db_cls):
     """Testing that both recursion and alternation work."""
 
+    if db_cls == Dataset:
+        pytest.xfail("left-recursive rules aren't supported with a trivial store and no planner")
+
     d = read(
         """
 edge(a, b).
