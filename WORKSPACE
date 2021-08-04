@@ -39,7 +39,7 @@ bazel_skylib_workspace()
 git_repository(
     name = "rules_python",
     remote = "https://github.com/bazelbuild/rules_python.git",
-    tag = "0.2.0",
+    tag = "0.3.0",
 )
 
 # pip package pinnings need to be initialized.
