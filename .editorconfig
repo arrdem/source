@@ -10,3 +10,6 @@ max_line_length = 120
 
 [*.py]
 indent_size = 4
+
+[{WORKSPACE,BUILD,*.bzl}]
+indent_size = 4
