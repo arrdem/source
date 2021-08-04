@@ -2,6 +2,7 @@
 
 from __future__ import print_function
 
+
 class Foo(object):
     def bar(self):
         return 1
@@ -17,6 +18,8 @@ print(a.bar())
 print(a.baz)
 
 import random
+
+
 for _ in range(10):
     print(random.randint(0, 1024))
 
@@ -25,4 +28,6 @@ def bar(a, b, **bs):
     pass
 
 import requests
+
+
 print(len(requests.get("https://pypi.org/pypi/requests/json").text))

@@ -1,7 +1,6 @@
 """Tests based off of known examples."""
 
 import proquint
-
 import pytest
 
 
@@ -45,12 +44,12 @@ examples = [
 ]
 
 
-@pytest.mark.parametrize('val,width,qint', examples)
+@pytest.mark.parametrize("val,width,qint", examples)
 def test_decode_examples(val, width, qint):
     assert proquint.Proquint.decode(qint) == val, f"qint {qint} did not decode"
 
 
-@pytest.mark.parametrize('val,width,qint', examples)
+@pytest.mark.parametrize("val,width,qint", examples)
 def test_encode_examples(val, width, qint):
     encoded_qint = proquint.Proquint.encode(val, width)
     decoded_val = proquint.Proquint.decode(encoded_qint)

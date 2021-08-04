@@ -104,7 +104,7 @@ def deps(requirements):
 
 
 @cli.command()
-@click.option("--no-upgrade/--upgrade", name="upgrade", default=False)
+@click.option("--no-upgrade/--upgrade", "", "upgrade", default=False)
 @click.argument("requirements")
 def install(requirements, upgrade):
     """Install (or upgrade) a dependency.

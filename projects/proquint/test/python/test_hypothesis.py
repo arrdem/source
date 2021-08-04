@@ -1,10 +1,9 @@
 """Tests based off of round-tripping randomly generated examples."""
 
-import proquint
-
-import pytest
 from hypothesis import given
 from hypothesis.strategies import integers
+import proquint
+import pytest
 
 
 @given(integers(min_value=0, max_value=1<<16))

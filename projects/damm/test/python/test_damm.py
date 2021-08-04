@@ -1,9 +1,8 @@
 from damm import Damm
-
 import pytest
 
 
-@pytest.mark.parametrize('num', [
+@pytest.mark.parametrize("num", [
     "0",    # 0 itself is the start Damm state
     "37",   # [0, 3] => 7
     "92",   # [0, 9] => 2

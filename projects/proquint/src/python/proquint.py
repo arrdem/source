@@ -121,7 +121,7 @@ class Proquint(object):
 
         res = 0
 
-        for i, c in enumerate([c for c in buffer if c != '-']):
+        for i, c in enumerate([c for c in buffer if c != "-"]):
             if (mag := cls._consonant_to_uint(c)) is not None:
                 res <<= 4
                 res += mag
@@ -131,7 +131,7 @@ class Proquint(object):
                     res <<= 2
                     res += mag
                 elif i != 5:
-                    raise ValueError('Bad proquint format')
+                    raise ValueError("Bad proquint format")
         return res
 
     # Handy aliases

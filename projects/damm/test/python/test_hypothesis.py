@@ -1,5 +1,4 @@
 from damm import Damm
-
 from hypothesis import given
 from hypothesis.strategies import integers
 

@@ -31,8 +31,9 @@
 
 import ast
 import logging
-import sys
 import os
+import sys
+
 
 if sys.version_info < (3, 0, 0):
     builtins = __builtins__
@@ -115,7 +116,6 @@ class TargetNonlocalFlow(Exception):
     """Base exception class to simulate non-local control flow transfers in
     a target application."""
 
-    pass
 
 
 class TargetBreak(TargetNonlocalFlow):
