@@ -11,6 +11,7 @@
 /**/*.pyo
 /**/.#*
 /**/.mypy*
+/**/.hypothesis*
 /**/__pychache__
 /**/_build
 /**/_public
