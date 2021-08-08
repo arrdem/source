@@ -8,6 +8,7 @@ And so I'm going the other way; Bazel in a monorepo with several subprojects so 
 - [Datalog](projects/datalog)
 - [Flowmetal](projects/flowmetal)
 - [YAML Schema](projects/yamlschema)
+- [zapp](projects/zapp)
 
 ## License
 
