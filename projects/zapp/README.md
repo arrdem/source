@@ -46,10 +46,9 @@ zapp_binary(
 
 ```
 
-In this directory there's the `zapp` compiler itself, and a couple of `hello_*` targets that are variously zapped.
-One uses `imports`, one is
+In this directory there's a couple of `hello_*` targets that are variously zapped. This one uses an external dependency via `rules_python`'s `py_requirement` machinery.
 
-Let's try `bazel build :hello`
+Let's try `bazel build :hello_deps` to see how it gets zapped.
 
 ``` shellsession
 $ bazel build :hello_deps
