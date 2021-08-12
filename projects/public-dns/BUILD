@@ -1,6 +1,9 @@
-py_binary(
+zapp_binary(
     name = "updater",
     main = "src/python/arrdem/updater/__main__.py",
+    imports = [
+        "src/python",
+    ],
     deps = [
         "//projects/gandi",
         py_requirement("jinja2"),

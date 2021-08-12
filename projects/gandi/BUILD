@@ -4,7 +4,7 @@ py_library(
     name = "gandi",
     srcs = glob(["src/python/gandi/client.py"]),
     imports = [
-        "src/python"
+        "src/python",
     ],
     deps = [
         py_requirement("requests"),

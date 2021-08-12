@@ -9,9 +9,6 @@ import re
 import sys
 
 
-for e in sys.path:
-    print(e)
-
 from gandi.client import GandiAPI
 import jinja2
 import meraki
@@ -30,8 +27,10 @@ RECORD_LINE_PATTERN = re.compile(
 
 def update(m, k, f, *args, **kwargs):
     """clojure.core/update for Python's stateful maps."""
+
     if k in m:
         m[k] = f(m[k], *args, **kwargs)
+
     return m
 
 
@@ -70,8 +69,8 @@ def template_and_parse_zone(template_file, template_bindings):
     assert template_file is not None
     assert template_bindings is not None
 
-    with open(template_file) as f:
-        dat = jinja2.Template(f.read()).render(**template_bindings)
+    with open(template_file) as fp:
+        dat = jinja2.Template(fp.read()).render(**template_bindings)
 
     uncommitted_records = []
     for line in dat.splitlines():
@@ -138,7 +137,9 @@ parser.add_argument("--dry-run", dest="dry", action="store_true", default=False)
 
 def main():
     args = parser.parse_args()
-    config = yaml.safe_load(open(args.config_file, "r"))
+
+    with open(args.config_file, "r") as fp:
+        config = yaml.safe_load(fp)
 
     dashboard = meraki.DashboardAPI(config["meraki"]["key"], output_log=False)
     org = config["meraki"]["organization"]
