@@ -1,3 +1,4 @@
+# -*- mode: bazel -*-
 # A global prelude for all BUILD[.bazel] files
 
 load("//tools/python:defs.bzl",
