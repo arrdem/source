@@ -25,3 +25,7 @@ load("//tools/build_rules:cp.bzl",
 load("//tools/build_rules:webp.bzl",
      "webp_image",
 )
+
+load("@rules_zapp//zapp:zapp.bzl",
+     "zapp_binary",
+)

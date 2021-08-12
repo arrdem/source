@@ -1,4 +1,4 @@
-py_binary(
+zapp_binary(
     name = "datalog-shell",
     main = "src/python/datalog/shell/__main__.py",
     imports = [
