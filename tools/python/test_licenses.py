@@ -21,6 +21,7 @@ APPROVED_LICENSES = [
     MPL20  := "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)",
     PSFL   := "License :: OSI Approved :: Python Software Foundation License",
     LGPL   := "License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)",
+    LGPL3  := "License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)",
     ISCL   := "License :: OSI Approved :: ISC License (ISCL)",
 ]
 
@@ -42,6 +43,8 @@ LICENSES_BY_LOWERNAME = {
     "gpl": GPL1,
     "gpl2": GPL2,
     "gpl3": GPL3,
+    "lgpl": LGPL,
+    "lgpl3": LGPL3,
 
     "isc": ISCL,
 
