@@ -28,7 +28,7 @@ Perform a point-in-time query for jobs.
 
 The query is a list of `[OP, EXPR, EXPR]` triples, which are combined under `AND` to produce a server-side query.
 Valid ops are `IS`, `LIKE` and binary comparisons (`<`, `=` and friends).
-Valid ops any SQLite expression not containing sub-queries.
+Valid exprs are any SQLite expression not containing sub-queries.
 
 Here, we're looking for jobs tagged as in the `["CREATED"]` state.
 ``` shell
