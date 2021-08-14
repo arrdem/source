@@ -61,7 +61,14 @@ class SQLite3DriverAdapter(object):
         cur = conn.cursor()
         log.debug({'sql': sql, 'parameters': parameters})
         cur.execute(sql, parameters)
-        results = cur.fetchall()
+
+        if "returning" not in sql.lower():
+            # Original behavior - return the last row ID
+            results = cur.lastrowid
+        else:
+            # New behavior - honor a `RETURNING` clause
+            results = cur.fetchall()
+
         log.debug({"results": results})
         cur.close()
         return results

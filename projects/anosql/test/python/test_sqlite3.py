@@ -2,7 +2,6 @@ import os
 
 import anosql
 import pytest
-from importlib.resources import path
 
 def dict_factory(cursor, row):
     d = {}
@@ -13,7 +12,7 @@ def dict_factory(cursor, row):
 
 @pytest.fixture()
 def queries():
-    dir_path = path("blogdb", "sql")
+    dir_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "blogdb", "sql")
     return anosql.from_path(dir_path, "sqlite3")
 
 
@@ -64,12 +63,12 @@ def test_insert_returning(sqlite3_conn, queries):
             content="Hello, World!",
             published="2018-12-04",
         )
+    print(blogid, type(blogid))
     cur = sqlite3_conn.cursor()
-    cur.execute(
-        """\
-        select title
-          from blogs
-         where blogid = ?;
+    cur.execute("""\
+    select title
+    from blogs
+    where blogid = ?;
     """,
         (blogid,),
     )
