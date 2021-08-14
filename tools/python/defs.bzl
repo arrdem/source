@@ -155,22 +155,28 @@ def py_project(name=None,
     """
     A helper for defining conventionally-formatted python project.
 
-    Assumes that there's a src/python tree, and a src/test tree.
+    Assumes that there's a {src,test}/{resources,python} where src/ is a library and test/ is local tests only.
 
-    Each test_*.py source generates its own implicit test target. This allows
-    for automatic test parallelism.
+    Each test_*.py source generates its own implicit test target. This allows for automatic test parallelism. Non
+    test_*.py files are implicitly srcs for the generated test targets. This is the same as making them implicitly a
+    testonly lib.
 
     """
 
     lib_srcs = lib_srcs or native.glob(["src/python/**/*.py"])
+    lib_data = lib_data or native.glob(["src/resources/**/*"])
     test_srcs = test_srcs or native.glob(["test/python/**/*.py"])
+    test_data = test_data or native.glob(["test/resources/**/*"])
 
     py_library(
         name=name,
         srcs=lib_srcs,
         deps=lib_deps,
         data=lib_data,
-        imports=["src/python"],
+        imports=[
+            "src/python",
+            "src/resources",
+        ],
         visibility = [
             "//visibility:public",
         ],
@@ -183,5 +189,8 @@ def py_project(name=None,
                 srcs=[src] + [f for f in test_srcs if "test_" not in f],
                 deps=[name] + (test_deps or []),
                 data=test_data,
-                imports=["test/python"],
+                imports=[
+                    "test/python",
+                    "test/resources",
+                ],
             )
