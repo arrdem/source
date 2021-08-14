@@ -1,6 +1,5 @@
 aiohttp==3.7.4.post0
 alabaster==0.7.12
-anosql==1.0.2
 async-timeout==3.0.1
 attrs==20.3.0
 autoflake==1.4
