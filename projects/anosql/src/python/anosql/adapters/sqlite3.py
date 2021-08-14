@@ -1,4 +1,12 @@
+"""
+A driver object implementing support for SQLite3
+"""
+
 from contextlib import contextmanager
+import logging
+import sqlite3
+
+log = logging.getLogger(__name__)
 
 
 class SQLite3DriverAdapter(object):
@@ -21,6 +29,7 @@ class SQLite3DriverAdapter(object):
     @staticmethod
     def select(conn, _query_name, sql, parameters):
         cur = conn.cursor()
+        log.debug({'sql': sql, 'parameters': parameters})
         cur.execute(sql, parameters)
         results = cur.fetchall()
         cur.close()
@@ -28,8 +37,9 @@ class SQLite3DriverAdapter(object):
 
     @staticmethod
     @contextmanager
-    def select_cursor(conn, _query_name, sql, parameters):
+    def select_cursor(conn: sqlite3.Connection, _query_name, sql, parameters):
         cur = conn.cursor()
+        log.debug({'sql': sql, 'parameters': parameters})
         cur.execute(sql, parameters)
         try:
             yield cur
@@ -37,21 +47,26 @@ class SQLite3DriverAdapter(object):
             cur.close()
 
     @staticmethod
-    def insert_update_delete(conn, _query_name, sql, parameters):
+    def insert_update_delete(conn: sqlite3.Connection, _query_name, sql, parameters):
+        log.debug({'sql': sql, 'parameters': parameters})
         conn.execute(sql, parameters)
 
     @staticmethod
-    def insert_update_delete_many(conn, _query_name, sql, parameters):
+    def insert_update_delete_many(conn: sqlite3.Connection, _query_name, sql, parameters):
+        log.debug({'sql': sql, 'parameters': parameters})
         conn.executemany(sql, parameters)
 
     @staticmethod
-    def insert_returning(conn, _query_name, sql, parameters):
+    def insert_returning(conn: sqlite3.Connection, _query_name, sql, parameters):
         cur = conn.cursor()
+        log.debug({'sql': sql, 'parameters': parameters})
         cur.execute(sql, parameters)
-        results = cur.lastrowid
+        results = cur.fetchall()
+        log.debug({"results": results})
         cur.close()
         return results
 
     @staticmethod
-    def execute_script(conn, sql):
+    def execute_script(conn: sqlite3.Connection, sql):
+        log.debug({'sql': sql, 'parameters': None})
         conn.executescript(sql)
