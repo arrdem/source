@@ -5,7 +5,7 @@ Each _job_ (a JSON request blob POSTed by the user) has an attached log of _even
 Users may change the _state_ of a job, and doing so automatically produces a new _event_ recording the change.
 Users may manually add _events_ to the log.
 
-Note that, while we strongly suggest that _state_ should always be a tagged tuple and the default is `["CREATED"]`, no constraints are placed on its contents.
+Note that, while we strongly suggest that _state_ should always be a tagged tuple, no constraints are placed on its contents.
 
 ## HTTP API
 
@@ -39,10 +39,11 @@ $ curl -X POST $JOBQ/api/v0/job --data '{"query": [["IS", "json_extract(state, '
 ```
 
 ### POST /api/v0/job/create
-Given a JSON document as the POST body, create a new job.
+Given a JSON document as the POST body, create a new job in the given state.
+If state is not provided, the state `null` is used.
 
 ```
-$ curl -X POST $JOBQ/api/v0/job/create --data '{"msg": "Hello, world!"}' | jq .
+$ curl -X POST $JOBQ/api/v0/job/create --data '{"state": ["CREATED"], "job": {"msg": "Hello, world!"}}' | jq .
 {
   "id": 1
 }

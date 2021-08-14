@@ -221,10 +221,13 @@ def get_jobs():
 def create_job():
     """Create a job."""
 
+    blob = request.get_json(force=True)
+    job = blob["job"]
+    state = blob.get("state", None)
     id, state = current_app.queries.job_create(
         request.db,
-        payload=json.dumps(request.get_json(force=True)),
-        state=None,
+        payload=json.dumps(job),
+        state=json.dumps(state),
     )
     return jsonify({"id": id, "state": state}), 200
 
