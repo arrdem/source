@@ -53,11 +53,12 @@ class JobqClient(object):
                                             json={"query": query,
                                                   "state": state}).json())
 
-    def create(self, payload: object) -> DehydratedJob:
+    def create(self, payload: object, state=None) -> DehydratedJob:
         """Create a new job in the system."""
 
         job_frag = self._session.post(self._url + "/api/v0/job/create",
-                                      json=payload)\
+                                      json={"payload": payload,
+                                            "state": state})\
                                 .json()
         return self._job(job_frag)
 

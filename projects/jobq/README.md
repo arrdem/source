@@ -39,11 +39,11 @@ $ curl -X POST $JOBQ/api/v0/job --data '{"query": [["IS", "json_extract(state, '
 ```
 
 ### POST /api/v0/job/create
-Given a JSON document as the POST body, create a new job in the given state.
+Given a JSON document as the POST body, create a new job with a payload in the given state.
 If state is not provided, the state `null` is used.
 
 ```
-$ curl -X POST $JOBQ/api/v0/job/create --data '{"state": ["CREATED"], "job": {"msg": "Hello, world!"}}' | jq .
+$ curl -X POST $JOBQ/api/v0/job/create --data '{"state": ["CREATED"], "payload": {"msg": "Hello, world!"}}' | jq .
 {
   "id": 1
 }
