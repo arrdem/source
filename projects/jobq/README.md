@@ -94,10 +94,12 @@ $ curl -X GET $JOBQ/api/v0/job/1 | jq .
 ```
 
 ### POST /api/v0/job/<job_id>/state
-Alter the state of a given job, appending a state change event to the log and returning the entire updated job.
+POST the 'current' state, and a proposed new state, attempting to update the state of the job using CAS.
+If the state of the job updates successfully, a new event will be appended to the job's log and the resulting job will be returned.
+Otherwise a conflict will be signaled.
 
 ``` shell
-$ curl -X POST $JOBQ/api/v0/job/1/state --data '["ASSIGNED"]' | jq .
+$ curl -X POST $JOBQ/api/v0/job/1/state --data '{"new": ["ASSIGNED"], "old": ["CREATED"]}' | jq .
 {
   "id": 1,
   "payload": {
