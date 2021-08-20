@@ -1,26 +1,13 @@
-zapp_binary(
+py_project(
     name = "jobq",
-    main = "src/python/jobq/__main__.py",
-    imports = [
-        "src/python",
-    ],
-    deps = [
+    lib_deps = [
         "//projects/anosql",
         "//projects/anosql-migrations",
-        py_requirement("flask"),
-        py_requirement("pyyaml"),
     ]
 )
 
-py_library(
-    name = "client",
-    srcs = [
-        "src/python/jobq/rest/api.py",
-    ],
-    imports = [
-        "src/python",
-    ],
-    deps = [
-        py_requirement("requests"),
-    ],
+zapp_binary(
+    name = "benchmark",
+    main = "benchmark.py",
+    deps = [":jobq"],
 )

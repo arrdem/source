@@ -1,0 +1,126 @@
+---
+openapi: 3.0.1
+info:
+  title: Jobq
+  description: A trivial job queue API
+
+tags:
+  - name: queue
+  - name: job
+
+definitions:
+  parameters:
+    q_id:
+      in: path
+      name: q_id
+      required: true
+      description: The ID of a given queue
+    j_id:
+      in: path
+      name: j_id
+      required: true
+      description: The ID of a given job
+
+  responses:
+    id: {}
+    queue: {}
+    queues: {}
+    job: {}
+
+    jobs:
+      "200":
+        description: A list of jobs
+        content:
+          application/json:
+            schema:
+              $ref: "#/definitions/types/jobs"
+
+  types:
+    queue: {}
+
+    queues:
+      type: object
+      properties:
+        jobs:
+          type: list
+          items:
+            $ref: "#/definitions/types/queue"
+
+    job: {}
+
+    dehydrated_job: {}
+
+    jobs:
+      type: object
+      properties:
+        jobs:
+          type: list
+          items:
+            $ref: "#/definitions/types/dehydrated_job"
+
+paths:
+  "/api/v0/queue":
+    get:
+      description: Fetch a list of queues in the system
+      responses:
+
+    post:
+      description: Create a new job queue
+      responses:
+        "200":
+          description: Created
+        "409":
+          description: Conflict
+
+  "/api/v0/queue/{q_id}":
+    get:
+      description: ""
+      parameters:
+        - $ref: "#/definitions/parameters/q_id"
+
+      responses:
+        $ref: "#/definitions/responses/jobs"
+
+  "/api/v0/queue/{q_id}/job":
+    post:
+      description: "Create a job within a given queue."
+      parameters:
+        - $ref: "#/definitions/parameters/q_id"
+
+  "/api/v0/queue/{q_id}/query_jobs":
+    post:
+      description: "Query the jobs in a queue."
+      parameters:
+        - $ref: "#/definitions/parameters/q_id"
+
+      responses:
+        "200": {}
+
+  "/api/v0/queue/{q_id}/poll_job":
+    post:
+      description: "Poll zero or one jobs off the queue."
+      parameters:
+        - $ref: "#/definitions/parameters/q_id"
+
+  "/api/v0/job/{j_id}":
+    get:
+      description: "Return all available data about the job"
+      parameters:
+        - $ref: "#/definitions/parameters/j_id"
+
+    delete:
+      description: "Expunge the job"
+      parameters:
+        - $ref: "#/definitions/parameters/j_id"
+
+  "/api/v0/job/{j_id}/state":
+    post:
+      description: "Alter the job's state, appending an event"
+      parameters:
+        - $ref: "#/definitions/parameters/j_id"
+
+  "/api/v0/job/{j_id}/event":
+    post:
+      description: "Append an event to a given job without modifying state"
+      parameters:
+        - $ref: "#/definitions/parameters/j_d"
