@@ -10,6 +10,7 @@ from random import randint, choice
 import string
 from statistics import mean, median, stdev
 import tempfile
+import logging
 
 from jobq import JobQueue
 
@@ -75,7 +76,17 @@ def test_poll(q, reps):
     bench(poll, reps)
 
 
+def test_append(q, reps):
+    def append_event():
+        q.append_event(randint(1, reps), {"foo": "bar"})
+
+    bench(append_event, reps)
+
+
 if __name__ == "__main__":
+    # No logs
+    logging.getLogger().setLevel(logging.WARN)
+
     # Test params
     reps = 10000
     path = "/tmp/jobq-bench.sqlite3"
@@ -89,8 +100,10 @@ if __name__ == "__main__":
     q = JobQueue(path)
     test_insert(q, reps)
     test_poll(q, reps)
+    test_append(q, reps)
 
     print(f"Testing with :memory:")
     q = JobQueue(":memory:")
     test_insert(q, reps)
     test_poll(q, reps)
+    test_append(q, reps)

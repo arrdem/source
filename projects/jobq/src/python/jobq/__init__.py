@@ -116,7 +116,7 @@ WHERE
 ;
 """
 
-_POLL_SQL = """\
+_POLL_SQL = f"""\
 UPDATE `job`
 SET
     `events` = json_insert(events, '$[#]', json_array('job_state_advanced', json_object('old', json(state), 'new', json(:state), 'timestamp', CURRENT_TIMESTAMP)))
