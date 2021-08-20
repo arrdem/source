@@ -15,16 +15,18 @@ definitions:
       name: q_id
       required: true
       description: The ID of a given queue
+      schema:
+        $ref: "#/definitions/types/id"
+
     j_id:
       in: path
       name: j_id
       required: true
       description: The ID of a given job
+      schema:
+        $ref: "#/definitions/types/id"
 
   responses:
-    id: {}
-    queue: {}
-    queues: {}
     job: {}
 
     jobs:
@@ -36,58 +38,27 @@ definitions:
               $ref: "#/definitions/types/jobs"
 
   types:
-    queue: {}
+    id:
+      type: int
 
-    queues:
+    job:
       type: object
       properties:
-        jobs:
-          type: list
-          items:
-            $ref: "#/definitions/types/queue"
-
-    job: {}
-
-    dehydrated_job: {}
-
-    jobs:
-      type: object
-      properties:
-        jobs:
-          type: list
-          items:
-            $ref: "#/definitions/types/dehydrated_job"
+        id:
+          $ref: "#/definitions/types/id"
+        payload: {}
+        events: {}
+        state: {}
+        modified:
+          type: int
 
 paths:
-  "/api/v0/queue":
+  "/api/v0/job":
     get:
-      description: Fetch a list of queues in the system
-      responses:
-
-    post:
-      description: Create a new job queue
-      responses:
-        "200":
-          description: Created
-        "409":
-          description: Conflict
-
-  "/api/v0/queue/{q_id}":
-    get:
-      description: ""
+      description: "Query the jobs in a queue."
       parameters:
         - $ref: "#/definitions/parameters/q_id"
 
-      responses:
-        $ref: "#/definitions/responses/jobs"
-
-  "/api/v0/queue/{q_id}/job":
-    post:
-      description: "Create a job within a given queue."
-      parameters:
-        - $ref: "#/definitions/parameters/q_id"
-
-  "/api/v0/queue/{q_id}/query_jobs":
     post:
       description: "Query the jobs in a queue."
       parameters:
@@ -96,7 +67,14 @@ paths:
       responses:
         "200": {}
 
-  "/api/v0/queue/{q_id}/poll_job":
+  "/api/v0/job/create":
+    post:
+      description: "Create a job within a given queue."
+      parameters:
+        - $ref: "#/definitions/parameters/q_id"
+
+
+  "/api/v0/job/poll":
     post:
       description: "Poll zero or one jobs off the queue."
       parameters:

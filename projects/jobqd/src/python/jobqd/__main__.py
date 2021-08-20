@@ -1,5 +1,5 @@
 """
-A mock job queue.
+A job queue over HTTP.
 """
 
 import argparse
@@ -10,7 +10,7 @@ import os
 import sys
 import sqlite3
 
-from jobq import JobQueue
+from jobq import Job, JobQueue
 
 from flask import abort, current_app, Flask, jsonify, request
 
@@ -26,9 +26,24 @@ parser.add_argument("--host", default="localhost")
 parser.add_argument("--db", default="~/jobq.sqlite3")
 
 
-@app.before_first_request
-def setup_queries():
-    current_app.q = JobQueue(current_app.config["db"])
+@app.before_request
+def setup_q():
+    request.q = JobQueue(current_app.config["db"])
+
+
+@app.after_request
+def teardown_q():
+    request.q.close()
+
+
+def job_as_json(job: Job) -> dict:
+    return {
+        "id": job.id,
+        "payload": job.payload,
+        "events": job.events,
+        "state": job.state,
+        "modified": int(job.modified),
+    }
 
 
 @app.route("/api/v0/job", methods=["GET", "POST"])
@@ -40,16 +55,10 @@ def get_jobs():
     else:
         blob = {}
 
-    query = blob.get("query", [["true"]])
+    query = blob.get("query", "true")
 
     return jsonify({
-        "jobs": [
-            {
-                "id": id,
-                "state": json.loads(state) if state is not None else state
-            }
-            for id, state in current_app.q.query(query)
-        ]
+        "jobs": [job_as_json(j) for j in request.q.query(query)]
     }), 200
 
 
@@ -60,10 +69,10 @@ def create_job():
     blob = request.get_json(force=True)
     payload = blob["payload"]
     state = blob.get("state", None)
-    id, state = current_app.q.create(
+    job = request.q.create(
         payload, state
     )
-    return jsonify({"id": id, "state": state}), 200
+    return jsonify(job_as_json(job)), 200
 
 
 @app.route("/api/v0/job/poll", methods=["POST"])
@@ -73,10 +82,9 @@ def poll_job():
     blob = request.get_json(force=True)
     query = blob["query"]
     state = blob["state"]
-    results = current_app.q.poll(query, state)
-    if results:
-        (id, state), = results
-        return jsonify({"id": id, "state": json.loads(state)}), 200
+    r = request.q.poll(query, state)
+    if r:
+        return jsonify(job_as_json(r)), 200
     else:
         abort(404)
 
@@ -85,19 +93,11 @@ def poll_job():
 def get_job(job_id):
     """Return a job by ID."""
 
-    r = current_app.q.get(id=job_id)
-    if not r:
+    r = request.q.get(id=job_id)
+    if r:
+        return jsonify(job_as_json(r)), 200
+    else:
         abort(404)
-
-    # Unpack the response tuple
-    id, payload, events, state, modified = r
-    return jsonify({
-        "id": id,
-        "payload": json.loads(payload),
-        "events": json.loads(events),
-        "state": json.loads(state) if state is not None else state,
-        "modified": modified,
-    }), 200
 
 
 @app.route("/api/v0/job/<job_id>/state", methods=["POST"])
@@ -107,8 +107,9 @@ def update_state(job_id):
     document = request.get_json(force=True)
     old = document["old"]
     new = document["new"]
-    if current_app.q.cas_state(job_id, old, new):
-        return get_job(job_id)
+    r = request.q.cas_state(job_id, old, new)
+    if r:
+        return jsonify(job_as_json(r)), 200
     else:
         abort(409)
 
@@ -117,16 +118,21 @@ def update_state(job_id):
 def append_event(job_id):
     """Append a user-defined event to the job's log."""
 
-    return current_app.q.append_event(job_id, event=request.get_json(force=True))
+    r = request.q.append_event(job_id, event=request.get_json(force=True))
+    if r:
+        return jsonify(job_as_json(r)), 200
+    else:
+        abort(404)
 
 
 @app.route("/api/v0/job/<job_id>", methods=["DELETE"])
 def delete_job(job_id):
     """Delete a given job."""
 
-    current_app.queries.job_delete(request.db, id=job_id)
+    request.q.job_delete(request.db, id=job_id)
 
     return jsonify({}), 200
+
 
 def main():
     """Run the mock server."""

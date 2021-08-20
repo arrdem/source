@@ -13,7 +13,7 @@ zapp_binary(
 py_library(
     name = "client",
     srcs = [
-        "src/python/jobq/rest/api.py",
+        "src/python/jobqd/rest/api.py",
     ],
     imports = [
         "src/python",
