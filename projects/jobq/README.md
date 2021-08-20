@@ -39,7 +39,7 @@ Benchmarks are extremely steady.
 Flushing a sqlite file to disk seems to be the limiting factor of I/O, and pipelining multiple message writes is undoubtably the way to go.
 However the purpose of the API is to use the sqlite file as the shared checkpoint between potentially many processes, so 'large' transactions are an antipattern.
 
-Tests suggest that this library is rock steady at 100 writes per sec. and 100 polls per sec. and completely bounded by sqlite controlled I/O as evidenced by using `":memory:"` which doesn't have to `fsync()`.
+The `naive_fsync` benchmark takes how long a simple `f.write(); f.flush(); os.fsync(f.fnum())` takes, and represents a lower bound for "transactional" I/O in a strictly appending system. That `insert` clocks in at about 10ms/op whereas `naive_fsync` clocks in at about 4.5ms suggests that the "overhead" imposed by SQLite is actually pretty reasonable, and only ~2x gains are possible without sacrificing durability.
 
 ``` shell
 $ bazel run :benchmark
@@ -51,40 +51,54 @@ Target //projects/jobq:benchmark up-to-date:
 
 ...
 
-Ran 'insert' 10000 times, total time 101.810816516 (s)
-  mean: 0.010148992843 (s)
-  median: 0.009474293 (s)
-  stddev: 0.006727934042954838 (s)
-  test overhead: 3.20888086e-05 (s)
+Getting a baseline
+Ran 'naive_serialize' 10000 times, total time 61.108668 ms
+  mean: 4.4800743 us
+  median: 3.876 us
+  stddev: 2.9536885497940415 us
+  test overhead: 1.6307925 us
 
-Ran 'poll' 10000 times, total time 100.482262487 (s)
-  mean: 0.0100152467857 (s)
-  median: 0.0095528585 (s)
-  stddev: 0.00821730176268304 (s)
-  test overhead: 3.2979463000000004e-05 (s)
+Ran 'naive_fsync' 10000 times, total time 46.169303029 s
+  mean: 4.5833899318 ms
+  median: 4.3935955 ms
+  stddev: 3.6405235897574997 ms
+  test overhead: 33.540371099999994 us
 
-Ran 'append_event' 10000 times, total time 105.015296419 (s)
-  mean: 0.0104681294652 (s)
-  median: 0.009592544 (s)
-  stddev: 0.007321370576225584 (s)
-  test overhead: 3.34001767e-05 (s)
+Testing with /tmp/jobq-bench.sqlite3
+Ran 'insert' 10000 times, total time 106.925228341 s
+  mean: 10.660283108 ms
+  median: 9.6410375 ms
+  stddev: 7.318317035793426 ms
+  test overhead: 32.2397261 us
+
+Ran 'poll' 10000 times, total time 102.727780818 s
+  mean: 10.2409366588 ms
+  median: 9.7355345 ms
+  stddev: 6.566850750848292 ms
+  test overhead: 31.841423 us
+
+Ran 'append_event' 10000 times, total time 105.075667417 s
+  mean: 10.4747147621 ms
+  median: 9.6445595 ms
+  stddev: 8.221955029149633 ms
+  test overhead: 32.8519796 us
 
 Testing with :memory:
-Ran 'insert' 10000 times, total time 0.37031511 (s)
-  mean: 3.3595880100000005e-05 (s)
-  median: 2.96015e-05 (s)
-  stddev: 1.045088890675899e-05 (s)
-  test overhead: 3.4356309e-06 (s)
+Ran 'insert' 10000 times, total time 527.735484 ms
+  mean: 49.054487699999996 us
+  median: 43.823 us
+  stddev: 13.212556522688379 us
+  test overhead: 3.7190607 us
 
-Ran 'poll' 10000 times, total time 1.17148314 (s)
-  mean: 0.0001128911222 (s)
-  median: 9.7398e-05 (s)
-  stddev: 3.213524197973896e-05 (s)
-  test overhead: 4.2571917999999996e-06 (s)
+Ran 'poll' 10000 times, total time 4.995857505 s
+  mean: 495.27983409999996 us
+  median: 161.8315 us
+  stddev: 443.6358523771585 us
+  test overhead: 4.3059164 us
 
-Ran 'append_event' 10000 times, total time 0.415490332 (s)
-  mean: 3.78861989e-05 (s)
-  median: 3.3019e-05 (s)
-  stddev: 1.1752889674795285e-05 (s)
-  test overhead: 3.6628343e-06 (s)
+Ran 'append_event' 10000 times, total time 579.750342 ms
+  mean: 54.1721441 us
+  median: 48.054 us
+  stddev: 15.205861822465426 us
+  test overhead: 3.8028901 us
 ```

@@ -11,6 +11,7 @@ import string
 from statistics import mean, median, stdev
 import tempfile
 import logging
+import json
 
 from jobq import JobQueue
 
@@ -39,6 +40,20 @@ def timing():
     obj.end = perf_counter_ns()
 
 
+def timer(val: float) -> str:
+    """Given a time in NS, convert it to integral NS/MS/S such that the non-decimal part is integral."""
+
+    for factor, unit in [
+            (1e9, 's'),
+            (1e6, 'ms'),
+            (1e3, 'us'),
+            (1, 'ns'),
+    ]:
+        scaled_val = val / factor
+        if 1e4 > scaled_val > 1.0:
+            return f"{scaled_val} {unit}"
+
+
 def bench(callable, reps):
     timings = []
     with timing() as run_t:
@@ -46,16 +61,52 @@ def bench(callable, reps):
             with timing() as t:
                 callable()
             timings.append(t.duration)
-    print(f"""Ran {callable.__name__!r} {reps} times, total time {run_t.duration / 1e9} (s)
-  mean: {mean(timings) / 1e9} (s)
-  median: {median(timings) / 1e9} (s)
-  stddev: {stdev(timings) / 1e9} (s)
-  test overhead: {(run_t.duration - sum(timings)) / reps / 1e9} (s)
+    print(f"""Ran {callable.__name__!r} {reps} times, total time {timer(run_t.duration)}
+  mean: {timer(mean(timings))}
+  median: {timer(median(timings))}
+  stddev: {timer(stdev(timings))}
+  test overhead: {timer((run_t.duration - sum(timings)) / reps)}
 """)
 
 
+def test_reference_json(reps):
+    """As a reference benchmark, test just appending to a file."""
+
+    jobs = [
+        {"user_id": randint(0, 1<<32), "msg": randstr(256)}
+        for _ in range(reps)
+    ]
+    jobs_i = iter(jobs)
+
+    def naive_serialize():
+        json.dumps([next(jobs_i), ["CREATED"]])
+
+    bench(naive_serialize, reps)
+
+
+def test_reference_fsync(reps):
+    """As a reference benchmark, test just appending to a file."""
+
+    jobs = [
+        {"user_id": randint(0, 1<<32), "msg": randstr(256)}
+        for _ in range(reps)
+    ]
+    jobs_i = iter(jobs)
+
+    handle, path = tempfile.mkstemp()
+    os.close(handle)
+    with open(path, "w") as fd:
+        def naive_fsync():
+            fd.write(json.dumps([next(jobs_i), ["CREATED"]]))
+            fd.flush()
+            os.fsync(fd.fileno())
+
+        bench(naive_fsync, reps)
+
+
 def test_insert(q, reps):
-    # Measuring insertion time
+    """Benchmark insertion time to a given SQLite DB."""
+
     jobs = [
         {"user_id": randint(0, 1<<32), "msg": randstr(256)}
         for _ in range(reps)
@@ -69,14 +120,17 @@ def test_insert(q, reps):
 
 
 def test_poll(q, reps):
+    """Benchmark query/update time on a given SQLite DB."""
 
     def poll():
-        q.poll([["=", "json_extract(j.state, '$[0]')", "'CREATED'"]], ["POLLED"])
+        q.poll("json_extract(j.state, '$[0]') = 'CREATED'", ["POLLED"])
 
     bench(poll, reps)
 
 
 def test_append(q, reps):
+    """Benchmark adding an event on a given SQLite DB."""
+
     def append_event():
         q.append_event(randint(1, reps), {"foo": "bar"})
 
@@ -94,6 +148,10 @@ if __name__ == "__main__":
     # Ensuring a clean-ish run env.
     if os.path.exists(path):
         os.remove(path)
+
+    print("Getting a baseline")
+    test_reference_json(reps)
+    test_reference_fsync(reps)
 
     # And the tests
     print(f"Testing with {path}")

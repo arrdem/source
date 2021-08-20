@@ -258,7 +258,6 @@ class JobQueue(object):
         with self._db as db:
             cur = db.cursor()
             statement = _POLL_SQL.format(compile_query(query))
-            print(statement)
             cur.execute(statement, {"state": json.dumps(new_state)})
             results = cur.fetchall()
             if results:
