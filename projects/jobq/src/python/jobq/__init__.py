@@ -180,6 +180,18 @@ class JobQueue(object):
             self._queries = with_migrations("sqlite3", self._queries, db)
             run_migrations(self._queries, db)
 
+    def __enter__(self, *args, **kwargs):
+        pass
+
+    def __exit__(self, *args, **kwargs):
+        self.close()
+
+    def close(self):
+        if self._db:
+            self._db.commit()
+            self._db.close()
+            self._db = None
+
     def query(self, query, limit=None):
         with self._db as db:
             query = compile_query(query)
