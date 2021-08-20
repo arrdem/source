@@ -163,14 +163,26 @@ def py_project(name=None,
 
     """
 
-    lib_srcs = lib_srcs or native.glob(["src/python/**/*.py"])
+    lib_srcs = lib_srcs or native.glob(["src/python/**/*.py"],
+                                       exclude=[
+                                           "**/*.pyc",
+                                       ])
     lib_data = lib_data or native.glob(["src/resources/**/*",
                                         "src/python/**/*"],
-                                       exclude=["**/*.py"])
-    test_srcs = test_srcs or native.glob(["test/python/**/*.py"])
+                                       exclude=[
+                                           "**/*.py",
+                                           "**/*.pyc",
+                                       ])
+    test_srcs = test_srcs or native.glob(["test/python/**/*.py"],
+                                         exclude=[
+                                             "**/*.pyc",
+                                         ])
     test_data = test_data or native.glob(["test/resources/**/*",
                                           "test/python/**/*"],
-                                         exclude=["**/*.py"])
+                                         exclude=[
+                                             "**/*.py",
+                                             "**/*.pyc",
+                                         ])
 
     py_library(
         name=name,
