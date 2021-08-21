@@ -146,7 +146,6 @@ py_resources = rule(
 )
 
 def py_project(name=None,
-               main=None,
                lib_srcs=None,
                lib_deps=None,
                lib_data=None,
@@ -185,10 +184,8 @@ def py_project(name=None,
                                              "**/*.pyc",
                                          ])
 
-    lib_name = name if not main else "lib"
-
     py_library(
-        name=lib_name,
+        name=name,
         srcs=lib_srcs,
         deps=lib_deps,
         data=lib_data,
@@ -201,28 +198,12 @@ def py_project(name=None,
         ],
     )
 
-    if main:
-        py_binary(
-            name = name,
-            main = main,
-            imports=[
-                "src/python",
-                "src/resources",
-            ],
-            deps=[
-                lib_name,
-            ],
-            visibility = [
-                "//visibility:public",
-            ],
-        )
-
     for src in test_srcs:
         if "test_" in src:
             py_pytest(
                 name=src.split("/")[-1],
                 srcs=[src] + [f for f in test_srcs if "test_" not in f],
-                deps=[lib_name] + (test_deps or []),
+                deps=[name] + (test_deps or []),
                 data=test_data,
                 imports=[
                     "test/python",
