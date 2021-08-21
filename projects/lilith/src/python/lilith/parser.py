@@ -16,13 +16,17 @@ GRAMMAR = read_text('lilith', 'grammar.lark')
 # !frag[lang: yaml]
 # !end
 # all this following tex
+class Symbol(t.NamedTuple):
+    name: str
+
+
 class Args(t.NamedTuple):
     positionals: object = []
     kwargs: object = {}
 
 
 class Apply(t.NamedTuple):
-    name: str
+    name: Symbol
     args: Args
 
 
@@ -43,8 +47,8 @@ class Block(t.NamedTuple):
         return "\n".join(self.body_lines)
 
 
-class TreeToTuples(lark.Transformer):
-    @lark.v_args(inline=True)
+class TreeToTuples(Transformer):
+    @v_args(inline=True)
     def string(self, s):
         return s[1:-1].replace('\\"', '"')
 
@@ -59,7 +63,7 @@ class TreeToTuples(lark.Transformer):
 
     def word(self, args):
         """args: ['a'] ['a' ['b', 'c', 'd']]"""
-        return ".".join(a.value for a in args)
+        return Symbol(".".join(a.value for a in args))
 
     def atom(self, args):
         return args[0]
