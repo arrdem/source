@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 """ReqMan; the Requirements Manager.
 
 Reqman is a quick and dirty tool that knows about Bazel, rules_python and requirements.txt files. It
@@ -114,7 +112,7 @@ def install(requirements, upgrade):
 
     """
 
-
+    raise RuntimeError("Sorry, not implemented yet.")
 
 
 @cli.command()
@@ -146,7 +144,8 @@ def clean(requirements):
     unused = set(_unused())
     reqs = _load(requirements)
     usedreqs = [r for r in reqs if sort_key(r) not in unused]
-    _write(requirements, usedreqs)
+    cleanreqs = [r for r in usedreqs if r not in SHITLIST]
+    _write(requirements, cleanreqs)
     if usedreqs != reqs:
         exit(1)
 
@@ -158,7 +157,8 @@ def sort(requirements):
 
     reqs = _load(requirements)
     sortedreqs = sorted(reqs, key=sort_key)
-    _write(requirements, sortedreqs)
+    cleanreqs = [r for r in sortedreqs if r not in SHITLIST]
+    _write(requirements, cleanreqs)
     if reqs != sortedreqs:
         exit(1)
 

@@ -201,7 +201,7 @@ def py_project(name=None,
     for src in test_srcs:
         if "test_" in src:
             py_pytest(
-                name=name + ".test." + str(hash(src)).replace("-", "") + "." + src.split("/")[-1],
+                name=src.split("/")[-1],
                 srcs=[src] + [f for f in test_srcs if "test_" not in f],
                 deps=[name] + (test_deps or []),
                 data=test_data,
