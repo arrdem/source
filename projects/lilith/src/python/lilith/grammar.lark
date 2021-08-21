@@ -1,6 +1,7 @@
 %import common.WORD
 %import common.INT
 %import common.FLOAT
+%import common.ESCAPED_STRING
 %import common.WS
 %ignore WS
 

@@ -44,10 +44,9 @@ class Block(t.NamedTuple):
 
 
 class TreeToTuples(lark.Transformer):
-    def string(self, args):
-        # FIXME (arrdem 2021-08-21):
-        #   Gonna have to do escape sequences here
-        return args[0].value
+    @lark.v_args(inline=True)
+    def string(self, s):
+        return s[1:-1].replace('\\"', '"')
 
     def int(self, args):
         return int(args[0])
