@@ -54,12 +54,15 @@ class TreeToTuples(Transformer):
     def string(self, s):
         return s[1:-1].replace('\\"', '"')
 
-    null = lambda self, _: None
+    nil = lambda self, _: None
     true = lambda self, _: True
     false = lambda self, _: False
     int = v_args(inline=True)(lambda self, x: int(x))
     float = v_args(inline=True)(lambda self, x: float(x))
     number = v_args(inline=True)(lambda self, x: x)
+
+    list = list
+    dict = dict
 
     def word(self, args):
         """args: ['a'] ['a' ['b', 'c', 'd']]"""
@@ -82,11 +85,14 @@ class TreeToTuples(Transformer):
             _args = _args + args[1]
         return _args
 
+    def pair(self, args):
+        return (args[0], args[1])
+
     def kwargs(self, args):
         d = {}
-        key, val = args[0:2]
-        if len(args) == 3:
-            d.update(args[2])
+        key, val = args[0]
+        if len(args) == 2:
+            d.update(args[1])
         d[key] = val
         return d
 

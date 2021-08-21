@@ -10,9 +10,18 @@ STRING: /""".*?"""/ | /".*?"/
 int: INT
 float: FLOAT
 number: int | float
-word: WORD ("." WORD)*
+word: "nil" -> nil
+    | "true" -> true
+    | "false" -> false
+    | WORD ("." WORD)* -> word
 string: STRING
-atom: number | word | string
+
+list: "[" (expr ("," expr)*)? "]"
+
+pair: expr ":" expr
+dict: "{" (pair ("," pair)*)? "}"
+
+atom: number | word | string | list | dict
 
 application: word "[" arguments? "]"
 
@@ -20,7 +29,7 @@ expr: application | atom
 
 args: expr ("," args)?
 
-kwargs: expr ":" expr ("," kwargs)?
+kwargs: pair ("," kwargs)*
 
 a_args_kwargs: args ";" kwargs
 a_args: args

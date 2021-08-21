@@ -1,5 +1,7 @@
 """A simple Lilith shell."""
 
+import traceback
+
 from lilith.interpreter import Bindings, eval, Runtime
 from lilith.parser import Apply, Args, parse_expr
 from lilith.reader import Module
@@ -49,12 +51,12 @@ if __name__ == "__main__":
         try:
             expr = parse_expr(line)
         except Exception as e:
-            print(e)
+            traceback.print_exc()
             continue
 
         try:
             result = eval(runtime, module, Bindings("__root__", None), expr)
             print_([("class:result", f"⇒ {result!r}")], style=STYLE)
         except Exception as e:
-            print(e)
+            traceback.print_exc()
             continue

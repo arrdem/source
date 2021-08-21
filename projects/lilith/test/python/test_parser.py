@@ -63,6 +63,21 @@ def test_parse_arguments(arguments_grammar, example, expected):
 @pytest.mark.parametrize(
     "example, expected",
     [
+        ("1", 1),
+        ("[1, 2, 3]", [1, 2, 3]),
+        ('{"a": 1}', {"a": 1}),
+        ("true", True),
+        ("false", False),
+        ("nil", None),
+    ],
+)
+def test_parse_expr(expr_grammar, example, expected):
+    assert expr_grammar.parse(example) == expected
+
+
+@pytest.mark.parametrize(
+    "example, expected",
+    [
         ("!def[syntax]", Block(Apply(Symbol("def"), Args([Symbol("syntax")], {})), [])),
         (
             "!frag[lang: md]",

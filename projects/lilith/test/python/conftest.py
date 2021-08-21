@@ -23,5 +23,10 @@ def arguments_grammar():
 
 
 @pytest.fixture
+def expr_grammar():
+    return parser_with_transformer(GRAMMAR, "expr")
+
+
+@pytest.fixture
 def header_grammar():
     return parser_with_transformer(GRAMMAR, "header")
