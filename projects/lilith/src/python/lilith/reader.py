@@ -4,10 +4,11 @@ Lilith's reader takes parsed blocks and applies languages, building a module str
 
 import logging
 import typing as t
-from .parser import Block, Args, parse_buffer
+from .parser import Block, Args, parse_buffer, Symbol
 from warnings import warn
 
 log = logging.getLogger(__name__)
+
 
 class Module(t.NamedTuple):
     name: str
@@ -19,7 +20,7 @@ def read_buffer(buffer: str, name: str = "&buff") -> Module:
 
     m = Module(name, {})
     for block in parse_buffer(buffer, name):
-        if block.app.name == "def":
+        if block.app.target == Symbol("def"):
             if len(block.args.positionals) == 2:
                 def_name, expr = block.args.positionals
                 m.defs[def_name] = Block(expr, block.body_lines)

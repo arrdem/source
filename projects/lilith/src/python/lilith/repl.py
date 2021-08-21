@@ -20,6 +20,7 @@ STYLE = Style.from_dict(
     }
 )
 
+
 def print_(fmt, **kwargs):
     print_formatted_text(FormattedText(fmt), **kwargs)
 
@@ -27,12 +28,15 @@ def print_(fmt, **kwargs):
 if __name__ == "__main__":
     session = PromptSession(history=FileHistory(".lilith.history"))
     runtime = Runtime("test", dict())
-    module = Module("__repl__", {
-        "print": print,
-        "int": int,
-        "string": str,
-        "float": float,
-    })
+    module = Module(
+        "__repl__",
+        {
+            "print": print,
+            "int": int,
+            "string": str,
+            "float": float,
+        },
+    )
 
     while True:
         try:
@@ -49,11 +53,7 @@ if __name__ == "__main__":
             continue
 
         try:
-            result = eval(
-                runtime, module,
-                Bindings("__root__", None),
-                expr
-            )
+            result = eval(runtime, module, Bindings("__root__", None), expr)
             print_([("class:result", f"⇒ {result!r}")], style=STYLE)
         except Exception as e:
             print(e)

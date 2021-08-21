@@ -3,12 +3,11 @@ Variously poor parsing for Lilith.
 """
 
 import typing as t
-import re
 from importlib.resources import read_text
 
-import lark
+from lark import Lark, v_args, Transformer
 
-GRAMMAR = read_text('lilith', 'grammar.lark')
+GRAMMAR = read_text("lilith", "grammar.lark")
 
 
 # !foo[bar]
@@ -26,7 +25,7 @@ class Args(t.NamedTuple):
 
 
 class Apply(t.NamedTuple):
-    name: Symbol
+    target: object
     args: Args
 
 
@@ -47,19 +46,20 @@ class Block(t.NamedTuple):
         return "\n".join(self.body_lines)
 
 
+id = lambda x: x
+
+
 class TreeToTuples(Transformer):
     @v_args(inline=True)
     def string(self, s):
         return s[1:-1].replace('\\"', '"')
 
-    def int(self, args):
-        return int(args[0])
-
-    def float(self, args):
-        return float(args[0])
-
-    def number(self, args):
-        return args[0]
+    null = lambda self, _: None
+    true = lambda self, _: True
+    false = lambda self, _: False
+    int = v_args(inline=True)(lambda self, x: int(x))
+    float = v_args(inline=True)(lambda self, x: float(x))
+    number = v_args(inline=True)(lambda self, x: x)
 
     def word(self, args):
         """args: ['a'] ['a' ['b', 'c', 'd']]"""
@@ -107,11 +107,7 @@ class TreeToTuples(Transformer):
 
 
 def parser_with_transformer(grammar, start="header"):
-    return lark.Lark(grammar,
-                     start=start,
-                     parser='lalr',
-                     transformer=TreeToTuples())
-
+    return Lark(grammar, start=start, parser="lalr", transformer=TreeToTuples())
 
 
 def parse_expr(buff: str):

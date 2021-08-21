@@ -21,6 +21,7 @@ def kwargs_grammar():
 def arguments_grammar():
     return parser_with_transformer(GRAMMAR, "arguments")
 
+
 @pytest.fixture
 def header_grammar():
     return parser_with_transformer(GRAMMAR, "header")

@@ -4,7 +4,7 @@
 
 import typing as t
 
-from .parser import Apply, Block
+from .parser import Apply, Block, Symbol
 from .reader import Module
 
 
@@ -49,8 +49,7 @@ def lookup(runtime, mod, locals, name):
     if name in mod.defs:
         return mod.defs.get(name)
 
-    else:
-        raise err
+    raise err or KeyError
 
     # FIXME (arrdem 2021-08-21):
     #   How do we ever get references to stuff in other modules?
@@ -68,11 +67,14 @@ def eval(ctx: Runtime, mod: Module, locals: Bindings, expr):
     # Pointedly not assert that the module is ACTUALLY in the runtime,
     # We're just going to assume this for convenience.
 
-    if isinstance(expr, Apply):
+    if isinstance(expr, Symbol):
+        return lookup(ctx, mod, locals, expr)
+
+    elif isinstance(expr, Apply):
         # FIXME (arrdem 2021-08-21):
         #   Apply should be (apply <expr> <args> <kwargs>).
         #   Now no distinction is made between strings ("") and symbols/barewords
-        fun = lookup(ctx, mod, locals, expr.name)
+        fun = eval(ctx, mod, locals, expr.target)
         # Evaluate the parameters
         args = eval(ctx, mod, locals, expr.args.positionals)
         kwargs = eval(ctx, mod, locals, expr.args.kwargs)
@@ -89,8 +91,10 @@ def eval(ctx: Runtime, mod: Module, locals: Bindings, expr):
         return tuple(eval(ctx, mod, locals, i) for i in expr)
 
     elif isinstance(expr, dict):
-        return {eval(ctx, mod, locals, k): eval(ctx, mod, locals, v)
-                for k, v in expr.items()}
+        return {
+            eval(ctx, mod, locals, k): eval(ctx, mod, locals, v)
+            for k, v in expr.items()
+        }
 
     else:
         raise RuntimeError(f"Can't eval {expr}")
