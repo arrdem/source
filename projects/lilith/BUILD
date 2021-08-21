@@ -7,3 +7,15 @@ py_project(
         py_requirement("hypothesis"),
     ]
 )
+
+py_binary(
+    name = "repl",
+    main = "src/python/lilith/repl.py",
+    imports = [
+        "src/python",
+    ],
+    deps = [
+        ":lilith",
+        py_requirement("prompt_toolkit"),
+    ]
+)

@@ -12,5 +12,4 @@ import pytest
 ])
 def test_read(example, expected):
     got = read_buffer(example)
-    print(got)
     assert got == expected

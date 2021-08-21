@@ -22,7 +22,7 @@ class Args(t.NamedTuple):
 
 
 class Apply(t.NamedTuple):
-    tag: str
+    name: str
     args: Args
 
 
@@ -44,6 +44,11 @@ class Block(t.NamedTuple):
 
 
 class TreeToTuples(lark.Transformer):
+    def string(self, args):
+        # FIXME (arrdem 2021-08-21):
+        #   Gonna have to do escape sequences here
+        return args[0].value
+
     def int(self, args):
         return int(args[0])
 
@@ -66,7 +71,6 @@ class TreeToTuples(lark.Transformer):
     def application(self, args):
         tag = args[0]
         args = args[1] if len(args) > 1 else Args()
-        print(args)
         return Apply(tag, args)
 
     def args(self, args):
@@ -105,6 +109,10 @@ def parser_with_transformer(grammar, start="header"):
                      parser='lalr',
                      transformer=TreeToTuples())
 
+
+
+def parse_expr(buff: str):
+    return parser_with_transformer(GRAMMAR, "expr").parse(buff)
 
 
 def parse_buffer(buff: str, name: str = "&buff") -> t.List[object]:

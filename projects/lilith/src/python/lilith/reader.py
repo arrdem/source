@@ -19,9 +19,7 @@ def read_buffer(buffer: str, name: str = "&buff") -> Module:
 
     m = Module(name, {})
     for block in parse_buffer(buffer, name):
-        log.debug(f"{name}, Got a block", block)
-
-        if block.tag == "def":
+        if block.app.name == "def":
             if len(block.args.positionals) == 2:
                 def_name, expr = block.args.positionals
                 m.defs[def_name] = Block(expr, block.body_lines)
