@@ -1,21 +1,29 @@
 %import common.WORD
-%import common.NUMBER
+%import common.INT
+%import common.FLOAT
 %import common.WS
 %ignore WS
 
 STRING: /""".*?"""/ | /".*?"/
 
-atom: NUMBER | WORD | STRING
+int: INT
+float: FLOAT
+number: int | float
+word: WORD ("." WORD)*
+string: STRING
+atom: number | word | string
 
-expr: atom
+application: word "[" arguments? "]"
+
+expr: application | atom
 
 args: expr ("," args)?
 
 kwargs: expr ":" expr ("," kwargs)?
 
-_args_kwargs: args ";" kwargs
-_args: args
-_kwargs: kwargs
-arguments: _args_kwargs | _args | _kwargs
+a_args_kwargs: args ";" kwargs
+a_args: args
+a_kwargs: kwargs
+arguments: a_args_kwargs | a_args | a_kwargs
 
-header: "!" WORD "[" arguments? "]"
+header: "!" application

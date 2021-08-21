@@ -21,10 +21,22 @@ class Args(t.NamedTuple):
     kwargs: object = {}
 
 
-class Block(t.NamedTuple):
+class Apply(t.NamedTuple):
     tag: str
     args: Args
+
+
+class Block(t.NamedTuple):
+    app: Apply
     body_lines: list
+
+    @property
+    def tag(self):
+        return self.app.tag
+
+    @property
+    def args(self):
+        return self.app.args
 
     @property
     def body(self):
@@ -32,14 +44,33 @@ class Block(t.NamedTuple):
 
 
 class TreeToTuples(lark.Transformer):
+    def int(self, args):
+        return int(args[0])
+
+    def float(self, args):
+        return float(args[0])
+
+    def number(self, args):
+        return args[0]
+
+    def word(self, args):
+        """args: ['a'] ['a' ['b', 'c', 'd']]"""
+        return ".".join(a.value for a in args)
+
     def atom(self, args):
         return args[0]
 
     def expr(self, args):
         return args[0]
 
+    def application(self, args):
+        tag = args[0]
+        args = args[1] if len(args) > 1 else Args()
+        print(args)
+        return Apply(tag, args)
+
     def args(self, args):
-        _args = [args[0].value]
+        _args = [args[0]]
         if len(args) == 2:
             _args = _args + args[1]
         return _args
@@ -49,28 +80,23 @@ class TreeToTuples(lark.Transformer):
         key, val = args[0:2]
         if len(args) == 3:
             d.update(args[2])
-        d[key.value] = val.value
+        d[key] = val
         return d
 
-    def _args_kwargs(self, args):
-        return lark.Tree('args', (args[0], args[1]))
+    def a_args_kwargs(self, args):
+        return Args(args[0], args[1])
 
-    def _args(self, args):
-        return lark.Tree('args', (args[0], {}))
+    def a_args(self, args):
+        return Args(args[0], {})
 
-    def _kwargs(self, args):
-        return lark.Tree('args', ([], args[0]))
+    def a_kwargs(self, args):
+        return Args([], args[0])
 
     def arguments(self, args):
-        return args
+        return args[0]
 
     def header(self, args):
-        print("Header", args)
-        tag = args[0]
-        arguments = args[1] if len(args) > 1 else ([], {})
-        body = []
-
-        return Block(tag, Args(*arguments), body)
+        return Block(args[0], [])
 
 
 def parser_with_transformer(grammar, start="header"):
@@ -80,16 +106,21 @@ def parser_with_transformer(grammar, start="header"):
                      transformer=TreeToTuples())
 
 
-def shotgun_parse(buff: str) -> t.List[object]:
+
+def parse_buffer(buff: str, name: str = "&buff") -> t.List[object]:
+    header_parser = parser_with_transformer(GRAMMAR, "header")
+
     def _parse():
         block = None
         for line in buff.splitlines():
             if line.startswith("!"):
                 if block:
                     yield block
-                block = [line]
+                block = header_parser.parse(line)
+            elif block:
+                block.body_lines.append(line)
             else:
-                block.append(line)
+                raise SyntaxError("Buffers must start with a ![] block")
         if block:
             yield block
 

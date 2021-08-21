@@ -1,9 +1,4 @@
-!defscope[designdoc]
-!scope[designdoc]
-
-!def[pitch]
-!frag[lang: md]
-
+!def[pitch, frag[lang: md]]
 # The Lilith Pitch
 
 Code is more than .. just code for the compiler.
@@ -40,11 +35,9 @@ FIXME: we need bare words, we need strings
 
 FIXME: We need the object language
 
-!def[openapi]
-!frag[lang: yaml]
+!def[openapi, frag[lang: yaml]]
 
-!def[main]
-!frag[lang: lil]
+!def[main, frag[lang: lil]]
 ; is importing a bang-operation?
 
 import[tagle]
