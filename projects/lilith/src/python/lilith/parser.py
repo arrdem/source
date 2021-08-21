@@ -4,13 +4,26 @@ Variously poor parsing for Lilith.
 
 import typing as t
 import re
+from importlib.resources import read_text
 
 import lark
 
+GRAMMAR = read_text('lilith', 'grammar.lark')
+
+
+# !foo[bar]
+# !def[name]
+# !frag[lang: yaml]
+# !end
+# all this following tex
+class Args(t.NamedTuple):
+    positionals: object = []
+    kwargs: object = {}
+
+
 class Block(t.NamedTuple):
     tag: str
-    args: list
-    kwargs: list
+    args: Args
     body_lines: list
 
     @property
@@ -19,6 +32,18 @@ class Block(t.NamedTuple):
 
 
 class TreeToTuples(lark.Transformer):
+    def atom(self, args):
+        return args[0]
+
+    def expr(self, args):
+        return args[0]
+
+    def args(self, args):
+        _args = [args[0].value]
+        if len(args) == 2:
+            _args = _args + args[1]
+        return _args
+
     def kwargs(self, args):
         d = {}
         key, val = args[0:2]
@@ -27,45 +52,32 @@ class TreeToTuples(lark.Transformer):
         d[key.value] = val.value
         return d
 
-    def args(self, args):
-        _args = [args[0].value]
-        if len(args) == 2:
-            _args = _args + args[1]
-        return _args
+    def _args_kwargs(self, args):
+        return lark.Tree('args', (args[0], args[1]))
 
-    def header(self, parse_args):
-        print("Header", parse_args)
-        tag = None
-        args = None
-        kwargs = None
+    def _args(self, args):
+        return lark.Tree('args', (args[0], {}))
+
+    def _kwargs(self, args):
+        return lark.Tree('args', ([], args[0]))
+
+    def arguments(self, args):
+        return args
+
+    def header(self, args):
+        print("Header", args)
+        tag = args[0]
+        arguments = args[1] if len(args) > 1 else ([], {})
         body = []
 
-        iargs = iter(parse_args[1])
-        tag = parse_args[0]
-        v = next(iargs, None)
-        if isinstance(v, list):
-            args = v
-            v = next(iargs, None)
-        if isinstance(v, dict):
-            kwargs = v
-
-        return Block(tag, args, kwargs, body)
+        return Block(tag, Args(*arguments), body)
 
 
-block_grammar = lark.Lark("""
-%import common.WORD
-%import common.WS
-%ignore WS
-?start: header
-
-args: WORD ("," args)?
-kwargs: WORD ":" WORD ("," kwargs)?
-arguments: args "," kwargs | args | kwargs
-header: "!" WORD "[" arguments? "]"
-""",
-                          parser='lalr',
-                          transformer=TreeToTuples())
-
+def parser_with_transformer(grammar, start="header"):
+    return lark.Lark(grammar,
+                     start=start,
+                     parser='lalr',
+                     transformer=TreeToTuples())
 
 
 def shotgun_parse(buff: str) -> t.List[object]:
