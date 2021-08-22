@@ -8,7 +8,7 @@ import traceback
 
 from lilith.interpreter import Bindings, eval as lil_eval, Runtime
 from lilith.parser import Apply, Args, parse_expr, Symbol
-from lilith.reader import Import, Module, read_buffer, read_file
+from lilith.reader import Def, Import, Module, read_buffer, read_file
 from prompt_toolkit import print_formatted_text, prompt, PromptSession
 from prompt_toolkit.formatted_text import FormattedText
 from prompt_toolkit.history import FileHistory
@@ -100,7 +100,7 @@ def batch(opts, args, runtime):
     )
 
     if main in mod.defs:
-        lil_eval(runtime, mod, Bindings(main, None), mod.defs.get(main))
+        lil_eval(runtime, mod, Bindings(main, None), mod.defs.get(main).block)
     else:
         raise NameError(f"entry point {main} not found in {mod.name.name}")
 
@@ -165,9 +165,9 @@ def main():
         [],
         {
             # The Python FFI escape hatch
-            Symbol("py"): py,
+            Symbol("py"): Def(None, py),
             # The Lilith self-interpreter
-            Symbol("lil"): lil,
+            Symbol("lil"): Def(None, lil),
         },
     )
     runtime.modules[bootstrap.name] = bootstrap

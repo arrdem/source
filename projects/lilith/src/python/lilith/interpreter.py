@@ -6,7 +6,7 @@ import logging
 import typing as t
 
 from lilith.parser import Apply, Block, Symbol, Args
-from lilith.reader import Module, Import
+from lilith.reader import Def, Module, Import
 
 
 log = logging.getLogger(__name__)
@@ -57,23 +57,32 @@ def lookup(ctx, mod, locals, name):
     # to eval it before we can use it as a value. Eval IS RECURSIVE.
 
     # Then module scope
-    if name in mod.defs:
-        return eval(ctx, mod, Bindings(), mod.defs.get(name))
+    if d := mod.defs.get(name):
+        # read-eval cache
+        if d.get() is Def.UNSET:
+            d.set(eval(ctx, mod, Bindings(), d.block))
+        return d.get()
 
     # Then module imports
     # Note that we include the prelude as a fallback import here
     for i in mod.imports + [Import(ctx.prelude, {}, wild=True)]:
         im = ctx.modules.get(i.src)
         iname = i.names.get(name, name if i.wild else None)
-        if iname in im.defs:
-            return eval(ctx, im, Bindings(), im.defs.get(iname))
+        if d := im.defs.get(iname):
+            # read-eval cache
+            if d.get() is Def.UNSET:
+                d.set(eval(ctx, im, Bindings(), d.block))
+            return d.get()
 
     # Finally try a global reference
     mod = Symbol(".".join(name.name.split(".")[:-1]))
     name = Symbol(name.name.split(".")[-1])
     if mod := ctx.modules.get(mod):
-        if binding := mod.defs.get(name):
-            return eval(ctx, mod, Bindings(), binding)
+        if d := mod.defs.get(name):
+            # read-eval cache
+            if d.get() is Def.UNSET:
+                d.set(eval(ctx, mod, Bindings(), d.block))
+            return d.get()
 
     raise err or KeyError
 
@@ -140,7 +149,7 @@ def eval(ctx: Runtime, mod: Module, locals: Bindings, expr):
         args = eval(ctx, mod, locals, expr.args.positionals)
         kwargs = eval(ctx, mod, locals, expr.args.kwargs)
         # Use Python's __call__ protocol
-        log.debug(f"eval[]; app; {fun}[*{args or []}, **{kwargs or dict()}]")
+        # log.debug(f"eval[]; app; {fun}[*{args or []}, **{kwargs or dict()}]")
         return fun(*args, **kwargs)
 
     elif isinstance(expr, list):

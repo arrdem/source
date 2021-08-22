@@ -1,7 +1,7 @@
 """Tests covering the reader."""
 
 from lilith.parser import Apply, Args, Block, Symbol
-from lilith.reader import Module, read_buffer
+from lilith.reader import Def, Module, read_buffer
 import pytest
 
 
@@ -14,9 +14,11 @@ import pytest
                 Symbol("&buff"),
                 [],
                 {
-                    Symbol("main"): Block(
-                        Apply(Symbol("lang"), Args([Symbol("lil")], {})),
-                        ['print["hello, world"]'],
+                    Symbol("main"): Def(
+                        Block(
+                            Apply(Symbol("lang"), Args([Symbol("lil")], {})),
+                            ['print["hello, world"]'],
+                        ),
                     )
                 },
             ),

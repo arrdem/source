@@ -1,8 +1,11 @@
 !import[lilith.bootstrap, [py, lil]]
+
 !def[lil, lilith.bootstrap.lil]
 lilith.bootstrap.lil
+
 !def[py, lilith.bootstrap.lil]
 lilith.bootstrap.py
+
 !def[abs, py]
 return abs
 !def[delattr, py]

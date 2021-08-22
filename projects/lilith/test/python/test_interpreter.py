@@ -4,7 +4,7 @@
 
 from lilith.interpreter import Bindings, eval, Runtime
 from lilith.parser import Apply, Args, Symbol
-from lilith.reader import Module
+from lilith.reader import Def, Module
 import pytest
 
 
@@ -37,7 +37,7 @@ def test_hello_world(capsys, runtime):
     assert (
         eval(
             runtime,
-            Module("__repl__", [], {Symbol("print"): print}),
+            Module("__repl__", [], {Symbol("print"): Def("__builtin__.print", print)}),
             Bindings("__root__", None),
             Apply(Symbol("print"), Args(["hello, world"], {})),
         )

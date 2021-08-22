@@ -85,6 +85,13 @@ return lambda x, y: x > y
 !def[sub, py]
 return lambda x, y: x - y
 
+!def[fib_tests, doctest]
+fib[1] = 1
+fib[2] = 1
+fib[3] = 2
+
+!md[]
+
 !def[fib, lil]
 lambda[[x]
        , cond[[gt[x, 1],
@@ -143,10 +150,11 @@ Most of Lilith's standard library (`src/python/lilith/prelude.lil`) consists of 
 **Currently missing:**
 - `eval[]`
 - `apply[]` (although this is trivial to implement)
-- `if[]`
+- `or[]`
 - `not[]`
 - `=[]`
 - `let[]`
+- `if[]`
 
 ## License
 

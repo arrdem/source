@@ -15,7 +15,6 @@ idea: the parser is going to IGNORE stuff by default.
 Let's build an M-expression syntax with support for multiple co-equal languages and fragments/scopes with a meta-syntax allowing for references between them and consuming fragment-notation-defined blocks? (FIXME: better word?)
 
 !def[syntax, md]
-
 \![] bang-brackets is a meta-syntactic directive used both by the lil tangler and the lil object language.
 
 Programs consist of many fragments, which can reference each-other and from which executable framents are woven.
