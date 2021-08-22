@@ -151,6 +151,7 @@ py_resources = rule(
 
 def py_project(name=None,
                main=None,
+               main_deps=None,
                lib_srcs=None,
                lib_deps=None,
                lib_data=None,
@@ -210,7 +211,7 @@ def py_project(name=None,
             name=name,
             main=main,
             srcs=lib_srcs,
-            deps=lib_deps,
+            deps=(lib_deps or []) + (main_deps or []),
             data=lib_data,
             imports=[
                 "src/python",
