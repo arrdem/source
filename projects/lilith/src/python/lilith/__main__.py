@@ -40,6 +40,7 @@ def repl(opts, args, runtime):
     session = PromptSession(history=FileHistory(".lilith.history"))
     module = Module(
         "__repl__",
+        [],
         {},
     )
 
@@ -143,7 +144,11 @@ if __name__ == "__main__":
 
     def py(runtime=None, module=None, expr=None, body=None, name=None):
         """The implementation of the Python lang as an eval type."""
-        return eval(body)
+        g = globals().copy()
+        l = {}
+        body = f"def _shim():\n" + "\n".join("  " + l for l in body.splitlines()) + "\n\n_escape = _shim()"
+        exec(body, g, l)
+        return l["_escape"]
 
     def lil(runtime=None, module=None, expr=None, body=None, name=None):
         """The implementation of the Lilith lang as an eval type."""

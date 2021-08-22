@@ -1,4 +1,4 @@
-!def[pitch, md[]]
+!def[pitch, md]
 # The Lilith Pitch
 
 Code is more than .. just code for the compiler.
@@ -14,7 +14,7 @@ idea: the parser is going to IGNORE stuff by default.
 
 Let's build an M-expression syntax with support for multiple co-equal languages and fragments/scopes with a meta-syntax allowing for references between them and consuming fragment-notation-defined blocks? (FIXME: better word?)
 
-!def[sytnax, md[]]
+!def[syntax, md]
 
 \![] bang-brackets is a meta-syntactic directive used both by the lil tangler and the lil object language.
 
@@ -34,9 +34,16 @@ FIXME: we need bare words, we need strings
 
 FIXME: We need the object language
 
-!def[openapi, yaml[]]
+!def[openapi, yaml]
+---
+openapi: 3.1.0
 
-!def[main, lang[lilith]]
-; is importing a bang-operation?
+!def[join, py]
+return lambda s, frags: s.join(frags)
 
-print[str.join["", [pitch, syntax]]]
+!def[md, py]
+from markdown import markdown
+return lambda *args, body=None, **kwargs: markdown(body)
+
+!def[main, lil]
+print[join["\n", [pitch, syntax]]]

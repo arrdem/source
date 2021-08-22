@@ -1,131 +1,133 @@
 !import[lilith.bootstrap, [py, lil]]
 !def[lil, lilith.bootstrap.lil]
 lilith.bootstrap.lil
+!def[py, lilith.bootstrap.lil]
+lilith.bootstrap.py
 !def[abs, py]
-abs
+return abs
 !def[delattr, py]
-delattr
+return delattr
 !def[hash, py]
-hash
+return hash
 !def[set, py]
-set
+return set
 !def[all, py]
-all
+return all
 !def[dict, py]
-dict
+return dict
 !def[min, py]
-min
+return min
 !def[any, py]
-any
+return any
 !def[dir, py]
-dir
+return dir
 !def[hex, py]
-hex
+return hex
 !def[next, py]
-next
+return next
 !def[slice, py]
-slice
+return slice
 !def[ascii, py]
-ascii
+return ascii
 !def[divmod, py]
-divmod
+return divmod
 !def[id, py]
-id
+return id
 !def[object, py]
-object
+return object
 !def[sorted, py]
-sorted
+return sorted
 !def[bin, py]
-bin
+return bin
 !def[enumerate, py]
-enumerate
+return enumerate
 !def[input, py]
-input
+return input
 !def[oct, py]
-oct
+return oct
 !def[staticmethod, py]
-staticmethod
+return staticmethod
 !def[bool, py]
-bool
+return bool
 !def[eval, py]
-eval
+return eval
 !def[int, py]
-int
+return int
 !def[open, py]
-open
+return open
 !def[str, py]
-str
+return str
 !def[breakpoint, py]
-breakpoint
+return breakpoint
 !def[exec, py]
-exec
+return exec
 !def[isinstance, py]
-isinstance
+return isinstance
 !def[ord, py]
-ord
+return ord
 !def[sum, py]
-sum
+return sum
 !def[bytearray, py]
-bytearray
+return bytearray
 !def[filter, py]
-filter
+return filter
 !def[issubclass, py]
-issubclass
+return issubclass
 !def[pow, py]
-pow
+return pow
 !def[super, py]
-super
+return super
 !def[bytes, py]
-bytes
+return bytes
 !def[float, py]
-float
+return float
 !def[iter, py]
-iter
+return iter
 !def[print, py]
-print
+return print
 !def[tuple, py]
-tuple
+return tuple
 !def[callable, py]
-callable
+return callable
 !def[format, py]
-format
+return format
 !def[len, py]
-len
+return len
 !def[property, py]
-property
+return property
 !def[type, py]
-type
+return type
 !def[chr, py]
-chr
+return chr
 !def[frozenset, py]
-frozenset
+return frozenset
 !def[list, py]
-list
+return list
 !def[range, py]
-range
+return range
 !def[vars, py]
-vars
+return vars
 !def[classmethod, py]
-classmethod
+return classmethod
 !def[getattr, py]
-getattr
+return getattr
 !def[locals, py]
-locals
+return locals
 !def[repr, py]
-repr
+return repr
 !def[zip, py]
-zip
+return zip
 !def[compile, py]
-compile
+return compile
 !def[map, py]
-map
+return map
 !def[reversed, py]
-reversed
+return reversed
 !def[complex, py]
-complex
+return complex
 !def[hasattr, py]
-hasattr
+return hasattr
 !def[max, py]
-max
+return max
 !def[round, py]
-round
+return round

@@ -6,6 +6,9 @@ py_project(
         py_requirement("pyyaml"),
         py_requirement("markdown"),
     ],
+    main_deps = [
+        py_requirement("prompt-toolkit"),
+    ],
     test_deps = [
         py_requirement("hypothesis"),
     ],
