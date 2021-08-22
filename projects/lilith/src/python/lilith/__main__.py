@@ -122,7 +122,7 @@ parser.add_argument(
 parser.add_argument("-v", "--verbose", action="count", default=0)
 parser.add_argument("file", nargs="?", help="A file to start executing from")
 
-if __name__ == "__main__":
+def main():
     opts, args = parser.parse_known_args()
 
     if opts.verbose == 0:
@@ -178,3 +178,7 @@ if __name__ == "__main__":
         batch(opts, args, runtime)
     else:
         repl(opts, args, runtime)
+
+
+if __name__ == "__main__":
+    main()
