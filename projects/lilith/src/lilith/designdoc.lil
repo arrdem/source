@@ -36,7 +36,7 @@ FIXME: We need the object language
 
 !def[openapi, yaml[]]
 
-!def[main, lilith[]]
+!def[main, lang[lilith]]
 ; is importing a bang-operation?
 
 print[str.join["", [pitch, syntax]]]

@@ -72,9 +72,7 @@ def eval(ctx: Runtime, mod: Module, locals: Bindings, expr):
         return lookup(ctx, mod, locals, expr)
 
     elif isinstance(expr, Apply):
-        # FIXME (arrdem 2021-08-21):
-        #   Apply should be (apply <expr> <args> <kwargs>).
-        #   Now no distinction is made between strings ("") and symbols/barewords
+        # Evaluate the call target
         fun = eval(ctx, mod, locals, expr.target)
         # Evaluate the parameters
         args = eval(ctx, mod, locals, expr.args.positionals)

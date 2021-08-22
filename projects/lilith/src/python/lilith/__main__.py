@@ -75,21 +75,23 @@ def batch(opts, args, runtime):
     main = Symbol(main)
 
     # Register
-    runtime.modules[mod.name] = mod
+    runtime.modules.update({mod.name: mod})
 
     print("DEBUG: batch mode")
     print(
         yaml.dump(
             {
                 "type": "runtime",
-                "name": runtime.name,
+                "name": runtime.name.name,
                 "modules": {
-                    m.name: {
+                    m.name.name: {
                         "defs": {dname.name: repr(d) for dname, d in m.defs.items()}
                     }
                     for m in runtime.modules.values()
                 },
-            }
+            },
+            default_flow_style=False,
+            sort_keys=False,
         )
     )
 
@@ -125,11 +127,27 @@ if __name__ == "__main__":
             sys.path.insert(0, _e)
 
     # Building up a bootstrap interface for going out to many Python features.
-    runtime = Runtime("__runtime__", Symbol(opts.prelude), {})
+    runtime = Runtime(Symbol("__runtime__"), Symbol(opts.prelude), {})
+
+    def _lil(runtime=None,
+             module=None,
+             body=None,
+             name=None):
+        """The implementation of the Lilith lang as an eval type."""
+        expr = parse_expr(body)
+        return eval(runtime, module, Bindings(), expr)
+
     bootstrap = Module(
-        "lilith.bootstrap",
+        Symbol("lilith.bootstrap"),
         [],
-        {Symbol("py"): lambda *args, body=None, **kwargs: eval(body)},
+        {
+            # The foundational meaning of lang[]
+            Symbol("lang"): lambda evaluator, body=None: evaluator(body),
+            # The Python FFI escape hatch
+            Symbol("py"): lambda *args, body=None, **kwargs: eval(body),
+            # The Lilith self-interpreter
+            Symbol("lilith"): _lil,
+         },
     )
     runtime.modules[Symbol(bootstrap.name)] = bootstrap
     prelude_mod = read_buffer(
