@@ -1,11 +1,12 @@
 """The Lilith runner."""
 
+import logging
 import argparse
 from importlib.resources import read_text as resource_text
 import sys
 import traceback
 
-from lilith.interpreter import Bindings, eval, Runtime
+from lilith.interpreter import Bindings, eval as lil_eval, Runtime
 from lilith.parser import Apply, Args, parse_expr, Symbol
 from lilith.reader import Import, Module, read_buffer, read_file
 from prompt_toolkit import print_formatted_text, prompt, PromptSession
@@ -13,6 +14,9 @@ from prompt_toolkit.formatted_text import FormattedText
 from prompt_toolkit.history import FileHistory
 from prompt_toolkit.styles import Style
 import yaml
+
+
+log = logging.getLogger(__name__)
 
 
 STYLE = Style.from_dict(
@@ -54,7 +58,7 @@ def repl(opts, args, runtime):
             continue
 
         try:
-            result = eval(runtime, module, Bindings("__root__", None), expr)
+            result = lil_eval(runtime, module, Bindings("__root__", None), expr)
             print_([("class:result", f"⇒ {result!r}")], style=STYLE)
         except Exception as e:
             traceback.print_exc()
@@ -77,8 +81,7 @@ def batch(opts, args, runtime):
     # Register
     runtime.modules.update({mod.name: mod})
 
-    print("DEBUG: batch mode")
-    print(
+    log.debug(
         yaml.dump(
             {
                 "type": "runtime",
@@ -96,7 +99,7 @@ def batch(opts, args, runtime):
     )
 
     if main in mod.defs:
-        eval(runtime, mod, Bindings(main, None), mod.defs.get(main))
+        lil_eval(runtime, mod, Bindings(main, None), mod.defs.get(main))
     else:
         raise NameError(f"entry point {main} not found in {mod.name.name}")
 
@@ -115,11 +118,20 @@ parser.add_argument(
 parser.add_argument(
     "--prelude", default="lilith.prelude", help="Select a module prelude."
 )
+parser.add_argument("-v", "--verbose", action="count", default=0)
 parser.add_argument("file", nargs="?", help="A file to start executing from")
-
 
 if __name__ == "__main__":
     opts, args = parser.parse_known_args()
+
+    if opts.verbose == 0:
+        level = logging.WARN
+    elif opts.verbose == 1:
+        level = logging.INFO
+    elif opts.verbose > 1:
+        level = 0
+
+    logging.basicConfig(level=level)
 
     # Bash anything the user says is the path onto the PYTHONPATH so we can use importlib for our loading machinery.
     for e in opts.path:
@@ -129,27 +141,26 @@ if __name__ == "__main__":
     # Building up a bootstrap interface for going out to many Python features.
     runtime = Runtime(Symbol("__runtime__"), Symbol(opts.prelude), {})
 
-    def _lil(runtime=None,
-             module=None,
-             body=None,
-             name=None):
+    def py(runtime=None, module=None, expr=None, body=None, name=None):
+        """The implementation of the Python lang as an eval type."""
+        return eval(body)
+
+    def lil(runtime=None, module=None, expr=None, body=None, name=None):
         """The implementation of the Lilith lang as an eval type."""
         expr = parse_expr(body)
-        return eval(runtime, module, Bindings(), expr)
+        return lil_eval(runtime, module, Bindings(), expr)
 
     bootstrap = Module(
         Symbol("lilith.bootstrap"),
         [],
         {
-            # The foundational meaning of lang[]
-            Symbol("lang"): lambda evaluator, body=None: evaluator(body),
             # The Python FFI escape hatch
-            Symbol("py"): lambda *args, body=None, **kwargs: eval(body),
+            Symbol("py"): py,
             # The Lilith self-interpreter
-            Symbol("lilith"): _lil,
-         },
+            Symbol("lil"): lil,
+        },
     )
-    runtime.modules[Symbol(bootstrap.name)] = bootstrap
+    runtime.modules[bootstrap.name] = bootstrap
     prelude_mod = read_buffer(
         resource_text(
             ".".join(opts.prelude.split(".")[:-1]), opts.prelude.split(".")[-1] + ".lil"

@@ -1,129 +1,131 @@
-!import[lilith.bootstrap, [lang, py]]
-!def[abs, lang[py]]
+!import[lilith.bootstrap, [py, lil]]
+!def[lil, lilith.bootstrap.lil]
+lilith.bootstrap.lil
+!def[abs, py]
 abs
-!def[delattr, lang[py]]
+!def[delattr, py]
 delattr
-!def[hash, lang[py]]
+!def[hash, py]
 hash
-!def[set, lang[py]]
+!def[set, py]
 set
-!def[all, lang[py]]
+!def[all, py]
 all
-!def[dict, lang[py]]
+!def[dict, py]
 dict
-!def[min, lang[py]]
+!def[min, py]
 min
-!def[any, lang[py]]
+!def[any, py]
 any
-!def[dir, lang[py]]
+!def[dir, py]
 dir
-!def[hex, lang[py]]
+!def[hex, py]
 hex
-!def[next, lang[py]]
+!def[next, py]
 next
-!def[slice, lang[py]]
+!def[slice, py]
 slice
-!def[ascii, lang[py]]
+!def[ascii, py]
 ascii
-!def[divmod, lang[py]]
+!def[divmod, py]
 divmod
-!def[id, lang[py]]
+!def[id, py]
 id
-!def[object, lang[py]]
+!def[object, py]
 object
-!def[sorted, lang[py]]
+!def[sorted, py]
 sorted
-!def[bin, lang[py]]
+!def[bin, py]
 bin
-!def[enumerate, lang[py]]
+!def[enumerate, py]
 enumerate
-!def[input, lang[py]]
+!def[input, py]
 input
-!def[oct, lang[py]]
+!def[oct, py]
 oct
-!def[staticmethod, lang[py]]
+!def[staticmethod, py]
 staticmethod
-!def[bool, lang[py]]
+!def[bool, py]
 bool
-!def[eval, lang[py]]
+!def[eval, py]
 eval
-!def[int, lang[py]]
+!def[int, py]
 int
-!def[open, lang[py]]
+!def[open, py]
 open
-!def[str, lang[py]]
+!def[str, py]
 str
-!def[breakpoint, lang[py]]
+!def[breakpoint, py]
 breakpoint
-!def[exec, lang[py]]
+!def[exec, py]
 exec
-!def[isinstance, lang[py]]
+!def[isinstance, py]
 isinstance
-!def[ord, lang[py]]
+!def[ord, py]
 ord
-!def[sum, lang[py]]
+!def[sum, py]
 sum
-!def[bytearray, lang[py]]
+!def[bytearray, py]
 bytearray
-!def[filter, lang[py]]
+!def[filter, py]
 filter
-!def[issubclass, lang[py]]
+!def[issubclass, py]
 issubclass
-!def[pow, lang[py]]
+!def[pow, py]
 pow
-!def[super, lang[py]]
+!def[super, py]
 super
-!def[bytes, lang[py]]
+!def[bytes, py]
 bytes
-!def[float, lang[py]]
+!def[float, py]
 float
-!def[iter, lang[py]]
+!def[iter, py]
 iter
-!def[print, lang[py]]
+!def[print, py]
 print
-!def[tuple, lang[py]]
+!def[tuple, py]
 tuple
-!def[callable, lang[py]]
+!def[callable, py]
 callable
-!def[format, lang[py]]
+!def[format, py]
 format
-!def[len, lang[py]]
+!def[len, py]
 len
-!def[property, lang[py]]
+!def[property, py]
 property
-!def[type, lang[py]]
+!def[type, py]
 type
-!def[chr, lang[py]]
+!def[chr, py]
 chr
-!def[frozenset, lang[py]]
+!def[frozenset, py]
 frozenset
-!def[list, lang[py]]
+!def[list, py]
 list
-!def[range, lang[py]]
+!def[range, py]
 range
-!def[vars, lang[py]]
+!def[vars, py]
 vars
-!def[classmethod, lang[py]]
+!def[classmethod, py]
 classmethod
-!def[getattr, lang[py]]
+!def[getattr, py]
 getattr
-!def[locals, lang[py]]
+!def[locals, py]
 locals
-!def[repr, lang[py]]
+!def[repr, py]
 repr
-!def[zip, lang[py]]
+!def[zip, py]
 zip
-!def[compile, lang[py]]
+!def[compile, py]
 compile
-!def[map, lang[py]]
+!def[map, py]
 map
-!def[reversed, lang[py]]
+!def[reversed, py]
 reversed
-!def[complex, lang[py]]
+!def[complex, py]
 complex
-!def[hasattr, lang[py]]
+!def[hasattr, py]
 hasattr
-!def[max, lang[py]]
+!def[max, py]
 max
-!def[round, lang[py]]
+!def[round, py]
 round
