@@ -122,6 +122,7 @@ parser.add_argument(
 parser.add_argument("-v", "--verbose", action="count", default=0)
 parser.add_argument("file", nargs="?", help="A file to start executing from")
 
+
 def main():
     opts, args = parser.parse_known_args()
 
@@ -146,7 +147,11 @@ def main():
         """The implementation of the Python lang as an eval type."""
         g = globals().copy()
         l = {}
-        body = f"def _shim():\n" + "\n".join("  " + l for l in body.splitlines()) + "\n\n_escape = _shim()"
+        body = (
+            f"def _shim():\n"
+            + "\n".join("  " + l for l in body.splitlines())
+            + "\n\n_escape = _shim()"
+        )
         exec(body, g, l)
         return l["_escape"]
 
