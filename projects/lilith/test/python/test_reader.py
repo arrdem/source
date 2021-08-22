@@ -2,7 +2,6 @@
 
 from lilith.parser import Apply, Args, Block, Symbol
 from lilith.reader import Module, read_buffer
-
 import pytest
 
 
@@ -12,7 +11,8 @@ import pytest
         (
             """!def[main, lang[lil]]\nprint["hello, world"]\n""",
             Module(
-                "&buff",
+                Symbol("&buff"),
+                [],
                 {
                     Symbol("main"): Block(
                         Apply(Symbol("lang"), Args([Symbol("lil")], {})),

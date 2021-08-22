@@ -1,16 +1,17 @@
 """
-
+A quick and dirty recursive interpreter for Lilith.
 """
 
 import typing as t
 
-from .parser import Apply, Block, Symbol
-from .reader import Module
+from lilith.parser import Apply, Block, Symbol
+from lilith.reader import Module
 
 
 class Runtime(t.NamedTuple):
     name: str
-    modules: t.Dict[str, Module]
+    prelude: Symbol
+    modules: t.Dict[Symbol, Module]
 
 
 class BindingNotFound(KeyError):

@@ -2,11 +2,15 @@
 
 """
 
-from lilith.interpreter import Bindings, Runtime, eval
+from lilith.interpreter import Bindings, eval, Runtime
+from lilith.parser import Apply, Args, Symbol
 from lilith.reader import Module
-from lilith.parser import Args, Apply, Symbol
-
 import pytest
+
+
+@pytest.fixture
+def runtime():
+    return Runtime("test", None, {})
 
 
 @pytest.mark.parametrize(
@@ -17,11 +21,11 @@ import pytest
         ({"foo": "bar"}, {"foo": "bar"}),
     ],
 )
-def test_eval(expr, expected):
+def test_eval(runtime, expr, expected):
     assert (
         eval(
-            Runtime("test", dict()),
-            Module("__repl__", dict()),
+            runtime,
+            Module("__repl__", [], dict()),
             Bindings("__root__", None),
             expr,
         )
@@ -29,11 +33,11 @@ def test_eval(expr, expected):
     )
 
 
-def test_hello_world(capsys):
+def test_hello_world(capsys, runtime):
     assert (
         eval(
-            Runtime("test", {}),
-            Module("__repl__", {Symbol("print"): print}),
+            runtime,
+            Module("__repl__", [], {Symbol("print"): print}),
             Bindings("__root__", None),
             Apply(Symbol("print"), Args(["hello, world"], {})),
         )

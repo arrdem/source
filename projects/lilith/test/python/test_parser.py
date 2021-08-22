@@ -9,7 +9,6 @@ from lilith.parser import (
     parser_with_transformer,
     Symbol,
 )
-
 import pytest
 
 

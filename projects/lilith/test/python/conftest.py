@@ -2,8 +2,7 @@
 Pytest fixtures.
 """
 
-from lilith.parser import Block, parser_with_transformer, GRAMMAR
-
+from lilith.parser import Block, GRAMMAR, parser_with_transformer
 import pytest
 
 

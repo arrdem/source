@@ -27,6 +27,7 @@ lark==0.11.1
 livereload==2.6.3
 lxml==4.6.3
 m2r==0.2.1
+Markdown==3.3.4
 MarkupSafe==2.0.1
 meraki==1.7.2
 mirakuru==2.4.1

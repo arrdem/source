@@ -1,0 +1,129 @@
+!import[lilith.bootstrap, [lang, py]]
+!def[abs, lang[py]]
+abs
+!def[delattr, lang[py]]
+delattr
+!def[hash, lang[py]]
+hash
+!def[set, lang[py]]
+set
+!def[all, lang[py]]
+all
+!def[dict, lang[py]]
+dict
+!def[min, lang[py]]
+min
+!def[any, lang[py]]
+any
+!def[dir, lang[py]]
+dir
+!def[hex, lang[py]]
+hex
+!def[next, lang[py]]
+next
+!def[slice, lang[py]]
+slice
+!def[ascii, lang[py]]
+ascii
+!def[divmod, lang[py]]
+divmod
+!def[id, lang[py]]
+id
+!def[object, lang[py]]
+object
+!def[sorted, lang[py]]
+sorted
+!def[bin, lang[py]]
+bin
+!def[enumerate, lang[py]]
+enumerate
+!def[input, lang[py]]
+input
+!def[oct, lang[py]]
+oct
+!def[staticmethod, lang[py]]
+staticmethod
+!def[bool, lang[py]]
+bool
+!def[eval, lang[py]]
+eval
+!def[int, lang[py]]
+int
+!def[open, lang[py]]
+open
+!def[str, lang[py]]
+str
+!def[breakpoint, lang[py]]
+breakpoint
+!def[exec, lang[py]]
+exec
+!def[isinstance, lang[py]]
+isinstance
+!def[ord, lang[py]]
+ord
+!def[sum, lang[py]]
+sum
+!def[bytearray, lang[py]]
+bytearray
+!def[filter, lang[py]]
+filter
+!def[issubclass, lang[py]]
+issubclass
+!def[pow, lang[py]]
+pow
+!def[super, lang[py]]
+super
+!def[bytes, lang[py]]
+bytes
+!def[float, lang[py]]
+float
+!def[iter, lang[py]]
+iter
+!def[print, lang[py]]
+print
+!def[tuple, lang[py]]
+tuple
+!def[callable, lang[py]]
+callable
+!def[format, lang[py]]
+format
+!def[len, lang[py]]
+len
+!def[property, lang[py]]
+property
+!def[type, lang[py]]
+type
+!def[chr, lang[py]]
+chr
+!def[frozenset, lang[py]]
+frozenset
+!def[list, lang[py]]
+list
+!def[range, lang[py]]
+range
+!def[vars, lang[py]]
+vars
+!def[classmethod, lang[py]]
+classmethod
+!def[getattr, lang[py]]
+getattr
+!def[locals, lang[py]]
+locals
+!def[repr, lang[py]]
+repr
+!def[zip, lang[py]]
+zip
+!def[compile, lang[py]]
+compile
+!def[map, lang[py]]
+map
+!def[reversed, lang[py]]
+reversed
+!def[complex, lang[py]]
+complex
+!def[hasattr, lang[py]]
+hasattr
+!def[max, lang[py]]
+max
+!def[round, lang[py]]
+round
