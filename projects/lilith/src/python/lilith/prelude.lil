@@ -134,3 +134,25 @@ return hasattr
 return max
 !def[round, py]
 return round
+
+!def[add, py]
+return lambda *args: sum([0] + (args or []))
+
+!def[sub, py]
+return lambda x, *ys: if not ys 0 - x else x - sum(ys)
+
+!def[mul, py]
+from functools import reduce
+return lambda *args: reduce(lambda x, y: x * y, 1, args)
+
+!def[mod, py]
+return lambda x, y: x % y
+
+!def[xor, py]
+return lambda x, y: x ^ y
+
+!def[shr, py]
+return lambda x, y: x >> y
+
+!def[shl, py]
+return lambda x, y: x << y

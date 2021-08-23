@@ -51,20 +51,28 @@ def foo(a, b):
     (+ a b))
 ```
 
-But these are both deeply syntactically limited.
-DSLs inside of strings .... are inside of strings.
-Special separate parsers are required to work with or on them.
-Users have to write those DSLs within the context of embedded strings.
-It just doesn't work well.
+As we're thinking about "comments" and "documentation", docstrings are a lot better than reader discard comments because we can at least do something with them.
+But they're still very much second class in that they presuppose "documentation" for an artifact or a program is limited to API docs.
 
-What if we wanted to put other media in a "source" file?
-What if the "doctest" grammar was something you could just type at the top level?
-Or you could embed YAML or SQL into a file without special escaping airs?
+To the extent docstrings are overloaded for other DSLs like doctests, those DSLs are extremely second if not third class.
+There's no syntax support for them in the language, a separate parser must be used, editors don't understand when you embed code or other languages in strings ... the entire experience is just limited.
+
+### Literate Programming (tangle/weave)
+
+Old-school Knuth [literate programming](https://en.wikipedia.org/wiki/Literate_programming) is AN answer for how to center documentation over the program.
+In the LP world, your program isn't so much a program as it is a book containing code blocks that can be "woven" together into a program a compiler can eat.
+From a literature perspective, this is a great idea.
+Programs are absolutely literature, and being able to produce a fully fledged and formatted book out of a "program" rather than just an API listing out of a "program" is great.
+
+Unfortunately tangle/weave systems don't align well with language boundaries.
+They deliberately leap over them, and in doing so disable language tooling.
+So what if we could build a language that natively has something like tangle/weave?
+Make comments or perhaps more accurately document DSLs "first-class" and values that can reference terms from the language, and in turn be referenced by the language.
 
 ## Enter Lilith
 
 Lilith is a sketch at what if you took the ideas from literate programming (having fragments of text from which programs are composed) but deliberately DID NOT privilege the "source" for a "document" over the "source" for the "program".
-Documents and programs could be co-equal and co-resident artifacts.
+Documents, DSLs and programs could be co-equal and co-resident artifacts.
 
 To achieve this vision, Lilith uses a context sensitive block-prefixed syntax which SHOULD be uncommon enough not to involve collisions with other languages.
 
@@ -136,25 +144,33 @@ $ lil src/lark/designdoc.lil
 ....
 ```
 
-## Hackweek disclaimers
+### Presentation videos
 
-Python packaging is the devil.
-This code was originally developed in [my monorepo](https://github.com/arrdem/source/tree/trunk/projects/lilith) where it is build and tested via a reproducible Bazel setup.
-I don't want to try and make the judges install Bazel, so `python3 setup.py develop` is the lowest common denominator.
-Note that `setup.py install` doesn't work for resource packaging reasons I haven't sorted out.
+- [short walkthrough](https://twitter.com/arrdem/status/1429486908833292295)
+- [long walkthrough](https://twitter.com/arrdem/status/1429486908833292295)
 
-While this README may be stale of language features, at this time Lilith is mostly concerned with parsing, building a runtime/namespace system of and evaluating fragments.
-While the machinery is there in the form of a relatively classical lisp `eval[]` operation to implement `if`, `lambda` and other such traditional special forms, that really wasn't the intent of the language syntax.
-Most of Lilith's standard library (`src/python/lilith/prelude.lil`) consists of establishing a FFI prelude to Python, which makes the language seem more fully featured than it is.
+## Limitations and broken windows
 
-**Currently missing:**
-- `eval[]`
+While this Lilith prototype succeeds in making document terms usable from the "host" language (Lilith), it doesn't currently support going the other way.
+A more complete Lilith would probably feature a way to embed Lilith evaluation within non-Lilith languages (ab)using read-time eval and treating document bodies like Python f-strings.
+An even more context sensitive parser would be needed to implement this, but that's eminently doable.
+
+The Lilith language itself is a PITA to write.
+While `!def[]` is a nice hack, `!def[] lambda` is ... kinda silly.
+Especially because there's no way to attach a docstring to a def.
+Perhaps a convention `!def[foo, ...]`, `!def[foo.__doc__, ...]` could hack around that, allowing docstrings to be defined separately but it's not thought out.
+
+The Lilith language itself is wildly incomplete.
+Being able to piggy-back off of the host Python interpreter has been good for a lot, but ultimately the language is missing a lot of basic lisp-isms:
+- `eval[]` (all the machinery is here to do this)
 - `apply[]` (although this is trivial to implement)
 - `or[]`
 - `not[]`
 - `=[]`
 - `let[]`
 - `if[]`
+
+The module/namespace/def system is clearly Clojure derived and worked out pretty well, but `!import` can't trigger code loading as presently factored.
 
 ## License
 
