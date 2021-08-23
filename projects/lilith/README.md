@@ -73,6 +73,7 @@ Make comments or perhaps more accurately document DSLs "first-class" and values 
 
 Lilith is a sketch at what if you took the ideas from literate programming (having fragments of text from which programs are composed) but deliberately DID NOT privilege the "source" for a "document" over the "source" for the "program".
 Documents, DSLs and programs could be co-equal and co-resident artifacts.
+Users could define their own (textual) macros, DSLs with evaluation order and weaving of fragments together into multiple documents or indices.
 
 To achieve this vision, Lilith uses a context sensitive block-prefixed syntax which SHOULD be uncommon enough not to involve collisions with other languages.
 
@@ -80,11 +81,11 @@ Lilith is an [M-expression](https://en.wikipedia.org/wiki/M-expression) esque la
 
 The meta-language is `!` prefixed M-expressions.
 At present the meta-language has two directives, `!def[<name>, <language>]` and `!import[<from>, ...]`.
-This Lilith implementation is bootstrapped off of Python, and provides two built-in languages, `lil` AKA Lilith and `py` AKA python3.
 
 Lilith interpretation is actually dual (or potentially N) interpreter based.
 When a given name is evaluated, its body or definition is evaluated in the given language.
-For instance, this snippet would define a pair of Lilith "foreign" functions in Python (`gt` and `sub`), which would then be used from the definiton of `fib`.
+This Lilith implementation is bootstrapped off of Python, and provides two built-in languages, `lil` AKA Lilith and `py` AKA python3.
+For instance, this snippet would define a pair of Lilith "foreign" functions in Python (`gt` and `sub`), which would then be used from the definition of `fib`.
 
 ``` lilith
 !def[gt, py]
@@ -97,8 +98,6 @@ return lambda x, y: x - y
 fib[1] = 1
 fib[2] = 1
 fib[3] = 2
-
-!md[]
 
 !def[fib, lil]
 lambda[[x]
@@ -170,7 +169,7 @@ Being able to piggy-back off of the host Python interpreter has been good for a 
 - `let[]`
 - `if[]`
 
-The module/namespace/def system is clearly Clojure derived and worked out pretty well, but `!import` can't trigger code loading as presently factored.
+The module/namespace/def system is Clojure derived and worked out pretty well, but `!import` can't trigger code loading as presently factored.
 
 ## License
 
