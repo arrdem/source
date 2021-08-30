@@ -6,8 +6,6 @@ import argparse
 import os
 from pprint import pprint
 import re
-import sys
-
 
 from gandi.client import GandiAPI
 import jinja2

@@ -4,10 +4,10 @@ from .adapters.psycopg2 import PsycoPG2Adapter
 from .adapters.sqlite3 import SQLite3DriverAdapter
 from .exceptions import SQLLoadException, SQLParseException
 from .patterns import (
-    query_name_definition_pattern,
-    empty_pattern,
-    doc_comment_pattern,
-    valid_query_name_pattern,
+  doc_comment_pattern,
+  empty_pattern,
+  query_name_definition_pattern,
+  valid_query_name_pattern
 )
 
 
@@ -340,7 +340,7 @@ def from_path(sql_path, driver_name):
 
     """
     if not os.path.exists(sql_path):
-        raise SQLLoadException('File does not exist: {}.'.format(sql_path), sql_path)
+        raise SQLLoadException("File does not exist: {}.".format(sql_path), sql_path)
 
     driver_adapter = get_driver_adapter(driver_name)
 
@@ -350,6 +350,6 @@ def from_path(sql_path, driver_name):
         return Queries(load_queries_from_file(sql_path, driver_adapter))
     else:
         raise SQLLoadException(
-            'The sql_path must be a directory or file, got {}'.format(sql_path),
+            "The sql_path must be a directory or file, got {}".format(sql_path),
             sql_path
         )

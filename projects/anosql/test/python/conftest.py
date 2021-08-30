@@ -4,6 +4,7 @@ import sqlite3
 
 import pytest
 
+
 BLOGDB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "blogdb")
 USERS_DATA_PATH = os.path.join(BLOGDB_PATH, "data", "users_data.csv")
 BLOGS_DATA_PATH = os.path.join(BLOGDB_PATH, "data", "blogs_data.csv")

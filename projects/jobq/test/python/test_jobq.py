@@ -8,6 +8,7 @@ from time import sleep
 from jobq import Job, JobQueue
 import pytest
 
+
 logging.getLogger().setLevel(logging.DEBUG)
 
 
@@ -49,7 +50,7 @@ def test_poll(db):
     sleep(1) # And a side-effect for the third one
     j3 = db.create("payload 3")
 
-    j = db.poll('true', ["assigned"])
+    j = db.poll("true", ["assigned"])
 
     assert isinstance(j, Job)
     assert j.id == j1.id, "j1 is the oldest in the system and should poll first."
@@ -60,7 +61,7 @@ def test_poll_not_found(db):
     """Test that poll can return nothing."""
 
     j1 = db.create("payload 1")
-    j = db.poll('false', ["assigned"])
+    j = db.poll("false", ["assigned"])
     assert j is None
 
 

@@ -1,12 +1,11 @@
-import pytest
-
 import anosql
+import pytest
 
 
 @pytest.fixture
 def sqlite(request):
     import sqlite3
-    sqlconnection = sqlite3.connect(':memory:')
+    sqlconnection = sqlite3.connect(":memory:")
 
     def fin():
         "teardown"
@@ -80,7 +79,7 @@ def test_one_row(sqlite):
                      "-- name: two-rows?\n"
                      "SELECT 1 UNION SELECT 2;\n")
     q = anosql.from_str(_test_one_row, "sqlite3")
-    assert q.one_row(sqlite) == (1, 'hello')
+    assert q.one_row(sqlite) == (1, "hello")
     assert q.two_rows(sqlite) is None
 
 

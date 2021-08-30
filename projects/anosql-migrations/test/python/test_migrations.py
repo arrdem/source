@@ -7,6 +7,7 @@ from anosql.core import Queries
 import anosql_migrations
 import pytest
 
+
 _SQL = """\
 -- name: migration_0000_create_kv
 CREATE TABLE kv (`id` INT, `key` TEXT, `value` TEXT);
@@ -49,9 +50,9 @@ def test_queries(queries):
     """Assert that we can construct a queries instance with migrations features."""
 
     assert isinstance(queries, Queries)
-    assert hasattr(queries, 'anosql_migrations_create_table')
-    assert hasattr(queries, 'anosql_migrations_list')
-    assert hasattr(queries, 'anosql_migrations_create')
+    assert hasattr(queries, "anosql_migrations_create_table")
+    assert hasattr(queries, "anosql_migrations_list")
+    assert hasattr(queries, "anosql_migrations_create")
 
 
 def test_migrations_create_table(conn, queries):

@@ -3,21 +3,20 @@ Benchmarking the jobq.
 """
 
 from contextlib import contextmanager
-from time import perf_counter_ns
-from abc import abstractclassmethod
-import os
-from random import randint, choice
-import string
-from statistics import mean, median, stdev
-import tempfile
-import logging
 import json
+import logging
+import os
+from random import choice, randint
+from statistics import mean, median, stdev
+import string
+import tempfile
+from time import perf_counter_ns
 
 from jobq import JobQueue
 
 
 def randstr(len):
-    return ''.join(choice(string.ascii_uppercase + string.digits) for _ in range(len))
+    return "".join(choice(string.ascii_uppercase + string.digits) for _ in range(len))
 
 
 class Timing(object):
@@ -44,10 +43,10 @@ def timer(val: float) -> str:
     """Given a time in NS, convert it to integral NS/MS/S such that the non-decimal part is integral."""
 
     for factor, unit in [
-            (1e9, 's'),
-            (1e6, 'ms'),
-            (1e3, 'us'),
-            (1, 'ns'),
+            (1e9, "s"),
+            (1e6, "ms"),
+            (1e3, "us"),
+            (1, "ns"),
     ]:
         scaled_val = val / factor
         if 1e4 > scaled_val > 1.0:

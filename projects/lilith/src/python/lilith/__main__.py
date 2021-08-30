@@ -1,8 +1,8 @@
 """The Lilith runner."""
 
-import logging
 import argparse
 from importlib.resources import read_text as resource_text
+import logging
 import sys
 import traceback
 

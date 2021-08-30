@@ -1,13 +1,13 @@
 """Quick and dirty migrations for AnoSQL."""
 
-import logging
 from datetime import datetime
 from hashlib import sha256
+import logging
 import re
 import typing as t
 
 import anosql
-from anosql.core import Queries, from_str
+from anosql.core import from_str, Queries
 
 
 log = logging.getLogger(__name__)
@@ -103,7 +103,7 @@ def create_tables(queries: Queries, conn) -> None:
     # Insert the bootstrap 'fixup' record
     execute_migration(queries, conn,
                       MigrationDescriptor(
-                          name='anosql_migrations_create_table',
+                          name="anosql_migrations_create_table",
                           sha256sum=sha256(queries.anosql_migrations_create_table.sql.encode("utf-8")).hexdigest()))
 
 

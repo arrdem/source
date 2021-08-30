@@ -3,16 +3,11 @@ A job queue over HTTP.
 """
 
 import argparse
-from functools import wraps
-import json
 import logging
 import os
-import sys
-import sqlite3
-
-from jobq import Job, JobQueue
 
 from flask import abort, current_app, Flask, jsonify, request
+from jobq import Job, JobQueue
 
 
 log = logging.getLogger(__name__)

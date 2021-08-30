@@ -2,10 +2,11 @@
 Variously poor parsing for Lilith.
 """
 
-import typing as t
 from importlib.resources import read_text
+import typing as t
 
-from lark import Lark, v_args, Transformer
+from lark import Lark, Transformer, v_args
+
 
 GRAMMAR = read_text("lilith", "grammar.lark")
 

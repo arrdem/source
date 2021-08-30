@@ -5,8 +5,8 @@ A quick and dirty recursive interpreter for Lilith.
 import logging
 import typing as t
 
-from lilith.parser import Apply, Block, Symbol, Args
-from lilith.reader import Def, Module, Import
+from lilith.parser import Apply, Args, Block, Symbol
+from lilith.reader import Def, Import, Module
 
 
 log = logging.getLogger(__name__)

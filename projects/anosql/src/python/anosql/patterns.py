@@ -1,5 +1,6 @@
 import re
 
+
 query_name_definition_pattern = re.compile(r"--\s*name\s*:\s*")
 """
 Pattern: Identifies name definition comments.

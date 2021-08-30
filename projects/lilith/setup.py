@@ -1,5 +1,6 @@
 from setuptools import setup
 
+
 with open("requirements.txt") as fp:
     requirements = [l.strip() for l in fp.readlines()]
 

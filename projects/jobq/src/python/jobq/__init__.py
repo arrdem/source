@@ -2,13 +2,11 @@
 A job queue library teetering atop sqlite3.
 """
 
-import logging
-import os
-import sys
-import sqlite3
-import json
-from typing import NamedTuple, Optional as Maybe
 from datetime import datetime
+import json
+import logging
+import sqlite3
+from typing import NamedTuple, Optional as Maybe
 
 import anosql
 from anosql_migrations import run_migrations, with_migrations

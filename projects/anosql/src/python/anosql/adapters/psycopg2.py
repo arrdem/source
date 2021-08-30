@@ -5,15 +5,15 @@ from ..patterns import var_pattern
 
 def replacer(match):
     gd = match.groupdict()
-    if gd['dblquote'] is not None:
-        return gd['dblquote']
-    elif gd['quote'] is not None:
+    if gd["dblquote"] is not None:
+        return gd["dblquote"]
+    elif gd["quote"] is not None:
         return gd["quote"]
     else:
-        return '{lead}%({var_name})s{trail}'.format(
-            lead=gd['lead'],
-            var_name=gd['var_name'],
-            trail=gd['trail'],
+        return "{lead}%({var_name})s{trail}".format(
+            lead=gd["lead"],
+            var_name=gd["var_name"],
+            trail=gd["trail"],
         )
 
 

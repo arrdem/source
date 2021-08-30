@@ -6,6 +6,7 @@ from contextlib import contextmanager
 import logging
 import sqlite3
 
+
 log = logging.getLogger(__name__)
 
 
@@ -29,7 +30,7 @@ class SQLite3DriverAdapter(object):
     @staticmethod
     def select(conn, _query_name, sql, parameters):
         cur = conn.cursor()
-        log.debug({'sql': sql, 'parameters': parameters})
+        log.debug({"sql": sql, "parameters": parameters})
         cur.execute(sql, parameters)
         results = cur.fetchall()
         cur.close()
@@ -39,7 +40,7 @@ class SQLite3DriverAdapter(object):
     @contextmanager
     def select_cursor(conn: sqlite3.Connection, _query_name, sql, parameters):
         cur = conn.cursor()
-        log.debug({'sql': sql, 'parameters': parameters})
+        log.debug({"sql": sql, "parameters": parameters})
         cur.execute(sql, parameters)
         try:
             yield cur
@@ -48,18 +49,18 @@ class SQLite3DriverAdapter(object):
 
     @staticmethod
     def insert_update_delete(conn: sqlite3.Connection, _query_name, sql, parameters):
-        log.debug({'sql': sql, 'parameters': parameters})
+        log.debug({"sql": sql, "parameters": parameters})
         conn.execute(sql, parameters)
 
     @staticmethod
     def insert_update_delete_many(conn: sqlite3.Connection, _query_name, sql, parameters):
-        log.debug({'sql': sql, 'parameters': parameters})
+        log.debug({"sql": sql, "parameters": parameters})
         conn.executemany(sql, parameters)
 
     @staticmethod
     def insert_returning(conn: sqlite3.Connection, _query_name, sql, parameters):
         cur = conn.cursor()
-        log.debug({'sql': sql, 'parameters': parameters})
+        log.debug({"sql": sql, "parameters": parameters})
         cur.execute(sql, parameters)
 
         if "returning" not in sql.lower():
@@ -75,5 +76,5 @@ class SQLite3DriverAdapter(object):
 
     @staticmethod
     def execute_script(conn: sqlite3.Connection, sql):
-        log.debug({'sql': sql, 'parameters': None})
+        log.debug({"sql": sql, "parameters": None})
         conn.executescript(sql)
