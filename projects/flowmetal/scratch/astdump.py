@@ -40,7 +40,7 @@ class TreeDumper(ast.NodeVisitor):
         self.visit(node)
 
     def visit(self, node):
-        nodetype = type(node)
+        # nodetype = type(node)
         nodename = node.__class__.__name__
         indent = " " * len(self._stack) * 2
         print(indent + nodename)
@@ -59,14 +59,14 @@ class YAMLTreeDumper(ast.NodeVisitor):
 
     def node2yml(self, node):
         try:
-            nodetype = type(node)
+            # nodetype = type(node)
             nodename = node.__class__.__name__
             return {
                 "op": nodename,
                 "props": {n: node.__dict__[n] for n in propnames(node)},
                 "children": [],
             }
-        except:
+        except Exception:
             print(repr(node), propnames(node), dir(node))
 
     def visit(self, node):

@@ -24,9 +24,9 @@ def mk_sqlist(contents, open=None, close=None):
     )
 
 
-def pairwise(l: list) -> iter:
+def pairwise(elems: list) -> iter:
     "s -> (s0,s1), (s2,s3), (s4, s5), ..."
-    return zip(l[::2], l[1::2])
+    return zip(elems[::2], elems[1::2])
 
 
 def mk_dict(contents, open=None, close=None):

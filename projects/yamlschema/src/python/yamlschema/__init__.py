@@ -154,13 +154,13 @@ class YamlLinter(object):
         if maxl := schema.get("maxLength"):
             if len(node.value) > maxl:
                 yield LintRecord(
-                    LintLevel.MISSMATCH, node, schema, f"Expected a shorter string"
+                    LintLevel.MISSMATCH, node, schema, "Expected a shorter string"
                 )
 
         if minl := schema.get("minLength"):
             if len(node.value) < minl:
                 yield LintRecord(
-                    LintLevel.MISSMATCH, node, schema, f"Expected a longer string"
+                    LintLevel.MISSMATCH, node, schema, "Expected a longer string"
                 )
 
         if pat := schema.get("pattern"):
@@ -169,7 +169,7 @@ class YamlLinter(object):
                     LintLevel.MISSMATCH,
                     node,
                     schema,
-                    f"Expected a string matching the pattern",
+                    "Expected a string matching the pattern",
                 )
 
     def lint_integer(self, schema, node: Node) -> t.Iterable[LintRecord]:
@@ -259,11 +259,11 @@ class YamlLinter(object):
 
         # Special schemas
         # These are schemas that accept everything.
-        if schema == True or schema == {}:
+        if schema is True or schema == {}:
             yield from []
 
         # This is the schema that rejects everything.
-        elif schema == False:
+        elif schema is False:
             yield LintRecord(
                 LintLevel.UNEXPECTED, node, schema, "Received an unexpected value"
             )

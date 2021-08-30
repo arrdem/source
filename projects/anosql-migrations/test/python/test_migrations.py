@@ -13,6 +13,7 @@ _SQL = """\
 CREATE TABLE kv (`id` INT, `key` TEXT, `value` TEXT);
 """
 
+
 def table_exists(conn, table_name):
     return list(conn.execute(f"""\
     SELECT (
@@ -35,7 +36,7 @@ def conn() -> sqlite3.Connection:
 def test_connect(conn: sqlite3.Connection):
     """Assert that the connection works and we can execute against it."""
 
-    assert list(conn.execute("SELECT 1;")) == [(1,),]
+    assert list(conn.execute("SELECT 1;")) == [(1, ), ]
 
 
 @pytest.fixture

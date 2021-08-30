@@ -46,8 +46,8 @@ def curse_repl(handle_buffer):
             for ex, buff, vals, err in reversed(examples):
                 putstr(f"Example {ex}:", attr=curses.A_BOLD)
 
-                for l in buff.split("\n"):
-                    putstr(f"    | {l}")
+                for line in buff.split("\n"):
+                    putstr(f"    | {line}")
 
                 putstr("")
 
@@ -55,8 +55,8 @@ def curse_repl(handle_buffer):
                     err = str(err)
                     err = err.split("\n")
                     putstr("  Error:")
-                    for l in err:
-                        putstr(f"    {l}", attr=curses.COLOR_YELLOW)
+                    for line in err:
+                        putstr(f"    {line}", attr=curses.COLOR_YELLOW)
 
                 elif vals:
                     putstr("  Values:")

@@ -1,6 +1,4 @@
-#!/usr/bin/env python3
-
-__doc__ = f"""
+"""
 Datalog (py)
 ============
 
@@ -127,8 +125,7 @@ def main(args):
                     db = db.merge(read_dataset(f.read()))
                     print(f"Loaded {db_file} ...")
             except Exception as e:
-                print("Internal error - {e}")
-                print(f"Unable to load db {db_file}, skipping")
+                print(f"Internal error - {e}\nUnable to load db {db_file}, skipping")
 
     while True:
         try:
@@ -155,8 +152,8 @@ def main(args):
         else:
             try:
                 op, val = read_command(line)
-            except Exception as e:
-                print(f"Got an unknown command or syntax error, can't tell which")
+            except Exception:
+                print("Got an unknown command or a syntax error, can't tell which")
                 continue
 
         # Definition merges on the DB
@@ -215,7 +212,7 @@ def main(args):
                 qdb = db.merge(db_cls([], [val]))
                 val = val.pattern
 
-            with yaspin(SPINNER) as spinner:
+            with yaspin(SPINNER):
                 with Timing() as t:
                     try:
                         results = list(select(qdb, val))

@@ -105,7 +105,7 @@ def do_build(
 
     status = sys.stdout
     warning = sys.stderr
-    error = sys.stderr
+    # error = sys.stderr
 
     confdir = confdir or sourcedir
     confoverrides = {}  # FIXME: support these
@@ -176,7 +176,7 @@ def do_serve(host, port, sourcedir, outputdir):
                 elif (
                     not path.startswith(outputdir)
                     and path not in ignorelist
-                    and not path in watchlist
+                    and path not in watchlist
                 ):
                     # Watch any source file (file we open for reading)
                     server.watch(path, build)

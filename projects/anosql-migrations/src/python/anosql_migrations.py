@@ -131,16 +131,16 @@ def available_migrations(queries: Queries, conn) -> t.Iterable[MigrationDescript
         # query_fn: t.Callable + {.__name__, .__doc__, .sql}
         query_fn = getattr(queries, query_name)
         yield MigrationDescriptor(
-            name = query_name,
-            committed_at = None,
-            sha256sum = sha256(query_fn.sql.encode("utf-8")).hexdigest())
+            name=query_name,
+            committed_at=None,
+            sha256sum=sha256(query_fn.sql.encode("utf-8")).hexdigest())
 
 
 def execute_migration(queries: Queries, conn, migration: MigrationDescriptor):
     """Execute a given migration singularly."""
 
     with conn:
-    # Mark the migration as in flight
+        # Mark the migration as in flight
         queries.anosql_migrations_create(
             conn,
             # Args

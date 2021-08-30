@@ -1,3 +1,5 @@
+# flake8: noqa: all
+
 # Python AST interpreter written in Python
 #
 # This module is part of the Pycopy https://github.com/pfalcon/pycopy
@@ -105,6 +107,7 @@ def arg_name(arg):
     else:
         return arg.arg
 
+
 def kwarg_defaults(args):
     if sys.version_info < (3, 0, 0):
         return args.defaults
@@ -115,7 +118,6 @@ def kwarg_defaults(args):
 class TargetNonlocalFlow(Exception):
     """Base exception class to simulate non-local control flow transfers in
     a target application."""
-
 
 
 class TargetBreak(TargetNonlocalFlow):
@@ -248,7 +250,7 @@ class ModuleInterpreter(StrictNodeVisitor):
         self.push_ns(ClassNS(node))
         try:
             self.stmt_list_visit(node.body)
-        except:
+        except Exception:
             self.pop_ns()
             raise
         ns = self.ns
@@ -563,7 +565,7 @@ class ModuleInterpreter(StrictNodeVisitor):
             it = iter(val)
             try:
                 for elt_idx, t in enumerate(target.elts):
-                    if getattr(ast, "Starred", None ) and isinstance(t, ast.Starred):
+                    if getattr(ast, "Starred", None) and isinstance(t, ast.Starred):
                         t = t.value
                         all_elts = list(it)
                         break_i = len(all_elts) - (len(target.elts) - elt_idx - 1)

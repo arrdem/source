@@ -66,13 +66,7 @@ def test_insert_returning(sqlite3_conn, queries):
         )
     print(blogid, type(blogid))
     cur = sqlite3_conn.cursor()
-    cur.execute("""\
-    select title
-    from blogs
-    where blogid = ?;
-    """,
-        (blogid,),
-    )
+    cur.execute("SELECT `title` FROM `blogs` WHERE `blogid` = ?;", (blogid,))
     actual = cur.fetchone()
     cur.close()
     expected = ("My first blog",)

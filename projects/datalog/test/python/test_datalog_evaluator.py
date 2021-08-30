@@ -73,9 +73,6 @@ def test_lvar_unification(db_cls):
 def test_rule_join(db_cls):
     """Test a basic join query - the parent -> grandparent relation."""
 
-    child = Constant("child")
-    gc = Constant("grandchild")
-
     d = read(
         """
 child(a, b).

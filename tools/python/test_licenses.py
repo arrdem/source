@@ -58,7 +58,7 @@ LICENSES_BY_LOWERNAME = {
 
 # Mash in some cases.
 LICENSES_BY_LOWERNAME.update(
-    {l.split(" :: ")[-1].lower(): l for l in APPROVED_LICENSES}
+    {lic.split(" :: ")[-1].lower(): lic for lic in APPROVED_LICENSES}
 )
 
 # As a workaround for packages which don"t have correct meadata on PyPi, hand-verified packages
@@ -108,7 +108,7 @@ def licenses(package: Requirement):
     this problem.
 
     """
-    l = []
+    lics = []
     version = next((v for op, v in package.specs if op == "=="), None)
     print(package.name, version)
 
@@ -120,7 +120,7 @@ def licenses(package: Requirement):
             headers={"Accept": "application/json"}
         ).json()
         if ln := bash_license(blob.get("license")):
-            l.append(ln)
+            lics.append(ln)
         else:
             try:
                 version = list(blob.get("releases", {}).keys())[-1]
@@ -133,16 +133,16 @@ def licenses(package: Requirement):
             f"https://pypi.org/pypi/{package.name}/{version}/json",
             headers={"Accept": "application/json"}
         ).json()
-        l = [
+        lics.extend([
             c
             for c in blob.get("info", {}).get("classifiers", [])
             if c.startswith("License")
-        ]
+        ])
         ln = blob.get("info", {}).get("license")
-        if ln and not l:
-            l.append(bash_license(ln))
+        if ln and not lics:
+            lics.append(bash_license(ln))
 
-    return l
+    return lics
 
 
 @pytest.mark.parametrize("package", PACKAGES)
@@ -151,5 +151,5 @@ def test_approved_license(package):
 
     _licenses = licenses(package)
     assert package.name in APPROVED_PACKAGES or any(
-        l in APPROVED_LICENSES for l in _licenses
+        lic in APPROVED_LICENSES for lic in _licenses
     ), f"{package} was not approved and its license(s) were unknown {_licenses!r}"

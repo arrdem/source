@@ -159,7 +159,7 @@ if __name__ == "__main__":
     test_poll(q, reps)
     test_append(q, reps)
 
-    print(f"Testing with :memory:")
+    print("Testing with :memory:")
     q = JobQueue(":memory:")
     test_insert(q, reps)
     test_poll(q, reps)

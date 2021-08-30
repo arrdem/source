@@ -19,7 +19,7 @@ def match(tuple, expr, bindings=None):
         # This may not work out long term.
         if isinstance(a, LVar) and isinstance(b, LVar):
             continue
-        elif isinstance(a, LVar) and not a in bindings and isinstance(b, Constant):
+        elif isinstance(a, LVar) and a not in bindings and isinstance(b, Constant):
             bindings[a] = b
         elif isinstance(a, LVar) and a in bindings and bindings[a] == b:
             continue
