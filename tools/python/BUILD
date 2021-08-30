@@ -32,35 +32,6 @@ toolchain(
     toolchain_type = "@bazel_tools//tools/python:toolchain_type",
 )
 
-py_binary(
-    name = "autoflake",
-    main = "autoflake_shim.py",
-    deps = [
-        py_requirement("autoflake"),
-    ]
-)
-
-py_binary(
-    name = "isort",
-    main = "isort_shim.py",
-    deps = [
-        py_requirement("isort"),
-    ]
-)
-
-py_binary(
-    name = "sphinx",
-    main = "sphinx_shim.py",
-    deps = [
-        py_requirement("click"),
-        py_requirement("recommonmark"),
-        py_requirement("sphinx"),
-        py_requirement("sphinxcontrib-openapi"),
-        py_requirement("sphinxcontrib-programoutput"),
-        py_requirement("livereload"),
-    ]
-)
-
 py_pytest(
     name = "test_licenses",
     srcs = [
@@ -76,46 +47,9 @@ py_pytest(
 )
 
 py_binary(
-    name = "unify",
-    main = "unify_shim.py",
-    deps = [
-        py_requirement("unify"),
-    ]
-)
-
-py_binary(
     name = "openapi",
     main = "openapi_shim.py",
     deps = [
         py_requirement("openapi-spec-validator"),
-    ]
-)
-
-# WARNING: YAMLLINT is GLP3'd code. Do not extend, modify or depend on this as a lib.
-py_binary(
-    name = "yamllint",
-    main = "yamllint_shim.py",
-    deps = [
-        py_requirement("yamllint"),
-    ]
-)
-
-py_binary(
-    name = "templater",
-    main = "templater.py",
-    deps = [
-        py_requirement("click"),
-        py_requirement("jinja2"),
-        py_requirement("PyYAML"),
-    ]
-)
-
-py_binary(
-    name = "xfmt",
-    main = "xfmt.py",
-    deps = [
-        py_requirement("beautifulsoup4"),
-        py_requirement("click"),
-        py_requirement("lxml"),
     ]
 )
