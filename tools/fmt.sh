@@ -14,7 +14,7 @@ function brl() {
     return "$?"
 }
 
-brl tools/autoflake -ir "${DIRS[@]}"
+brl tools/autoflake --remove-all-unused-imports -ir "${DIRS[@]}"
 brl tools/isort     "${DIRS[@]}"
 brl tools/unify     --quote '"' -ir "${DIRS[@]}"
 brl projects/reqman clean tools/python/requirements.txt

@@ -13,7 +13,7 @@ function brl() {
     return "$?"
 }
 
-brl tools/autoflake -r "${DIRS[@]}"
+brl tools/flake8 "${DIRS[@]}"
 brl tools/isort --check "${DIRS[@]}"
 brl tools/unify --quote '"' -cr "${DIRS[@]}"
 brl tools/reqman lint tools/python/requirements.txt
