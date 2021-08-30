@@ -13,7 +13,7 @@ exports_files([
 ])
 
 py_runtime(
-    name = "python_runtime",
+    name = "python3_runtime",
     files = [],
     interpreter_path = "/usr/bin/python3.9",
     python_version = "PY3",
@@ -21,14 +21,14 @@ py_runtime(
 )
 
 py_runtime_pair(
-    name = "runtime",
+    name = "python_runtime",
     py2_runtime = None,
-    py3_runtime = ":python_runtime",
+    py3_runtime = ":python3_runtime",
 )
 
 toolchain(
-    name = "toolchain",
-    toolchain = ":runtime",
+    name = "python3_toolchain",
+    toolchain = ":python_runtime",
     toolchain_type = "@bazel_tools//tools/python:toolchain_type",
 )
 

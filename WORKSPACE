@@ -35,7 +35,6 @@ bazel_skylib_workspace()
 ####################################################################################################
 # Python support
 ####################################################################################################
-register_toolchains("//tools/python:toolchain")
 
 # Using rules_python at a more recent SHA than the last release like a baws
 git_repository(
@@ -45,6 +44,8 @@ git_repository(
     # commit = "...",
 )
 
+register_toolchains("//tools/python:python3_toolchain")
+
 # pip package pinnings need to be initialized.
 # this generates a bunch of bzl rules so that each pip dep is a bzl target
 load("@rules_python//python:pip.bzl", "pip_install")
@@ -52,6 +53,7 @@ load("@rules_python//python:pip.bzl", "pip_install")
 pip_install(
     name = "arrdem_source_pypi",
     requirements = "//tools/python:requirements.txt",
+    python_interpreter = "/usr/bin/python3.9",
 )
 
 # git_repository(
