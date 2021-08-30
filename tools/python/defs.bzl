@@ -14,6 +14,9 @@ load("@rules_zapp//zapp:zapp.bzl",
      "zapp_binary",
 )
 
+load("//tools/flake8:flake8.bzl",
+     "flake8",
+)
 
 def py_requirement(*args, **kwargs):
     """A re-export of requirement()"""
@@ -207,6 +210,12 @@ def py_project(name=None,
             "//visibility:public",
         ],
     )
+
+    # if lib_srcs:
+    #     flake8(
+    #         name = "flake8",
+    #         deps = [lib_name],
+    #     )
 
     if main:
         py_binary(

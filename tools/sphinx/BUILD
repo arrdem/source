@@ -8,5 +8,8 @@ py_binary(
         py_requirement("sphinxcontrib-openapi"),
         py_requirement("sphinxcontrib-programoutput"),
         py_requirement("livereload"),
-    ]
+    ],
+    visibility = [
+        "//visibility:public"
+    ],
 )

@@ -3,5 +3,8 @@ py_binary(
     main = "__main__.py",
     deps = [
         py_requirement("openapi-spec-validator"),
-    ]
+    ],
+    visibility = [
+        "//visibility:public"
+    ],
 )

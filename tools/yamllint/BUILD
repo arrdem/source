@@ -4,5 +4,8 @@ py_binary(
     main = "__main__.py",
     deps = [
         py_requirement("yamllint"),
-    ]
+    ],
+    visibility = [
+        "//visibility:public"
+    ],
 )

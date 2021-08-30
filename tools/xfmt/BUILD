@@ -5,5 +5,8 @@ py_binary(
         py_requirement("beautifulsoup4"),
         py_requirement("click"),
         py_requirement("lxml"),
-    ]
+    ],
+    visibility = [
+        "//visibility:public"
+    ],
 )
