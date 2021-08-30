@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 """Shim for executing the openapi spec validator."""
 
 import re

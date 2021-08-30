@@ -45,11 +45,3 @@ py_pytest(
         py_requirement("requirements-parser"),
     ]
 )
-
-py_binary(
-    name = "openapi",
-    main = "openapi_shim.py",
-    deps = [
-        py_requirement("openapi-spec-validator"),
-    ]
-)

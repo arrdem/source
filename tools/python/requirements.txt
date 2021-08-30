@@ -5,7 +5,6 @@ attrs==20.3.0
 autoflake==1.4
 Babel==2.9.0
 beautifulsoup4==4.9.3
-bleach==4.0.0
 certifi==2020.12.5
 chardet==4.0.0
 click==7.1.2
@@ -40,7 +39,6 @@ openapi-spec-validator==0.3.0
 packaging==20.9
 parso==0.8.2
 pathspec==0.8.1
-pep517==0.11.0
 pip-tools==6.2.0
 pluggy==0.13.1
 port-for==0.6.1
@@ -80,7 +78,6 @@ sphinxcontrib-programoutput==0.17
 sphinxcontrib-qthelp==1.0.3
 sphinxcontrib-serializinghtml==1.1.4
 toml==0.10.2
-tomli==1.2.1
 tornado==6.1
 typed-ast==1.4.2
 typing-extensions==3.7.4.3
@@ -89,9 +86,7 @@ untokenize==0.1.1
 urllib3==1.26.4
 urwid==2.1.2
 wcwidth==0.2.5
-webencodings==0.5.1
 Werkzeug==2.0.1
 yamllint==1.26.1
 yarl==1.6.3
 yaspin==1.5.0
-zipp==3.5.0
