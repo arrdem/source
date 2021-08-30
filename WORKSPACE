@@ -35,11 +35,14 @@ bazel_skylib_workspace()
 ####################################################################################################
 # Python support
 ####################################################################################################
+register_toolchains("//tools/python:toolchain")
+
 # Using rules_python at a more recent SHA than the last release like a baws
 git_repository(
     name = "rules_python",
     remote = "https://github.com/bazelbuild/rules_python.git",
     tag = "0.3.0",
+    # commit = "...",
 )
 
 # pip package pinnings need to be initialized.
@@ -49,19 +52,15 @@ load("@rules_python//python:pip.bzl", "pip_install")
 pip_install(
     name = "arrdem_source_pypi",
     requirements = "//tools/python:requirements.txt",
-    python_interpreter = "python3",
 )
 
-git_repository(
+# git_repository(
+#     name = "rules_zapp",
+#     remote = "https://github.com/arrdem/rules_zapp.git",
+#     tag = "0.1.2",
+# )
+
+local_repository(
     name = "rules_zapp",
-    remote = "https://github.com/arrdem/rules_zapp.git",
-    tag = "0.1.1",
-)
-
-####################################################################################################
-# Postscript
-####################################################################################################
-# Do toolchain nonsense to use py3
-register_toolchains(
-    "//tools/python:toolchain",
+    path = "/home/arrdem/doc/hobby/programming/lang/python/rules_zapp",
 )

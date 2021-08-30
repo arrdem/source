@@ -3,6 +3,8 @@ load("@arrdem_source_pypi//:requirements.bzl",
 )
 
 load("@rules_python//python:defs.bzl",
+     "py_runtime",
+     "py_runtime_pair",
      _py_binary = "py_binary",
      _py_test = "py_test",
      _py_library = "py_library",
@@ -210,9 +212,7 @@ def py_project(name=None,
         py_binary(
             name=name,
             main=main,
-            srcs=lib_srcs,
-            deps=(lib_deps or []) + (main_deps or []),
-            data=lib_data,
+            deps=(main_deps or []) + [lib_name],
             imports=[
                 "src/python",
                 "src/resources",
@@ -225,8 +225,7 @@ def py_project(name=None,
         zapp_binary(
             name=name + ".zapp",
             main=main,
-            srcs=lib_srcs,
-            deps=lib_deps,
+            deps=(main_deps or []) + [lib_name],
             data=lib_data,
             imports=[
                 "src/python",
