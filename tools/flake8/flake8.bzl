@@ -1,5 +1,11 @@
 """Linting for Python using Aspects."""
 
+# Hacked up from https://github.com/bazelbuild/rules_rust/blob/main/rust/private/clippy.bzl
+#
+# Usage:
+#   bazel build --aspects="//tools/flake8:flake8.bzl%flake8_aspect" --output_groups=flake8_checks <target|pattern>
+#
+# Note that the build directive can be inserted to .bazelrc to make it part of the default behavior
 
 def _flake8_aspect_impl(target, ctx):
     if hasattr(ctx.rule.attr, 'srcs'):
@@ -41,7 +47,7 @@ flake8_aspect = aspect(
     implementation = _flake8_aspect_impl,
     attr_aspects = ['deps'],
     attrs = {
-        '_flake8': attr.label(default="//tools/flake8"),
+        '_flake8': attr.label(default=":flake8"),
         '_config': attr.label(
             default="//:setup.cfg",
             executable=False,
