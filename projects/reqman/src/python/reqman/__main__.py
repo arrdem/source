@@ -39,6 +39,7 @@ SHITLIST = [
     "setuptools",
 ]
 
+
 def req_name(requirement: str) -> str:
     requirement = requirement.lower()
     match = re.match(REQ_PATTERN, requirement)
@@ -58,9 +59,9 @@ def _bq(query):
     """Enumerate the PyPi package names from a Bazel query."""
 
     unused = subprocess.check_output(["bazel", "query", query, "--output=package"]).decode("utf-8")
-    for l in unused.split("\n"):
-        if l:
-            yield l.replace("@arrdem_source_pypi//pypi__", "")
+    for line in unused.split("\n"):
+        if line:
+            yield line.replace("@arrdem_source_pypi//pypi__", "")
 
 
 def _unused():
@@ -75,7 +76,7 @@ def _load(fname):
     with open(fname, "r") as reqfile:
         # FIXME (arrdem 2021-08-03):
         #   Return a parse, not just lines.
-        return list(l.strip() for l in reqfile)
+        return list(line.strip() for line in reqfile)
 
 
 def _write(fname, reqs):

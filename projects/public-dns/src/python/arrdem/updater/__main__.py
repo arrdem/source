@@ -14,11 +14,11 @@ import yaml
 
 
 RECORD_LINE_PATTERN = re.compile(
-    "^(?P<rrset_name>\S+)\s+"
-    "(?P<rrset_ttl>\S+)\s+"
-    "IN\s+"
-    "(?P<rrset_type>\S+)\s+"
-    "(?P<rrset_values>.+)$"
+    r"^(?P<rrset_name>\S+)\s+"
+    r"(?P<rrset_ttl>\S+)\s+"
+    r"IN\s+"
+    r"(?P<rrset_type>\S+)\s+"
+    r"(?P<rrset_values>.+)$"
 )
 
 
