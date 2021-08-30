@@ -7,7 +7,6 @@ trip through the lexer.
 
 import calf.lexer as cl
 from conftest import parametrize
-import pytest
 
 
 def lex_single_token(buffer):

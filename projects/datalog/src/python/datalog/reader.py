@@ -3,7 +3,6 @@ A datalog reader.
 """
 
 from collections import defaultdict
-from itertools import chain
 
 from datalog.parser import FAILURE, Grammar
 from datalog.types import Constant, Dataset, LVar, Rule

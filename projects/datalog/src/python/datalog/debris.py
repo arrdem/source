@@ -1,5 +1,9 @@
 """Debris."""
 
+from random import shuffle
+
+from datalog.types import LVar
+
 
 def shuffled(seq):
     """Because random.shuffle() is in-place >.>"""

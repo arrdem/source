@@ -10,7 +10,6 @@ import re
 from gandi.client import GandiAPI
 import jinja2
 import meraki
-import pkg_resources
 import yaml
 
 

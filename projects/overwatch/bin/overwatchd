@@ -21,23 +21,14 @@ import socket
 import subprocess
 import sys
 from sys import exit
-import syslog
 from telnetlib import Telnet
 from threading import Event, Lock, Thread
 from time import sleep
 
-from kazoo.client import KazooClient
-from kazoo.exceptions import (
-  ConnectionLoss,
-  LockTimeout,
-  NodeExistsError,
-  NoNodeError,
-  SessionExpiredError
-)
+from kazoo.exceptions import ConnectionLoss, LockTimeout, SessionExpiredError
 from kazoo.handlers.threading import KazooTimeoutError
 from kazoo.recipe.lock import Lock as KazooLock
 from kook.client import KookClient, lock
-import yaml
 
 
 log = logging.getLogger("arrdem.overwatchd")

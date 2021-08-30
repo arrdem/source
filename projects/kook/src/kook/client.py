@@ -11,7 +11,6 @@ from kazoo.client import KazooClient
 from kazoo.exceptions import NodeExistsError
 from kazoo.protocol.states import ZnodeStat
 from kazoo.recipe.lock import Lock, ReadLock, WriteLock
-from kazoo.recipe.watchers import ChildrenWatch, DataWatch
 from kook.config import current_config, KookConfig
 from toolz.dicttoolz import assoc as _assoc, dissoc as _dissoc, merge as _merge, update_in
 

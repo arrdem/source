@@ -6,7 +6,7 @@ import logging
 import typing as t
 from warnings import warn
 
-from lilith.parser import Args, Block, parse_buffer, Symbol
+from lilith.parser import Block, parse_buffer, Symbol
 
 
 log = logging.getLogger(__name__)

@@ -6,7 +6,6 @@ import logging
 import re
 import typing as t
 
-import anosql
 from anosql.core import from_str, Queries
 
 

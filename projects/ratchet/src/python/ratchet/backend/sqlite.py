@@ -7,8 +7,6 @@ import os
 import socket
 import sqlite3 as sql
 
-from ratchet import Event, Message, Request
-
 
 SCHEMA_SCRIPT = """
 PRAGMA foreign_keys = ON;

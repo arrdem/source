@@ -5,9 +5,7 @@ from datalog.types import (
   CachedDataset,
   Constant,
   Dataset,
-  LVar,
   PartlyIndexedDataset,
-  Rule,
   TableIndexedDataset
 )
 
