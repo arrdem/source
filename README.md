@@ -1,14 +1,15 @@
 # Reid's monorepo
 
 I've found it inconvenient to develop lots of small Python modules.
-And so I'm going the other way; Bazel in a monorepo with several subprojects so I'm able to reuse a maximum of scaffolding.
+And so I'm going the other way; Bazel in a monorepo with subprojects so I'm able to reuse a maximum of scaffolding.
 
 ## Projects
 
-- [Datalog](projects/datalog)
+- [Datalog](projects/datalog) and the matching [shell](projects/datalog-shell)
+- [YAML Schema](projects/yamlschema) (JSON schema with knowledge of PyYAML's syntax structure & nice errors)
+- [Zapp! (now with a new home and releases)](https://github.com/arrdem/rules_zapp)
 - [Flowmetal](projects/flowmetal)
-- [YAML Schema](projects/yamlschema)
-- [zapp](projects/zapp)
+- [Lilith](projects/lilith)
 
 ## License
 
