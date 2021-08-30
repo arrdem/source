@@ -1,12 +1,12 @@
 """A quick and dirty Python driver for the jobqd API."""
 
 from datetime import datetime
-from typing import NamedTuple
+import typing as t
 
 import requests
 
 
-class Job(NamedTuple):
+class Job(t.NamedTuple):
     id: int
     payload: object
     events: object
@@ -16,11 +16,11 @@ class Job(NamedTuple):
     @classmethod
     def from_json(cls, obj):
         return cls(
-            id = int(obj["id"]),
-            payload = obj["payload"],
-            events = obj["events"],
-            state = obj["state"],
-            modified = datetime.fromtimestamp(obj["modified"])
+            id=int(obj["id"]),
+            payload=obj["payload"],
+            events=obj["events"],
+            state=obj["state"],
+            modified=datetime.fromtimestamp(obj["modified"])
         )
 
 
@@ -35,11 +35,11 @@ class JobqClient(object):
         for job in self._session.post(self._url + "/api/v0/job",
                                       json={"query": query or [],
                                             "limit": limit})\
-                                     .json()\
-                                     .get("jobs"):
+                                .json()\
+                                .get("jobs"):
             yield Job.from_json(job)
 
-    def poll(self, query, state) -> DehydratedJob:
+    def poll(self, query, state) -> Job:
         """Poll the job queue for the first job matching the given query, atomically advancing it to the given state and returning the advanced Job."""
 
         return Job.from_json(
@@ -49,7 +49,7 @@ class JobqClient(object):
                             "state": state})
                 .json())
 
-    def create(self, payload: object, state=None) -> DehydratedJob:
+    def create(self, payload: object, state=None) -> Job:
         """Create a new job in the system."""
 
         return Job.from_json(
@@ -59,7 +59,7 @@ class JobqClient(object):
                             "state": state})
                 .json())
 
-    def fetch(self, job: Job) -> HydratedJob:
+    def fetch(self, job: Job) -> Job:
         """Fetch the current state of a job."""
 
         return Job.from_json(
@@ -77,7 +77,7 @@ class JobqClient(object):
                             "new": state})
                 .json())
 
-    def event(self, job: Job, event: object) -> HydratedJob:
+    def event(self, job: Job, event: object) -> Job:
         """Attempt to record an event against a job."""
 
         return Job.from_json(

@@ -141,7 +141,7 @@ class Proquint(object):
         """Encode an integer into a proquint string."""
 
         if width % 8 != 0 or width < 8:
-            raise ValueError(f"Width must be a positive power of 2 greater than 8")
+            raise ValueError("Width must be a positive power of 2 greater than 8")
 
         return cls.encode_bytes(val.to_bytes(width // 8, "big"))
 

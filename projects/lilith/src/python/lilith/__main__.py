@@ -54,14 +54,14 @@ def repl(opts, args, runtime):
 
         try:
             expr = parse_expr(line)
-        except Exception as e:
+        except Exception:
             traceback.print_exc()
             continue
 
         try:
             result = lil_eval(runtime, module, Bindings("__root__", None), expr)
             print_([("class:result", f"⇒ {result!r}")], style=STYLE)
-        except Exception as e:
+        except Exception:
             traceback.print_exc()
             continue
 
@@ -145,15 +145,15 @@ def main():
 
     def py(runtime=None, module=None, expr=None, body=None, name=None):
         """The implementation of the Python lang as an eval type."""
-        g = globals().copy()
-        l = {}
+        globs = globals().copy()
+        locs = {}
         body = (
-            f"def _shim():\n"
-            + "\n".join("  " + l for l in body.splitlines())
+            "def _shim():\n"
+            + "\n".join("  " + line for line in body.splitlines())
             + "\n\n_escape = _shim()"
         )
-        exec(body, g, l)
-        return l["_escape"]
+        exec(body, globs, locs)
+        return locs["_escape"]
 
     def lil(runtime=None, module=None, expr=None, body=None, name=None):
         """The implementation of the Lilith lang as an eval type."""

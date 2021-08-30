@@ -234,7 +234,7 @@ class JobQueue(object):
                             yield next(iterable)
                         except StopIteration:
                             break
-                        jobs = lf(jobs)
+                jobs = lf(jobs)
 
             return self._from_results(jobs)
 

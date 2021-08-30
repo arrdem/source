@@ -127,9 +127,9 @@ def available_migrations(queries: Queries, conn) -> t.Iterable[MigrationDescript
         if query_name.endswith("_cursor"):
             continue
 
-        # type: query_name: str
+        # query_name: str
+        # query_fn: t.Callable + {.__name__, .__doc__, .sql}
         query_fn = getattr(queries, query_name)
-        # type: query_fn: t.Callable + {.__name__, .__doc__, .sql}
         yield MigrationDescriptor(
             name = query_name,
             committed_at = None,
