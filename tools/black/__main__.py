@@ -1,10 +1,9 @@
-"""A shim to black which knows how to tee output."""
+"""A shim to black which knows how to tee output for --output-file."""
 
 import argparse
-from contextlib import contextmanager
 import sys
 
-from black import patched_main
+from black import patched_main, nullcontext
 
 
 parser = argparse.ArgumentParser()
@@ -12,7 +11,7 @@ parser.add_argument("--output-file", default=None)
 
 
 class Tee(object):
-    """Tee all I/O to a file and stdout."""
+    """Something that looks like a File/Writeable but does teed writes."""
 
     def __init__(self, name, mode):
         self._file = open(name, mode)
@@ -38,11 +37,6 @@ class Tee(object):
         self._file.close()
 
 
-@contextmanager
-def nullctx():
-    yield
-
-
 if __name__ == "__main__":
     opts, args = parser.parse_known_args()
 
@@ -50,7 +44,7 @@ if __name__ == "__main__":
         print("Teeig output....")
         ctx = Tee(opts.output_file, "w")
     else:
-        ctx = nullctx()
+        ctx = nullcontext()
 
     with ctx:
         sys.argv = [sys.argv[0]] + args
