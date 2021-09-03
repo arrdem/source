@@ -27,6 +27,7 @@ for _ in range(10):
 def bar(a, b, **bs):
     pass
 
+
 import requests
 
 

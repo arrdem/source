@@ -91,4 +91,8 @@ if __name__ == "__main__":
     with open(filename) as f:
         root = ast.parse(f.read(), filename)
 
-    print(yaml.dump(YAMLTreeDumper().visit(root), default_flow_style=False, sort_keys=False))
+    print(
+        yaml.dump(
+            YAMLTreeDumper().visit(root), default_flow_style=False, sort_keys=False
+        )
+    )

@@ -160,7 +160,9 @@ def compile_query(query):
     elif isinstance(query, str):
         terms = [query]
 
-    assert not any(keyword in query.lower() for keyword in ["select", "update", "delete", ";"])
+    assert not any(
+        keyword in query.lower() for keyword in ["select", "update", "delete", ";"]
+    )
     return " AND ".join(terms)
 
 
@@ -173,7 +175,6 @@ class Job(NamedTuple):
 
 
 class JobQueue(object):
-
     def __init__(self, path):
         self._db = sqlite3.connect(path)
         self._queries = anosql.from_str(_SQL, "sqlite3")
@@ -196,7 +197,7 @@ class JobQueue(object):
             json.loads(payload),
             json.loads(events),
             json.loads(state),
-            datetime.fromtimestamp(int(modified))
+            datetime.fromtimestamp(int(modified)),
         )
 
     def _from_result(self, result) -> Job:
@@ -227,6 +228,7 @@ class JobQueue(object):
 
             if limit:
                 limit = int(limit)
+
                 def lf(iterable):
                     iterable = iter(iterable)
                     for i in range(limit):
@@ -234,6 +236,7 @@ class JobQueue(object):
                             yield next(iterable)
                         except StopIteration:
                             break
+
                 jobs = lf(jobs)
 
             return self._from_results(jobs)
@@ -265,9 +268,7 @@ class JobQueue(object):
         """Fetch all available data about a given job by ID."""
 
         with self._db as db:
-            return self._from_result(
-                self._queries.job_get(db, id=job_id)
-            )
+            return self._from_result(self._queries.job_get(db, id=job_id))
 
     def cas_state(self, job_id, old_state, new_state):
         """CAS update a job's state, returning the updated job or indicating a conflict."""
@@ -287,11 +288,7 @@ class JobQueue(object):
 
         with self._db as db:
             return self._from_result(
-                self._queries.job_append_event(
-                    db,
-                    id=job_id,
-                    event=json.dumps(event)
-                )
+                self._queries.job_append_event(db, id=job_id, event=json.dumps(event))
             )
 
     def delete_job(self, job_id):

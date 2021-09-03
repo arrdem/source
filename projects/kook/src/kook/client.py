@@ -12,7 +12,12 @@ from kazoo.exceptions import NodeExistsError
 from kazoo.protocol.states import ZnodeStat
 from kazoo.recipe.lock import Lock, ReadLock, WriteLock
 from kook.config import current_config, KookConfig
-from toolz.dicttoolz import assoc as _assoc, dissoc as _dissoc, merge as _merge, update_in
+from toolz.dicttoolz import (
+    assoc as _assoc,
+    dissoc as _dissoc,
+    merge as _merge,
+    update_in,
+)
 
 
 def assoc(m, k, v):

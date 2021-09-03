@@ -15,7 +15,9 @@ CREATE TABLE kv (`id` INT, `key` TEXT, `value` TEXT);
 
 
 def table_exists(conn, table_name):
-    return list(conn.execute(f"""\
+    return list(
+        conn.execute(
+            f"""\
     SELECT (
         `name`
     )
@@ -23,7 +25,9 @@ def table_exists(conn, table_name):
     WHERE
         `type` = 'table'
     AND `name` = '{table_name}'
-    ;"""))
+    ;"""
+        )
+    )
 
 
 @pytest.fixture
@@ -36,7 +40,9 @@ def conn() -> sqlite3.Connection:
 def test_connect(conn: sqlite3.Connection):
     """Assert that the connection works and we can execute against it."""
 
-    assert list(conn.execute("SELECT 1;")) == [(1, ), ]
+    assert list(conn.execute("SELECT 1;")) == [
+        (1,),
+    ]
 
 
 @pytest.fixture
@@ -66,7 +72,9 @@ def test_migrations_list(conn, queries):
     """Test that we can list out available migrations."""
 
     ms = list(anosql_migrations.available_migrations(queries, conn))
-    assert any(m.name == "migration_0000_create_kv" for m in ms), f"Didn't find in {ms!r}"
+    assert any(
+        m.name == "migration_0000_create_kv" for m in ms
+    ), f"Didn't find in {ms!r}"
 
 
 def test_committed_migrations(conn, queries):
@@ -96,4 +104,6 @@ def test_post_committed_migrations(migrated_conn, queries):
     """Assert that the create_kv migration has been committed."""
 
     ms = list(anosql_migrations.committed_migrations(queries, migrated_conn))
-    assert any(m.name == "migration_0000_create_kv" for m in ms), "\n".join(migrated_conn.iterdump())
+    assert any(m.name == "migration_0000_create_kv" for m in ms), "\n".join(
+        migrated_conn.iterdump()
+    )

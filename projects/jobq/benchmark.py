@@ -43,10 +43,10 @@ def timer(val: float) -> str:
     """Given a time in NS, convert it to integral NS/MS/S such that the non-decimal part is integral."""
 
     for factor, unit in [
-            (1e9, "s"),
-            (1e6, "ms"),
-            (1e3, "us"),
-            (1, "ns"),
+        (1e9, "s"),
+        (1e6, "ms"),
+        (1e3, "us"),
+        (1, "ns"),
     ]:
         scaled_val = val / factor
         if 1e4 > scaled_val > 1.0:
@@ -60,21 +60,20 @@ def bench(callable, reps):
             with timing() as t:
                 callable()
             timings.append(t.duration)
-    print(f"""Ran {callable.__name__!r} {reps} times, total time {timer(run_t.duration)}
+    print(
+        f"""Ran {callable.__name__!r} {reps} times, total time {timer(run_t.duration)}
   mean: {timer(mean(timings))}
   median: {timer(median(timings))}
   stddev: {timer(stdev(timings))}
   test overhead: {timer((run_t.duration - sum(timings)) / reps)}
-""")
+"""
+    )
 
 
 def test_reference_json(reps):
     """As a reference benchmark, test just appending to a file."""
 
-    jobs = [
-        {"user_id": randint(0, 1<<32), "msg": randstr(256)}
-        for _ in range(reps)
-    ]
+    jobs = [{"user_id": randint(0, 1 << 32), "msg": randstr(256)} for _ in range(reps)]
     jobs_i = iter(jobs)
 
     def naive_serialize():
@@ -86,15 +85,13 @@ def test_reference_json(reps):
 def test_reference_fsync(reps):
     """As a reference benchmark, test just appending to a file."""
 
-    jobs = [
-        {"user_id": randint(0, 1<<32), "msg": randstr(256)}
-        for _ in range(reps)
-    ]
+    jobs = [{"user_id": randint(0, 1 << 32), "msg": randstr(256)} for _ in range(reps)]
     jobs_i = iter(jobs)
 
     handle, path = tempfile.mkstemp()
     os.close(handle)
     with open(path, "w") as fd:
+
         def naive_fsync():
             fd.write(json.dumps([next(jobs_i), ["CREATED"]]))
             fd.flush()
@@ -106,10 +103,7 @@ def test_reference_fsync(reps):
 def test_insert(q, reps):
     """Benchmark insertion time to a given SQLite DB."""
 
-    jobs = [
-        {"user_id": randint(0, 1<<32), "msg": randstr(256)}
-        for _ in range(reps)
-    ]
+    jobs = [{"user_id": randint(0, 1 << 32), "msg": randstr(256)} for _ in range(reps)]
     jobs_i = iter(jobs)
 
     def insert():

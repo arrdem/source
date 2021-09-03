@@ -52,9 +52,7 @@ def get_jobs():
 
     query = blob.get("query", "true")
 
-    return jsonify({
-        "jobs": [job_as_json(j) for j in request.q.query(query)]
-    }), 200
+    return jsonify({"jobs": [job_as_json(j) for j in request.q.query(query)]}), 200
 
 
 @app.route("/api/v0/job/create", methods=["POST"])
@@ -64,9 +62,7 @@ def create_job():
     blob = request.get_json(force=True)
     payload = blob["payload"]
     state = blob.get("state", None)
-    job = request.q.create(
-        payload, state
-    )
+    job = request.q.create(payload, state)
     return jsonify(job_as_json(job)), 200
 
 

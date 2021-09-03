@@ -100,10 +100,16 @@ def create_tables(queries: Queries, conn) -> None:
         log.info("Created migrations table")
 
     # Insert the bootstrap 'fixup' record
-    execute_migration(queries, conn,
-                      MigrationDescriptor(
-                          name="anosql_migrations_create_table",
-                          sha256sum=sha256(queries.anosql_migrations_create_table.sql.encode("utf-8")).hexdigest()))
+    execute_migration(
+        queries,
+        conn,
+        MigrationDescriptor(
+            name="anosql_migrations_create_table",
+            sha256sum=sha256(
+                queries.anosql_migrations_create_table.sql.encode("utf-8")
+            ).hexdigest(),
+        ),
+    )
 
 
 def committed_migrations(queries: Queries, conn) -> t.Iterable[MigrationDescriptor]:
@@ -133,7 +139,8 @@ def available_migrations(queries: Queries, conn) -> t.Iterable[MigrationDescript
         yield MigrationDescriptor(
             name=query_name,
             committed_at=None,
-            sha256sum=sha256(query_fn.sql.encode("utf-8")).hexdigest())
+            sha256sum=sha256(query_fn.sql.encode("utf-8")).hexdigest(),
+        )
 
 
 def execute_migration(queries: Queries, conn, migration: MigrationDescriptor):

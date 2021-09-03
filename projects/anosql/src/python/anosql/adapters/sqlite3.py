@@ -53,7 +53,9 @@ class SQLite3DriverAdapter(object):
         conn.execute(sql, parameters)
 
     @staticmethod
-    def insert_update_delete_many(conn: sqlite3.Connection, _query_name, sql, parameters):
+    def insert_update_delete_many(
+        conn: sqlite3.Connection, _query_name, sql, parameters
+    ):
         log.debug({"sql": sql, "parameters": parameters})
         conn.executemany(sql, parameters)
 

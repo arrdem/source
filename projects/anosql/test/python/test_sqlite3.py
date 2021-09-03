@@ -32,16 +32,25 @@ def test_record_query(sqlite3_conn, queries):
 
 def test_parameterized_query(sqlite3_conn, queries):
     actual = queries.blogs.get_user_blogs(sqlite3_conn, userid=1)
-    expected = [("How to make a pie.", "2018-11-23"), ("What I did Today", "2017-07-28")]
+    expected = [
+        ("How to make a pie.", "2018-11-23"),
+        ("What I did Today", "2017-07-28"),
+    ]
     assert actual == expected
 
 
 def test_parameterized_record_query(sqlite3_conn, queries):
     sqlite3_conn.row_factory = dict_factory
-    actual = queries.blogs.sqlite_get_blogs_published_after(sqlite3_conn, published="2018-01-01")
+    actual = queries.blogs.sqlite_get_blogs_published_after(
+        sqlite3_conn, published="2018-01-01"
+    )
 
     expected = [
-        {"title": "How to make a pie.", "username": "bobsmith", "published": "2018-11-23 00:00"},
+        {
+            "title": "How to make a pie.",
+            "username": "bobsmith",
+            "published": "2018-11-23 00:00",
+        },
         {"title": "Testing", "username": "janedoe", "published": "2018-01-01 00:00"},
     ]
 
@@ -51,7 +60,10 @@ def test_parameterized_record_query(sqlite3_conn, queries):
 def test_select_cursor_context_manager(sqlite3_conn, queries):
     with queries.blogs.get_user_blogs_cursor(sqlite3_conn, userid=1) as cursor:
         actual = cursor.fetchall()
-        expected = [("How to make a pie.", "2018-11-23"), ("What I did Today", "2017-07-28")]
+        expected = [
+            ("How to make a pie.", "2018-11-23"),
+            ("What I did Today", "2017-07-28"),
+        ]
         assert actual == expected
 
 

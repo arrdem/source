@@ -2,11 +2,11 @@
 
 from datalog.easy import read, select
 from datalog.types import (
-  CachedDataset,
-  Constant,
-  Dataset,
-  PartlyIndexedDataset,
-  TableIndexedDataset
+    CachedDataset,
+    Constant,
+    Dataset,
+    PartlyIndexedDataset,
+    TableIndexedDataset,
 )
 
 import pytest
@@ -194,7 +194,9 @@ def test_alternate_rule_lrec(db_cls):
     """Testing that both recursion and alternation work."""
 
     if db_cls == Dataset:
-        pytest.xfail("left-recursive rules aren't supported with a trivial store and no planner")
+        pytest.xfail(
+            "left-recursive rules aren't supported with a trivial store and no planner"
+        )
 
     d = read(
         """

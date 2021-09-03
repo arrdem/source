@@ -38,7 +38,6 @@ examples = [
     (536870912, 32, "fabab-babab"),
     (1073741824, 32, "habab-babab"),
     (2147483648, 32, "mabab-babab"),
-
     # A random value
     (3232235536, 32, "safom-babib"),
 ]
@@ -53,4 +52,6 @@ def test_decode_examples(val, width, qint):
 def test_encode_examples(val, width, qint):
     encoded_qint = proquint.Proquint.encode(val, width)
     decoded_val = proquint.Proquint.decode(encoded_qint)
-    assert encoded_qint == qint, f"did not encode {val} to {qint}; got {encoded_qint} ({decoded_val})"
+    assert (
+        encoded_qint == qint
+    ), f"did not encode {val} to {qint}; got {encoded_qint} ({decoded_val})"

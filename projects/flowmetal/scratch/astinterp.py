@@ -314,7 +314,7 @@ class ModuleInterpreter(StrictNodeVisitor):
         #
         # Note that we have to do the .posonlyargs dance
         if argspec.vararg:
-            self.ns[argspec.vararg.arg] = args[len(argspec.args):]
+            self.ns[argspec.vararg.arg] = args[len(argspec.args) :]
         else:
             if len(args) > len(argspec.args or getattr(argspec, "posonlyargs", ())):
                 arg_num_mismatch()
@@ -791,8 +791,9 @@ class ModuleInterpreter(StrictNodeVisitor):
         for n in node.names:
             if n in self.ns and self.ns[n] is not GLOBAL:
                 raise SyntaxError(
-                    "SyntaxError: name '{}' is assigned to before global declaration"
-                    .format(n)
+                    "SyntaxError: name '{}' is assigned to before global declaration".format(
+                        n
+                    )
                 )
             # Don't store GLOBAL in the top-level namespace
             if self.ns.parent:
@@ -895,6 +896,7 @@ class ModuleInterpreter(StrictNodeVisitor):
     def visit_Ellipsis(self, node):
         # In Py3k only
         from ast import Ellipsis
+
         return Ellipsis
 
     def visit_Print(self, node):
@@ -929,8 +931,8 @@ class InterpreterSystem(object):
                 name = name.replace(".", os.path.sep)
                 for e in self.path:
                     for ext in [
-                            # ".flow",
-                            ".py",
+                        # ".flow",
+                        ".py",
                     ]:
                         if os.path.isdir(e):
                             f = os.path.join(e, name + ext)
@@ -942,10 +944,14 @@ class InterpreterSystem(object):
 
                         elif os.path.isfile(e):
                             # FIXME (arrdem 2021-05-31)
-                            raise RuntimeError("Import from .zip/.whl/.egg archives aren't supported yet")
+                            raise RuntimeError(
+                                "Import from .zip/.whl/.egg archives aren't supported yet"
+                            )
 
                 else:
-                    self.modules[name] = __import__(name, globals, locals, fromlist, level)
+                    self.modules[name] = __import__(
+                        name, globals, locals, fromlist, level
+                    )
 
         return self.modules[name]
 

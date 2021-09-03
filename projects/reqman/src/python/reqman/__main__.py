@@ -49,7 +49,7 @@ def req_name(requirement: str) -> str:
 def sort_key(requirement: str) -> str:
     return (
         req_name(requirement)  # Get the match group
-        .lower()           # We ignore case
+        .lower()  # We ignore case
         .replace("-", "")  # We ignore -
         .replace("_", "")  # And _
     )
@@ -58,7 +58,9 @@ def sort_key(requirement: str) -> str:
 def _bq(query):
     """Enumerate the PyPi package names from a Bazel query."""
 
-    unused = subprocess.check_output(["bazel", "query", query, "--output=package"]).decode("utf-8")
+    unused = subprocess.check_output(
+        ["bazel", "query", query, "--output=package"]
+    ).decode("utf-8")
     for line in unused.split("\n"):
         if line:
             yield line.replace("@arrdem_source_pypi//pypi__", "")
@@ -67,7 +69,9 @@ def _bq(query):
 def _unused():
     """Find unused requirements."""
 
-    return set(_bq("@arrdem_source_pypi//...")) - set(_bq("filter('//pypi__', deps(//...))"))
+    return set(_bq("@arrdem_source_pypi//...")) - set(
+        _bq("filter('//pypi__', deps(//...))")
+    )
 
 
 def _load(fname):

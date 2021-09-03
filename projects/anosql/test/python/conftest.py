@@ -102,10 +102,15 @@ def pg_conn(postgresql):
 
         with postgresql.cursor() as cur:
             with open(USERS_DATA_PATH) as fp:
-                cur.copy_from(fp, "users", sep=",", columns=["username", "firstname", "lastname"])
+                cur.copy_from(
+                    fp, "users", sep=",", columns=["username", "firstname", "lastname"]
+                )
             with open(BLOGS_DATA_PATH) as fp:
                 cur.copy_from(
-                    fp, "blogs", sep=",", columns=["userid", "title", "content", "published"]
+                    fp,
+                    "blogs",
+                    sep=",",
+                    columns=["userid", "title", "content", "published"],
                 )
 
     return postgresql

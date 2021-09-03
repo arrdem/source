@@ -56,12 +56,12 @@ from datalog.debris import Timing
 from datalog.evaluator import select
 from datalog.reader import pr_str, read_command, read_dataset
 from datalog.types import (
-  CachedDataset,
-  Dataset,
-  LVar,
-  PartlyIndexedDataset,
-  Rule,
-  TableIndexedDataset
+    CachedDataset,
+    Dataset,
+    LVar,
+    PartlyIndexedDataset,
+    Rule,
+    TableIndexedDataset,
 )
 
 from prompt_toolkit import print_formatted_text, PromptSession

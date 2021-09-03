@@ -14,10 +14,12 @@ setup(
     packages=[
         "lilith",
     ],
-    package_data={"": [
-        "src/python/lilith/*.lark",
-        "src/python/lilith/*.lil",
-    ]},
+    package_data={
+        "": [
+            "src/python/lilith/*.lark",
+            "src/python/lilith/*.lil",
+        ]
+    },
     include_package_data=True,
     install_requires=requirements,
     entry_points={

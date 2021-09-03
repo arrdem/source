@@ -10,7 +10,9 @@ from proquint import Proquint
 parser = argparse.ArgumentParser()
 g = parser.add_mutually_exclusive_group()
 g.add_argument("-g", "--generate", dest="generate", default=False, action="store_true")
-g.add_argument("-p", "--predictable", dest="predictable", default=False, action="store_true")
+g.add_argument(
+    "-p", "--predictable", dest="predictable", default=False, action="store_true"
+)
 g.add_argument("-d", "--decode", dest="decode", default=False, action="store_true")
 g.add_argument("-e", "--encode", dest="encode", default=False, action="store_true")
 parser.add_argument("-w", "--width", dest="width", type=int, default=32)

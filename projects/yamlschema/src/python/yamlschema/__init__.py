@@ -199,7 +199,7 @@ class YamlLinter(object):
             )
 
     def _lint_num_range(self, schema, node: Node, value) -> t.Iterable[LintRecord]:
-        """"FIXME."""
+        """ "FIXME."""
 
         if (base := schema.get("multipleOf")) is not None:
             if value % base != 0:

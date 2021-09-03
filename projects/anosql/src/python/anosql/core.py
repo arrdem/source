@@ -4,10 +4,10 @@ from .adapters.psycopg2 import PsycoPG2Adapter
 from .adapters.sqlite3 import SQLite3DriverAdapter
 from .exceptions import SQLLoadException, SQLParseException
 from .patterns import (
-  doc_comment_pattern,
-  empty_pattern,
-  query_name_definition_pattern,
-  valid_query_name_pattern
+    doc_comment_pattern,
+    empty_pattern,
+    query_name_definition_pattern,
+    valid_query_name_pattern,
 )
 
 
@@ -89,8 +89,8 @@ def get_driver_adapter(driver_name):
 
 
 class SQLOperationType(object):
-    """Enumeration (kind of) of anosql operation types
-    """
+    """Enumeration (kind of) of anosql operation types"""
+
     INSERT_RETURNING = 0
     INSERT_UPDATE_DELETE = 1
     INSERT_UPDATE_DELETE_MANY = 2
@@ -168,9 +168,13 @@ def _create_fns(query_name, docs, op_type, sql, driver_adapter):
         if op_type == SQLOperationType.INSERT_RETURNING:
             return driver_adapter.insert_returning(conn, query_name, sql, parameters)
         elif op_type == SQLOperationType.INSERT_UPDATE_DELETE:
-            return driver_adapter.insert_update_delete(conn, query_name, sql, parameters)
+            return driver_adapter.insert_update_delete(
+                conn, query_name, sql, parameters
+            )
         elif op_type == SQLOperationType.INSERT_UPDATE_DELETE_MANY:
-            return driver_adapter.insert_update_delete_many(conn, query_name, sql, *parameters)
+            return driver_adapter.insert_update_delete_many(
+                conn, query_name, sql, *parameters
+            )
         elif op_type == SQLOperationType.SCRIPT:
             return driver_adapter.execute_script(conn, sql)
         elif op_type == SQLOperationType.SELECT_ONE_ROW:
@@ -351,5 +355,5 @@ def from_path(sql_path, driver_name):
     else:
         raise SQLLoadException(
             "The sql_path must be a directory or file, got {}".format(sql_path),
-            sql_path
+            sql_path,
         )

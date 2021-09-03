@@ -89,16 +89,18 @@ class Proquint(object):
             val = n << 8 | m
 
             # This is slightly un-idiomatic, but it precisely captures the coding definition
-            yield "".join([
-                dict[val >> shift & mask]
-                for dict, shift, mask in [
-                        (cls.CONSONANTS, 0xC, 0xf),
-                        (cls.VOWELS,     0xA, 0x3),
-                        (cls.CONSONANTS, 0x6, 0xf),
-                        (cls.VOWELS,     0x4, 0x3),
-                        (cls.CONSONANTS, 0x0, 0xf)
+            yield "".join(
+                [
+                    dict[val >> shift & mask]
+                    for dict, shift, mask in [
+                        (cls.CONSONANTS, 0xC, 0xF),
+                        (cls.VOWELS, 0xA, 0x3),
+                        (cls.CONSONANTS, 0x6, 0xF),
+                        (cls.VOWELS, 0x4, 0x3),
+                        (cls.CONSONANTS, 0x0, 0xF),
+                    ]
                 ]
-            ])
+            )
 
     # Core methods
     ################################################################################################

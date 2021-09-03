@@ -5,6 +5,7 @@ import pytest
 @pytest.fixture
 def sqlite(request):
     import sqlite3
+
     sqlconnection = sqlite3.connect(":memory:")
 
     def fin():
@@ -18,11 +19,13 @@ def sqlite(request):
 
 
 def test_simple_query(sqlite):
-    _test_create_insert = ("-- name: create-some-table#\n"
-                           "-- testing insertion\n"
-                           "CREATE TABLE foo (a, b, c);\n\n"
-                           "-- name: insert-some-value!\n"
-                           "INSERT INTO foo (a, b, c) VALUES (1, 2, 3);\n")
+    _test_create_insert = (
+        "-- name: create-some-table#\n"
+        "-- testing insertion\n"
+        "CREATE TABLE foo (a, b, c);\n\n"
+        "-- name: insert-some-value!\n"
+        "INSERT INTO foo (a, b, c) VALUES (1, 2, 3);\n"
+    )
 
     q = anosql.from_str(_test_create_insert, "sqlite3")
     q.create_some_table(sqlite)
@@ -30,11 +33,13 @@ def test_simple_query(sqlite):
 
 
 def test_auto_insert_query(sqlite):
-    _test_create_insert = ("-- name: create-some-table#\n"
-                           "-- testing insertion\n"
-                           "CREATE TABLE foo (a, b, c);\n\n"
-                           "-- name: insert-some-value<!\n"
-                           "INSERT INTO foo (a, b, c) VALUES (1, 2, 3);\n")
+    _test_create_insert = (
+        "-- name: create-some-table#\n"
+        "-- testing insertion\n"
+        "CREATE TABLE foo (a, b, c);\n\n"
+        "-- name: insert-some-value<!\n"
+        "INSERT INTO foo (a, b, c) VALUES (1, 2, 3);\n"
+    )
 
     q = anosql.from_str(_test_create_insert, "sqlite3")
     q.create_some_table(sqlite)
@@ -44,13 +49,15 @@ def test_auto_insert_query(sqlite):
 
 
 def test_parametrized_insert(sqlite):
-    _test_create_insert = ("-- name: create-some-table#\n"
-                           "-- testing insertion\n"
-                           "CREATE TABLE foo (a, b, c);\n\n"
-                           "-- name: insert-some-value!\n"
-                           "INSERT INTO foo (a, b, c) VALUES (?, ?, ?);\n\n"
-                           "-- name: get-all-values\n"
-                           "SELECT * FROM foo;\n")
+    _test_create_insert = (
+        "-- name: create-some-table#\n"
+        "-- testing insertion\n"
+        "CREATE TABLE foo (a, b, c);\n\n"
+        "-- name: insert-some-value!\n"
+        "INSERT INTO foo (a, b, c) VALUES (?, ?, ?);\n\n"
+        "-- name: get-all-values\n"
+        "SELECT * FROM foo;\n"
+    )
 
     q = anosql.from_str(_test_create_insert, "sqlite3")
     q.create_some_table(sqlite)
@@ -59,13 +66,15 @@ def test_parametrized_insert(sqlite):
 
 
 def test_parametrized_insert_named(sqlite):
-    _test_create_insert = ("-- name: create-some-table#\n"
-                           "-- testing insertion\n"
-                           "CREATE TABLE foo (a, b, c);\n\n"
-                           "-- name: insert-some-value!\n"
-                           "INSERT INTO foo (a, b, c) VALUES (:a, :b, :c);\n\n"
-                           "-- name: get-all-values\n"
-                           "SELECT * FROM foo;\n")
+    _test_create_insert = (
+        "-- name: create-some-table#\n"
+        "-- testing insertion\n"
+        "CREATE TABLE foo (a, b, c);\n\n"
+        "-- name: insert-some-value!\n"
+        "INSERT INTO foo (a, b, c) VALUES (:a, :b, :c);\n\n"
+        "-- name: get-all-values\n"
+        "SELECT * FROM foo;\n"
+    )
 
     q = anosql.from_str(_test_create_insert, "sqlite3")
     q.create_some_table(sqlite)
@@ -74,23 +83,27 @@ def test_parametrized_insert_named(sqlite):
 
 
 def test_one_row(sqlite):
-    _test_one_row = ("-- name: one-row?\n"
-                     "SELECT 1, 'hello';\n\n"
-                     "-- name: two-rows?\n"
-                     "SELECT 1 UNION SELECT 2;\n")
+    _test_one_row = (
+        "-- name: one-row?\n"
+        "SELECT 1, 'hello';\n\n"
+        "-- name: two-rows?\n"
+        "SELECT 1 UNION SELECT 2;\n"
+    )
     q = anosql.from_str(_test_one_row, "sqlite3")
     assert q.one_row(sqlite) == (1, "hello")
     assert q.two_rows(sqlite) is None
 
 
 def test_simple_query_pg(postgresql):
-    _queries = ("-- name: create-some-table#\n"
-                "-- testing insertion\n"
-                "CREATE TABLE foo (id serial primary key, a int, b int, c int);\n\n"
-                "-- name: insert-some-value!\n"
-                "INSERT INTO foo (a, b, c) VALUES (1, 2, 3);\n\n"
-                "-- name: get-all-values\n"
-                "SELECT a, b, c FROM foo;\n")
+    _queries = (
+        "-- name: create-some-table#\n"
+        "-- testing insertion\n"
+        "CREATE TABLE foo (id serial primary key, a int, b int, c int);\n\n"
+        "-- name: insert-some-value!\n"
+        "INSERT INTO foo (a, b, c) VALUES (1, 2, 3);\n\n"
+        "-- name: get-all-values\n"
+        "SELECT a, b, c FROM foo;\n"
+    )
 
     q = anosql.from_str(_queries, "psycopg2")
 
@@ -101,13 +114,15 @@ def test_simple_query_pg(postgresql):
 
 
 def test_auto_insert_query_pg(postgresql):
-    _queries = ("-- name: create-some-table#\n"
-                "-- testing insertion\n"
-                "CREATE TABLE foo (id serial primary key, a int, b int, c int);\n\n"
-                "-- name: insert-some-value<!\n"
-                "INSERT INTO foo (a, b, c) VALUES (1, 2, 3) returning id;\n\n"
-                "-- name: get-all-values\n"
-                "SELECT a, b, c FROM foo;\n")
+    _queries = (
+        "-- name: create-some-table#\n"
+        "-- testing insertion\n"
+        "CREATE TABLE foo (id serial primary key, a int, b int, c int);\n\n"
+        "-- name: insert-some-value<!\n"
+        "INSERT INTO foo (a, b, c) VALUES (1, 2, 3) returning id;\n\n"
+        "-- name: get-all-values\n"
+        "SELECT a, b, c FROM foo;\n"
+    )
 
     q = anosql.from_str(_queries, "psycopg2")
 
@@ -118,13 +133,15 @@ def test_auto_insert_query_pg(postgresql):
 
 
 def test_parameterized_insert_pg(postgresql):
-    _queries = ("-- name: create-some-table#\n"
-                "-- testing insertion\n"
-                "CREATE TABLE foo (id serial primary key, a int, b int, c int);\n\n"
-                "-- name: insert-some-value!\n"
-                "INSERT INTO foo (a, b, c) VALUES (%s, %s, %s);\n\n"
-                "-- name: get-all-values\n"
-                "SELECT a, b, c FROM foo;\n")
+    _queries = (
+        "-- name: create-some-table#\n"
+        "-- testing insertion\n"
+        "CREATE TABLE foo (id serial primary key, a int, b int, c int);\n\n"
+        "-- name: insert-some-value!\n"
+        "INSERT INTO foo (a, b, c) VALUES (%s, %s, %s);\n\n"
+        "-- name: get-all-values\n"
+        "SELECT a, b, c FROM foo;\n"
+    )
 
     q = anosql.from_str(_queries, "psycopg2")
 
@@ -135,13 +152,15 @@ def test_parameterized_insert_pg(postgresql):
 
 
 def test_auto_parameterized_insert_query_pg(postgresql):
-    _queries = ("-- name: create-some-table#\n"
-                "-- testing insertion\n"
-                "CREATE TABLE foo (id serial primary key, a int, b int, c int);\n\n"
-                "-- name: insert-some-value<!\n"
-                "INSERT INTO foo (a, b, c) VALUES (%s, %s, %s) returning id;\n\n"
-                "-- name: get-all-values\n"
-                "SELECT a, b, c FROM foo;\n")
+    _queries = (
+        "-- name: create-some-table#\n"
+        "-- testing insertion\n"
+        "CREATE TABLE foo (id serial primary key, a int, b int, c int);\n\n"
+        "-- name: insert-some-value<!\n"
+        "INSERT INTO foo (a, b, c) VALUES (%s, %s, %s) returning id;\n\n"
+        "-- name: get-all-values\n"
+        "SELECT a, b, c FROM foo;\n"
+    )
 
     q = anosql.from_str(_queries, "psycopg2")
 
@@ -154,13 +173,15 @@ def test_auto_parameterized_insert_query_pg(postgresql):
 
 
 def test_parameterized_select_pg(postgresql):
-    _queries = ("-- name: create-some-table#\n"
-                "-- testing insertion\n"
-                "CREATE TABLE foo (id serial primary key, a int, b int, c int);\n\n"
-                "-- name: insert-some-value!\n"
-                "INSERT INTO foo (a, b, c) VALUES (1, 2, 3)\n\n"
-                "-- name: get-all-values\n"
-                "SELECT a, b, c FROM foo WHERE a = %s;\n")
+    _queries = (
+        "-- name: create-some-table#\n"
+        "-- testing insertion\n"
+        "CREATE TABLE foo (id serial primary key, a int, b int, c int);\n\n"
+        "-- name: insert-some-value!\n"
+        "INSERT INTO foo (a, b, c) VALUES (1, 2, 3)\n\n"
+        "-- name: get-all-values\n"
+        "SELECT a, b, c FROM foo WHERE a = %s;\n"
+    )
 
     q = anosql.from_str(_queries, "psycopg2")
 
@@ -171,13 +192,15 @@ def test_parameterized_select_pg(postgresql):
 
 
 def test_parameterized_insert_named_pg(postgresql):
-    _queries = ("-- name: create-some-table#\n"
-                "-- testing insertion\n"
-                "CREATE TABLE foo (id serial primary key, a int, b int, c int);\n\n"
-                "-- name: insert-some-value!\n"
-                "INSERT INTO foo (a, b, c) VALUES (%(a)s, %(b)s, %(c)s)\n\n"
-                "-- name: get-all-values\n"
-                "SELECT a, b, c FROM foo;\n")
+    _queries = (
+        "-- name: create-some-table#\n"
+        "-- testing insertion\n"
+        "CREATE TABLE foo (id serial primary key, a int, b int, c int);\n\n"
+        "-- name: insert-some-value!\n"
+        "INSERT INTO foo (a, b, c) VALUES (%(a)s, %(b)s, %(c)s)\n\n"
+        "-- name: get-all-values\n"
+        "SELECT a, b, c FROM foo;\n"
+    )
 
     q = anosql.from_str(_queries, "psycopg2")
 
@@ -188,13 +211,15 @@ def test_parameterized_insert_named_pg(postgresql):
 
 
 def test_parameterized_select_named_pg(postgresql):
-    _queries = ("-- name: create-some-table#\n"
-                "-- testing insertion\n"
-                "CREATE TABLE foo (id serial primary key, a int, b int, c int);\n\n"
-                "-- name: insert-some-value!\n"
-                "INSERT INTO foo (a, b, c) VALUES (1, 2, 3)\n\n"
-                "-- name: get-all-values\n"
-                "SELECT a, b, c FROM foo WHERE a = %(a)s;\n")
+    _queries = (
+        "-- name: create-some-table#\n"
+        "-- testing insertion\n"
+        "CREATE TABLE foo (id serial primary key, a int, b int, c int);\n\n"
+        "-- name: insert-some-value!\n"
+        "INSERT INTO foo (a, b, c) VALUES (1, 2, 3)\n\n"
+        "-- name: get-all-values\n"
+        "SELECT a, b, c FROM foo WHERE a = %(a)s;\n"
+    )
 
     q = anosql.from_str(_queries, "psycopg2")
 
@@ -208,7 +233,6 @@ def test_without_trailing_semi_colon_pg():
     """Make sure keywords ending queries are recognized even without
     semi-colons.
     """
-    _queries = ("-- name: get-by-a\n"
-                "SELECT a, b, c FROM foo WHERE a = :a\n")
+    _queries = "-- name: get-by-a\n" "SELECT a, b, c FROM foo WHERE a = :a\n"
     q = anosql.from_str(_queries, "psycopg2")
     assert q.get_by_a.sql == "SELECT a, b, c FROM foo WHERE a = %(a)s"

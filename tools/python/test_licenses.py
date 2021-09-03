@@ -13,16 +13,16 @@ from requirements.requirement import Requirement
 # Licenses approved as representing non-copyleft and not precluding commercial usage.
 # This is all easy, there's a good schema here.
 APPROVED_LICENSES = [
-    MIT    := "License :: OSI Approved :: MIT License",
+    MIT := "License :: OSI Approved :: MIT License",
     APACHE := "License :: OSI Approved :: Apache Software License",
-    BSD    := "License :: OSI Approved :: BSD License",
-    MPL10  := "License :: OSI Approved :: Mozilla Public License 1.0 (MPL)",
-    MPL11  := "License :: OSI Approved :: Mozilla Public License 1.1 (MPL 1.1)",
-    MPL20  := "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)",
-    PSFL   := "License :: OSI Approved :: Python Software Foundation License",
-    LGPL   := "License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)",
-    LGPL3  := "License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)",
-    ISCL   := "License :: OSI Approved :: ISC License (ISCL)",
+    BSD := "License :: OSI Approved :: BSD License",
+    MPL10 := "License :: OSI Approved :: Mozilla Public License 1.0 (MPL)",
+    MPL11 := "License :: OSI Approved :: Mozilla Public License 1.1 (MPL 1.1)",
+    MPL20 := "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)",
+    PSFL := "License :: OSI Approved :: Python Software Foundation License",
+    LGPL := "License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)",
+    LGPL3 := "License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)",
+    ISCL := "License :: OSI Approved :: ISC License (ISCL)",
 ]
 
 UNAPPROVED_LICENSES = [
@@ -36,23 +36,17 @@ LICENSES_BY_LOWERNAME = {
     "apache 2.0": APACHE,
     "apache": APACHE,
     "http://www.apache.org/licenses/license-2.0": APACHE,
-
     "bsd 3": BSD,
     "bsd": BSD,
-
     "gpl": GPL1,
     "gpl2": GPL2,
     "gpl3": GPL3,
     "lgpl": LGPL,
     "lgpl3": LGPL3,
-
     "isc": ISCL,
-
     "mit": MIT,
-
     "mpl": MPL10,
     "mpl 2.0": MPL20,
-
     "psf": PSFL,
 }
 
@@ -75,7 +69,9 @@ with open("tools/python/requirements.txt") as fd:
 
 def bash_license(ln):
     while True:
-        lnn = re.sub(r"[(),]|( version)|( license)|( ?v(?=\d))|([ -]clause)", "", ln.lower())
+        lnn = re.sub(
+            r"[(),]|( version)|( license)|( ?v(?=\d))|([ -]clause)", "", ln.lower()
+        )
         if ln != lnn:
             ln = lnn
         else:
@@ -85,16 +81,19 @@ def bash_license(ln):
     return ln
 
 
-@pytest.mark.parametrize("a,b", [
-    ("MIT", MIT),
-    ("mit", MIT),
-    ("BSD", BSD),
-    ("BSD 3-clause", BSD),
-    ("BSD 3 clause", BSD),
-    ("GPL3", GPL3),
-    ("GPL v3", GPL3),
-    ("GPLv3", GPL3),
-])
+@pytest.mark.parametrize(
+    "a,b",
+    [
+        ("MIT", MIT),
+        ("mit", MIT),
+        ("BSD", BSD),
+        ("BSD 3-clause", BSD),
+        ("BSD 3 clause", BSD),
+        ("GPL3", GPL3),
+        ("GPL v3", GPL3),
+        ("GPLv3", GPL3),
+    ],
+)
 def test_bash_license(a, b):
     assert bash_license(a) == b
 
@@ -117,7 +116,7 @@ def licenses(package: Requirement):
     if not version:
         blob = requests.get(
             f"https://pypi.org/pypi/{package.name}/json",
-            headers={"Accept": "application/json"}
+            headers={"Accept": "application/json"},
         ).json()
         if ln := bash_license(blob.get("license")):
             lics.append(ln)
@@ -131,13 +130,15 @@ def licenses(package: Requirement):
     if version:
         blob = requests.get(
             f"https://pypi.org/pypi/{package.name}/{version}/json",
-            headers={"Accept": "application/json"}
+            headers={"Accept": "application/json"},
         ).json()
-        lics.extend([
-            c
-            for c in blob.get("info", {}).get("classifiers", [])
-            if c.startswith("License")
-        ])
+        lics.extend(
+            [
+                c
+                for c in blob.get("info", {}).get("classifiers", [])
+                if c.startswith("License")
+            ]
+        )
         ln = blob.get("info", {}).get("license")
         if ln and not lics:
             lics.append(bash_license(ln))
