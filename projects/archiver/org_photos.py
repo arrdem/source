@@ -592,6 +592,11 @@ def img_info(p: Path) -> ImgInfo:
 
     # 944404
     subsec = int(get_tag("EXIF SubSecTime") or get_tag("EXIF SubSecTimeOriginal") or get_tag("EXIF SubSecTimeDigitized") or "0")
+
+    # GoPro burst format is G%f.JPG or something close to it
+    if subsec == 0 and (m := re.match("g.*(\d{6}).jpe?g", p.name.lower())):
+        subsec = int(m.group(1))
+
     date = date.replace(microsecond=subsec)
 
     return ImgInfo(
