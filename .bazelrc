@@ -1,5 +1,5 @@
 test --test_output=errors
 
 # To enable flake8 on all build steps, uncomment this -
-build --aspects="//tools/flake8:flake8.bzl%flake8_aspect" --output_groups=flake8_checks
-build --aspects="//tools/black:black.bzl%black_aspect" --output_groups=black_checks
+# build --aspects="//tools/flake8:flake8.bzl%flake8_aspect" --output_groups=flake8_checks
+# build --aspects="//tools/black:black.bzl%black_aspect" --output_groups=black_checks

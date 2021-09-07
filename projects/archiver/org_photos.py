@@ -361,7 +361,7 @@ def checksum(p: Path, sum=sha256) -> str:
         return digest.hexdigest()
 
 
-def checksum_str(iter, sum=sha256):
+def checksum_list(iter, sum=sha256):
     """Compute the checksum of a bunch of stuff from an iterable."""
 
     sum = sum()
@@ -509,7 +509,9 @@ class ImgInfo(t.NamedTuple):
     shasum_prefix: int = 9
 
     def device_fingerprint(self):
-        return checksum_str([
+        """Compute a stable 'fingerprint' for the device that took the shot."""
+
+        return checksum_list([
             self.camera_make,
             self.camera_model,
             self.camera_sn,
@@ -520,6 +522,11 @@ class ImgInfo(t.NamedTuple):
         ])[:self.shasum_prefix]
 
     def file_fingerprint(self):
+        """Compute a 'fingerprint' for the file itself.
+
+        Note that this hash DOES include EXIF data, and is not stable.
+
+        """
         return self.file_sha256sum()[:self.shasum_prefix]
 
     def file_sha256sum(self):
