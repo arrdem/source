@@ -3,7 +3,7 @@
 import argparse
 import sys
 
-from black import patched_main, nullcontext
+from black import nullcontext, patched_main
 
 
 parser = argparse.ArgumentParser()

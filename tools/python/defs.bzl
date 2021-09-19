@@ -14,6 +14,9 @@ load("@rules_zapp//zapp:zapp.bzl",
      "zapp_binary",
 )
 
+load("@bazel_skylib//lib:sets.bzl", "sets")
+
+
 def py_requirement(*args, **kwargs):
     """A re-export of requirement()"""
     return _py_requirement(*args, **kwargs)
@@ -39,11 +42,11 @@ def py_pytest(name, srcs, deps, main=None, python_version=None, args=None, **kwa
 
     f = "//tools/python:bzl_pytest_shim.py"
 
-    deps = [
+    deps = sets.to_list(sets.make([
         py_requirement("pytest"),
         py_requirement("jedi"),
         py_requirement("pytest-pudb"),
-    ] + deps
+    ] + deps))
 
     srcs = [f] + srcs
 
@@ -60,12 +63,14 @@ def py_pytest(name, srcs, deps, main=None, python_version=None, args=None, **kwa
     # FIXME (arrdem 2020-09-27):
     #   This really needs to be a py_image_test.
     #   Not clear how to achieve that.
-    # py_image(
-    #   name = name + ".containerized",
+    # zapp_binary(
+    #   name = name + ".hermetic",
     #   main = f,
     #   args = args,
     #   srcs = srcs,
     #   deps = deps,
+    #   test = True,
+    #   zip_safe = False,
     #   **kwargs,
     # )
 

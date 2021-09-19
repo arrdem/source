@@ -4,10 +4,8 @@ Validate 3rdparty library licenses as approved.
 
 import re
 
+from pkg_resources import DistInfoDistribution, working_set
 import pytest
-import requests
-import requirements
-from requirements.requirement import Requirement
 
 
 # Licenses approved as representing non-copyleft and not precluding commercial usage.
@@ -63,14 +61,10 @@ APPROVED_PACKAGES = [
 ]
 
 
-with open("tools/python/requirements.txt") as fd:
-    PACKAGES = list(requirements.parse(fd))
-
-
 def bash_license(ln):
     while True:
         lnn = re.sub(
-            r"[(),]|( version)|( license)|( ?v(?=\d))|([ -]clause)", "", ln.lower()
+            r"[(),]|( version)|( license)|( ?v(?=\d))|([ -]clause)|(or later)", "", ln.lower()
         )
         if ln != lnn:
             ln = lnn
@@ -98,59 +92,38 @@ def test_bash_license(a, b):
     assert bash_license(a) == b
 
 
-def licenses(package: Requirement):
-    """Get package metadata (the licenses list) from PyPi.
+def licenses(dist: DistInfoDistribution):
+    """Get dist metadata (the licenses list) from PyPi.
 
-    pip and other tools use the local package metadata to introspect licenses which requires that
+    pip and other tools use the local dist metadata to introspect licenses which requires that
     packages be installed. Going to PyPi isn't strictly reproducible both because the PyPi database
     could be updated and we could see network failures but there really isn't a good way to solve
     this problem.
 
     """
+
     lics = []
-    version = next((v for op, v in package.specs if op == "=="), None)
-    print(package.name, version)
+    name = dist.project_name
+    version = dist.version
+    print(name, version, type(dist))
 
-    # If we don't have a version (eg. forked git dep) assume we've got the same license constraints
-    # as the latest upstream release. After all we can't re-license stuff.
-    if not version:
-        blob = requests.get(
-            f"https://pypi.org/pypi/{package.name}/json",
-            headers={"Accept": "application/json"},
-        ).json()
-        if ln := bash_license(blob.get("license")):
-            lics.append(ln)
-        else:
-            try:
-                version = list(blob.get("releases", {}).keys())[-1]
-            except IndexError:
-                pass
+    meta = dist.get_metadata(dist.PKG_INFO).split("\n")
+    classifiers = [l.replace("Classifier: ", "", 1) for l in meta if l.startswith("Classifier: ")]
+    license = bash_license(next((l for l in meta if l.startswith("License:")), "License: UNKNOWN").replace("License: ", "", 1))
+    lics.extend(l for l in classifiers if l.startswith("License ::"))
 
-    # If we have a version, try to pull that release's metadata since it may have more/better.
-    if version:
-        blob = requests.get(
-            f"https://pypi.org/pypi/{package.name}/{version}/json",
-            headers={"Accept": "application/json"},
-        ).json()
-        lics.extend(
-            [
-                c
-                for c in blob.get("info", {}).get("classifiers", [])
-                if c.startswith("License")
-            ]
-        )
-        ln = blob.get("info", {}).get("license")
-        if ln and not lics:
-            lics.append(bash_license(ln))
+    if not lics:
+        lics.append(license)
 
     return lics
 
 
-@pytest.mark.parametrize("package", PACKAGES)
-def test_approved_license(package):
+@pytest.mark.parametrize("dist", (w for w in working_set if w.location.find("arrdem_source_pypi") != -1), ids=lambda dist: dist.project_name)
+def test_approved_license(dist: DistInfoDistribution):
     """Ensure that a given package is either allowed by name or uses an approved license."""
 
-    _licenses = licenses(package)
-    assert package.name in APPROVED_PACKAGES or any(
+    _licenses = licenses(dist)
+    print(dist.location)
+    assert dist.project_name in APPROVED_PACKAGES or any(
         lic in APPROVED_LICENSES for lic in _licenses
-    ), f"{package} was not approved and its license(s) were unknown {_licenses!r}"
+    ), f"{dist.project_name} ({dist.location}) was not approved and its license(s) were unknown {_licenses!r}"

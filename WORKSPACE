@@ -40,7 +40,7 @@ bazel_skylib_workspace()
 git_repository(
     name = "rules_python",
     remote = "https://github.com/bazelbuild/rules_python.git",
-    tag = "0.3.0",
+    tag = "0.4.0",
     # commit = "...",
 )
 
@@ -48,13 +48,19 @@ register_toolchains("//tools/python:python3_toolchain")
 
 # pip package pinnings need to be initialized.
 # this generates a bunch of bzl rules so that each pip dep is a bzl target
-load("@rules_python//python:pip.bzl", "pip_install")
+load("@rules_python//python:pip.bzl", "pip_parse")
 
-pip_install(
+pip_parse(
     name = "arrdem_source_pypi",
-    requirements = "//tools/python:requirements.txt",
+    requirements_lock = "//tools/python:requirements.txt",
     python_interpreter = "/usr/bin/python3.9",
 )
+
+# Load the starlark macro which will define your dependencies.
+load("@arrdem_source_pypi//:requirements.bzl", "install_deps")
+
+# Call it to define repos for your requirements.
+install_deps()
 
 # git_repository(
 #     name = "rules_zapp",

@@ -1,6 +1,8 @@
 load("@rules_python//python:defs.bzl",
-     "py_runtime_pair"
+     "py_runtime_pair",
 )
+
+load("@arrdem_source_pypi//:requirements.bzl", "all_requirements")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -40,8 +42,5 @@ py_pytest(
     data = [
         "requirements.txt",
     ],
-    deps = [
-        py_requirement("requests"),
-        py_requirement("requirements-parser"),
-    ]
+    deps = all_requirements,
 )
