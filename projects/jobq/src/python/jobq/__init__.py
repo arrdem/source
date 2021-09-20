@@ -9,7 +9,10 @@ import sqlite3
 from typing import NamedTuple, Optional as Maybe
 
 import anosql
-from anosql_migrations import run_migrations, with_migrations
+from anosql_migrations import (
+    run_migrations,
+    with_migrations,
+)
 
 
 _GET_JOB_FIELDS = """\

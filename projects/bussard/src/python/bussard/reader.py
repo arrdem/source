@@ -9,7 +9,10 @@ zonefiles through the parser.
 
 from types import LambdaType
 
-from bussard.gen.parser import parse as _parse, Parser  # noqa
+from bussard.gen.parser import (  # noqa
+    parse as _parse,
+    Parser,
+)
 from bussard.gen.types import *  # noqa
 
 

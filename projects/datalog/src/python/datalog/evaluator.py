@@ -4,7 +4,13 @@ A datalog engine.
 
 from functools import reduce
 
-from datalog.types import CachedDataset, Constant, Dataset, LVar, TableIndexedDataset
+from datalog.types import (
+    CachedDataset,
+    Constant,
+    Dataset,
+    LVar,
+    TableIndexedDataset,
+)
 
 
 def match(tuple, expr, bindings=None):

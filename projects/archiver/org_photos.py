@@ -17,18 +17,16 @@ Inspired by https://github.com/herval/org_photos/blob/main/org_photos.rb
 """
 
 import argparse
-import sys
-from pathlib import Path
-from hashlib import sha256, sha512
-from datetime import date
 from datetime import datetime
-from shutil import copy2 as copyfile
+from hashlib import sha256, sha512
+from pathlib import Path
 import re
+from shutil import copy2 as copyfile
+import sys
 import typing as t
 
 # FIXME: use piexif, which supports writeback not exifread.
 import exifread
-from exifread.classes import IfdTag
 
 
 parser = argparse.ArgumentParser()
@@ -36,7 +34,7 @@ parser.add_argument("src_dir", type=Path)
 parser.add_argument("dest_dir", type=Path)
 
 
-MODIFIED_ISO_DATE = '%Y:%m:%dT%H:%M:%SF%f'
+MODIFIED_ISO_DATE = "%Y:%m:%dT%H:%M:%SF%f"
 
 
 def take(n, iter):
@@ -51,7 +49,7 @@ def take(n, iter):
 
 def exif_tags(p: Path) -> object:
     """Return the EXIF tags on an image."""
-    with open(p, 'rb') as fp:
+    with open(p, "rb") as fp:
         return exifread.process_file(fp)
 
 # EXIF tags dataset (exifread edition) -
@@ -430,7 +428,7 @@ def date_from_name(p: Path):
             # A bug
             # 2014:08:21T19:4640F1408672000
             # 2015:12:14T23:0933F1450159773
-            '%Y:%m:%dT%H:%M%SF%f',
+            "%Y:%m:%dT%H:%M%SF%f",
 
             # 2020-12-21 17.15.09.0
             "%Y-%m-%d %H.%M.%S.%f",
@@ -556,9 +554,9 @@ def img_info(p: Path) -> ImgInfo:
     camera_make = get_tag("Image Make", "Unknown")
     camera_model = get_tag("Image Model", "Unknown")
     camera_sn = get_tag("MakerNote SerialNumber", "Unknown")
-    lens_make = get_tag('EXIF LensMake', "Unknown")
-    lens_model = get_tag('EXIF LensModel', "Unknown")
-    lens_sn = get_tag('EXIF LensSerialNumber', "Unknown")
+    lens_make = get_tag("EXIF LensMake", "Unknown")
+    lens_model = get_tag("EXIF LensModel", "Unknown")
+    lens_sn = get_tag("EXIF LensSerialNumber", "Unknown")
     software = get_tag("Image Software", "Unknown")
     dirty = False
 

@@ -4,8 +4,17 @@ A datalog reader.
 
 from collections import defaultdict
 
-from datalog.parser import FAILURE, Grammar, ParseError
-from datalog.types import Constant, Dataset, LVar, Rule
+from datalog.parser import (
+    FAILURE,
+    Grammar,
+    ParseError,
+)
+from datalog.types import (
+    Constant,
+    Dataset,
+    LVar,
+    Rule,
+)
 
 
 class Actions(object):

@@ -3,9 +3,10 @@ A tree deduplicator and archiver tool.
 """
 
 import argparse
-from pathlib import Path
 from hashlib import sha256
+from pathlib import Path
 from shutil import copy2 as copyfile
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument("from_dir", type=Path)

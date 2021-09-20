@@ -2,7 +2,11 @@
 
 """
 
-from lilith.interpreter import Bindings, eval, Runtime
+from lilith.interpreter import (
+    Bindings,
+    eval,
+    Runtime,
+)
 from lilith.parser import Apply, Args, Symbol
 from lilith.reader import Def, Module
 import pytest

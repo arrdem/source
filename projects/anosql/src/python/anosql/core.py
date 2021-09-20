@@ -2,7 +2,10 @@ import os
 
 from .adapters.psycopg2 import PsycoPG2Adapter
 from .adapters.sqlite3 import SQLite3DriverAdapter
-from .exceptions import SQLLoadException, SQLParseException
+from .exceptions import (
+    SQLLoadException,
+    SQLParseException,
+)
 from .patterns import (
     doc_comment_pattern,
     empty_pattern,

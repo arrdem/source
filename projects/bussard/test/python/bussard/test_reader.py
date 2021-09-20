@@ -3,7 +3,12 @@ Tests of the Bussard reader.
 """
 
 import bussard.reader as t
-from bussard.reader import Actions, Parser, read, read1
+from bussard.reader import (
+    Actions,
+    Parser,
+    read,
+    read1,
+)
 
 
 def parse_word(input):

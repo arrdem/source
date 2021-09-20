@@ -1,6 +1,11 @@
 """Tests covering the reader."""
 
-from lilith.parser import Apply, Args, Block, Symbol
+from lilith.parser import (
+    Apply,
+    Args,
+    Block,
+    Symbol,
+)
 from lilith.reader import Def, Module, read_buffer
 import pytest
 

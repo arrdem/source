@@ -25,8 +25,14 @@ from telnetlib import Telnet
 from threading import Event, Lock, Thread
 from time import sleep
 
-from kazoo.exceptions import ConnectionLoss, LockTimeout, SessionExpiredError
-from kazoo.handlers.threading import KazooTimeoutError
+from kazoo.exceptions import (
+    ConnectionLoss,
+    LockTimeout,
+    SessionExpiredError,
+)
+from kazoo.handlers.threading import (
+    KazooTimeoutError,
+)
 from kazoo.recipe.lock import Lock as KazooLock
 from kook.client import KookClient, lock
 

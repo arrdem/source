@@ -6,7 +6,13 @@ import argparse
 import logging
 import os
 
-from flask import abort, current_app, Flask, jsonify, request
+from flask import (
+    abort,
+    current_app,
+    Flask,
+    jsonify,
+    request,
+)
 from jobq import Job, JobQueue
 
 

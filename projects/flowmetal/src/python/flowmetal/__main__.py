@@ -3,7 +3,12 @@ The Flowmetal server entry point.
 """
 
 import click
-from flowmetal import frontend, interpreter, reaper, scheduler
+from flowmetal import (
+    frontend,
+    interpreter,
+    reaper,
+    scheduler,
+)
 
 
 @click.group()

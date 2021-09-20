@@ -1,16 +1,32 @@
 """The Lilith runner."""
 
 import argparse
-from importlib.resources import read_text as resource_text
+from importlib.resources import (
+    read_text as resource_text,
+)
 import logging
 import sys
 import traceback
 
-from lilith.interpreter import Bindings, eval as lil_eval, Runtime
+from lilith.interpreter import (
+    Bindings,
+    eval as lil_eval,
+    Runtime,
+)
 from lilith.parser import parse_expr, Symbol
-from lilith.reader import Def, Module, read_buffer, read_file
-from prompt_toolkit import print_formatted_text, PromptSession
-from prompt_toolkit.formatted_text import FormattedText
+from lilith.reader import (
+    Def,
+    Module,
+    read_buffer,
+    read_file,
+)
+from prompt_toolkit import (
+    print_formatted_text,
+    PromptSession,
+)
+from prompt_toolkit.formatted_text import (
+    FormattedText,
+)
 from prompt_toolkit.history import FileHistory
 from prompt_toolkit.styles import Style
 import yaml

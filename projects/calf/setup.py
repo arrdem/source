@@ -2,7 +2,10 @@
 
 from os import path
 
-from setuptools import find_namespace_packages, setup
+from setuptools import (
+    find_namespace_packages,
+    setup,
+)
 
 
 # Fetch the README contents

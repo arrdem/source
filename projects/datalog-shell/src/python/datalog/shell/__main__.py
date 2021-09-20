@@ -54,7 +54,11 @@ import sys
 
 from datalog.debris import Timing
 from datalog.evaluator import select
-from datalog.reader import pr_str, read_command, read_dataset
+from datalog.reader import (
+    pr_str,
+    read_command,
+    read_dataset,
+)
 from datalog.types import (
     CachedDataset,
     Dataset,
@@ -64,8 +68,13 @@ from datalog.types import (
     TableIndexedDataset,
 )
 
-from prompt_toolkit import print_formatted_text, PromptSession
-from prompt_toolkit.formatted_text import FormattedText
+from prompt_toolkit import (
+    print_formatted_text,
+    PromptSession,
+)
+from prompt_toolkit.formatted_text import (
+    FormattedText,
+)
 from prompt_toolkit.history import FileHistory
 from prompt_toolkit.styles import Style
 from yaspin import Spinner, yaspin

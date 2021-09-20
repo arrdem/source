@@ -1,5 +1,12 @@
-from .core import from_path, from_str, SQLOperationType
-from .exceptions import SQLLoadException, SQLParseException
+from .core import (
+    from_path,
+    from_str,
+    SQLOperationType,
+)
+from .exceptions import (
+    SQLLoadException,
+    SQLParseException,
+)
 
 
 __all__ = [

@@ -9,7 +9,12 @@ import re
 import typing as t
 
 import yaml
-from yaml.nodes import MappingNode, Node, ScalarNode, SequenceNode
+from yaml.nodes import (
+    MappingNode,
+    Node,
+    ScalarNode,
+    SequenceNode,
+)
 
 
 log = logging.getLogger(__name__)

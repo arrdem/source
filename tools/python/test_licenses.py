@@ -4,7 +4,10 @@ Validate 3rdparty library licenses as approved.
 
 import re
 
-from pkg_resources import DistInfoDistribution, working_set
+from pkg_resources import (
+    DistInfoDistribution,
+    working_set,
+)
 import pytest
 
 

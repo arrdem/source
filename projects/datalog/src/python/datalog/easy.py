@@ -8,9 +8,18 @@ Easy because it's closer to hand, but no simpler.
 
 from typing import Sequence, Tuple
 
-from datalog.evaluator import join as __join, select as __select
+from datalog.evaluator import (
+    join as __join,
+    select as __select,
+)
 from datalog.reader import read as __read
-from datalog.types import Constant, Dataset, LTuple, LVar, PartlyIndexedDataset
+from datalog.types import (
+    Constant,
+    Dataset,
+    LTuple,
+    LVar,
+    PartlyIndexedDataset,
+)
 
 
 def read(text: str, db_cls=PartlyIndexedDataset):

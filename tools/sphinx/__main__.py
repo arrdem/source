@@ -19,8 +19,13 @@ import livereload
 from sphinx.application import Sphinx
 from sphinx.cmd.quickstart import main as new
 from sphinx.ext.apidoc import main as apidoc
-from sphinx.ext.autosummary.generate import main as autosummary
-from sphinx.util.docutils import docutils_namespace, patch_docutils
+from sphinx.ext.autosummary.generate import (
+    main as autosummary,
+)
+from sphinx.util.docutils import (
+    docutils_namespace,
+    patch_docutils,
+)
 
 
 @click.group()

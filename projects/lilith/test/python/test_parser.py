@@ -1,6 +1,12 @@
 """tests covering the Lilith parser."""
 
-from lilith.parser import Apply, Args, Block, parse_buffer, Symbol
+from lilith.parser import (
+    Apply,
+    Args,
+    Block,
+    parse_buffer,
+    Symbol,
+)
 import pytest
 
 
