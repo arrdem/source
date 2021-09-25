@@ -67,7 +67,9 @@ APPROVED_PACKAGES = [
 def bash_license(ln):
     while True:
         lnn = re.sub(
-            r"[(),]|( version)|( license)|( ?v(?=\d))|([ -]clause)|(or later)", "", ln.lower()
+            r"[(),]|( version)|( license)|( ?v(?=\d))|([ -]clause)|(or later)",
+            "",
+            ln.lower(),
         )
         if ln != lnn:
             ln = lnn
@@ -111,8 +113,14 @@ def licenses(dist: DistInfoDistribution):
     print(name, version, type(dist))
 
     meta = dist.get_metadata(dist.PKG_INFO).split("\n")
-    classifiers = [l.replace("Classifier: ", "", 1) for l in meta if l.startswith("Classifier: ")]
-    license = bash_license(next((l for l in meta if l.startswith("License:")), "License: UNKNOWN").replace("License: ", "", 1))
+    classifiers = [
+        l.replace("Classifier: ", "", 1) for l in meta if l.startswith("Classifier: ")
+    ]
+    license = bash_license(
+        next((l for l in meta if l.startswith("License:")), "License: UNKNOWN").replace(
+            "License: ", "", 1
+        )
+    )
     lics.extend(l for l in classifiers if l.startswith("License ::"))
 
     if not lics:
@@ -121,7 +129,11 @@ def licenses(dist: DistInfoDistribution):
     return lics
 
 
-@pytest.mark.parametrize("dist", (w for w in working_set if w.location.find("arrdem_source_pypi") != -1), ids=lambda dist: dist.project_name)
+@pytest.mark.parametrize(
+    "dist",
+    (w for w in working_set if w.location.find("arrdem_source_pypi") != -1),
+    ids=lambda dist: dist.project_name,
+)
 def test_approved_license(dist: DistInfoDistribution):
     """Ensure that a given package is either allowed by name or uses an approved license."""
 

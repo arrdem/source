@@ -52,6 +52,7 @@ def exif_tags(p: Path) -> object:
     with open(p, "rb") as fp:
         return exifread.process_file(fp)
 
+
 # EXIF tags dataset (exifread edition) -
 #
 # ---
@@ -389,7 +390,7 @@ def sanitize(s: str) -> str:
 def safe_strptime(date, format):
     try:
         return datetime.strptime(date, format)
-    except:
+    except ValueError:
         return None
 
 
@@ -417,54 +418,47 @@ def date_from_name(p: Path):
         # A couple of date formats use _ as field separators, consistently choice " " instead so that we can write fewer
         # date patterns and be more correct.
         fname = fname.replace("_", " ")
-        fname = re.sub(r"(-\d+)(-\d+)*$", r"\1", fname)  # deal with -1-2 etc. crap from Dropbox
+        fname = re.sub(
+            r"(-\d+)(-\d+)*$", r"\1", fname
+        )  # deal with -1-2 etc. crap from Dropbox
 
     # Try to guess the date
     # File date formats:
     for fmt in [
-            # Our date format
-            MODIFIED_ISO_DATE,
-
-            # A bug
-            # 2014:08:21T19:4640F1408672000
-            # 2015:12:14T23:0933F1450159773
-            "%Y:%m:%dT%H:%M%SF%f",
-
-            # 2020-12-21 17.15.09.0
-            "%Y-%m-%d %H.%M.%S.%f",
-
-            # 2020-12-21 17.15.09
-            "%Y-%m-%d %H.%M.%S",
-
-            # 2019-02-09 12.45.32-6
-            # 2019-01-13 13.43.45-16
-            "%Y-%m-%d %H.%M.%S-%f",
-
-            # Note the _1 or such may not be millis, but we assume it is.
-            # 20171113_130826_1
-            # 20171113 130826 1
-            "%Y%m%d %H%M%S %f",
-
-            # 20180404_114639
-            # 20180404 114639
-            "%Y%m%d %H%M%S",
-
-            # 2017-11-05_15:15:55
-            # 2017-11-05 15:15:55
-            "%Y-%m-%d %H:%M:%S",
-
-            # 20210417_220753284
-            # 20210417 220753284
-            # 20210304 204755545
-            "%Y%m%d %h%m%s%f",
+        # Our date format
+        MODIFIED_ISO_DATE,
+        # A bug
+        # 2014:08:21T19:4640F1408672000
+        # 2015:12:14T23:0933F1450159773
+        "%Y:%m:%dT%H:%M%SF%f",
+        # 2020-12-21 17.15.09.0
+        "%Y-%m-%d %H.%M.%S.%f",
+        # 2020-12-21 17.15.09
+        "%Y-%m-%d %H.%M.%S",
+        # 2019-02-09 12.45.32-6
+        # 2019-01-13 13.43.45-16
+        "%Y-%m-%d %H.%M.%S-%f",
+        # Note the _1 or such may not be millis, but we assume it is.
+        # 20171113_130826_1
+        # 20171113 130826 1
+        "%Y%m%d %H%M%S %f",
+        # 20180404_114639
+        # 20180404 114639
+        "%Y%m%d %H%M%S",
+        # 2017-11-05_15:15:55
+        # 2017-11-05 15:15:55
+        "%Y-%m-%d %H:%M:%S",
+        # 20210417_220753284
+        # 20210417 220753284
+        # 20210304 204755545
+        "%Y%m%d %h%m%s%f",
     ]:
         try:
             return datetime.strptime(fname, fmt)
-        except:
+        except ValueError:
             continue
     else:
         print(f"Warning: Unable to infer datetime from {fname!r}", file=sys.stderr)
-
 
 
 def normalize_ext(p: Path):
@@ -509,15 +503,17 @@ class ImgInfo(t.NamedTuple):
     def device_fingerprint(self):
         """Compute a stable 'fingerprint' for the device that took the shot."""
 
-        return checksum_list([
-            self.camera_make,
-            self.camera_model,
-            self.camera_sn,
-            self.lens_make,
-            self.lens_model,
-            self.lens_sn,
-            self.software,
-        ])[:self.shasum_prefix]
+        return checksum_list(
+            [
+                self.camera_make,
+                self.camera_model,
+                self.camera_sn,
+                self.lens_make,
+                self.lens_model,
+                self.lens_sn,
+                self.software,
+            ]
+        )[: self.shasum_prefix]
 
     def file_fingerprint(self):
         """Compute a 'fingerprint' for the file itself.
@@ -525,7 +521,7 @@ class ImgInfo(t.NamedTuple):
         Note that this hash DOES include EXIF data, and is not stable.
 
         """
-        return self.file_sha256sum()[:self.shasum_prefix]
+        return self.file_sha256sum()[: self.shasum_prefix]
 
     def file_sha256sum(self):
         return checksum(self.file_path, sha256)
@@ -540,7 +536,7 @@ def img_info(p: Path) -> ImgInfo:
     tags = exif_tags(p)
 
     def get_tag(tag, default=None):
-        if (v := tags.get(tag)):
+        if v := tags.get(tag):
             if isinstance(v.values, list):
                 return v.values[0]
             elif isinstance(v.values, str):
@@ -578,10 +574,14 @@ def img_info(p: Path) -> ImgInfo:
     stat = p.stat()
 
     # 2019:03:31 15:59:26
-    date = get_tag("Image DateTime") or get_tag("EXIF DateTimeOriginal") or get_tag("EXIF DateTimeDigitized")
+    date = (
+        get_tag("Image DateTime")
+        or get_tag("EXIF DateTimeOriginal")
+        or get_tag("EXIF DateTimeDigitized")
+    )
     if date and (date := safe_strptime(date, "%Y:%m:%d %H:%M:%S")):
         pass
-    elif (date := date_from_name(p)):
+    elif date := date_from_name(p):
         dirty |= True
     else:
         # The oldest of the mtime and the ctime
@@ -589,10 +589,15 @@ def img_info(p: Path) -> ImgInfo:
         dirty |= True
 
     # 944404
-    subsec = int(get_tag("EXIF SubSecTime") or get_tag("EXIF SubSecTimeOriginal") or get_tag("EXIF SubSecTimeDigitized") or "0")
+    subsec = int(
+        get_tag("EXIF SubSecTime")
+        or get_tag("EXIF SubSecTimeOriginal")
+        or get_tag("EXIF SubSecTimeDigitized")
+        or "0"
+    )
 
     # GoPro burst format is G%f.JPG or something close to it
-    if subsec == 0 and (m := re.match("g.*(\d{6}).jpe?g", p.name.lower())):
+    if subsec == 0 and (m := re.match(r"g.*(\d{6}).jpe?g", p.name.lower())):
         subsec = int(m.group(1))
 
     date = date.replace(microsecond=subsec)
@@ -614,11 +619,6 @@ def img_info(p: Path) -> ImgInfo:
 
 def main():
     opts, args = parser.parse_known_args()
-    skip_tags = [
-        0x927C, # MakerNote
-        0x9286, # UserComment
-        0xC4A5, # PrintIM
-    ]
 
     print("---")
     for src in list(opts.src_dir.glob("**/*")):
@@ -650,6 +650,7 @@ def main():
         else:
             target.chmod(0o644)
             src.unlink()  # Delete the source
+
 
 if __name__ == "__main__":
     main()

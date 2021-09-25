@@ -56,11 +56,18 @@ def main():
                 # If you trust mtime, this can go a lot faster
                 trust_mtime = False
 
-                if trust_mtime and abs_dest_path.stat().st_mtime < abs_src_path.stat().st_mtime:
-                     pass
+                if (
+                    trust_mtime
+                    and abs_dest_path.stat().st_mtime < abs_src_path.stat().st_mtime
+                ):
+                    pass
 
-                elif (src_checksum := checksum(abs_src_path)) != (dest_checksum := checksum(abs_dest_path)):
-                    print(f"file conflict (src {src_checksum}, dest {dest_checksum}), correcting...")
+                elif (src_checksum := checksum(abs_src_path)) != (
+                    dest_checksum := checksum(abs_dest_path)
+                ):
+                    print(
+                        f"file conflict (src {src_checksum}, dest {dest_checksum}), correcting..."
+                    )
                     copyfile(abs_src_path, abs_dest_path)
 
             abs_src_path.unlink()
