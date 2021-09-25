@@ -1,4 +1,4 @@
-py_binary(
+zapp_binary(
     name = "autoflake",
     main = "__main__.py",
     deps = [

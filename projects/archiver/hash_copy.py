@@ -3,36 +3,14 @@ A tree deduplicator and archiver tool.
 """
 
 import argparse
-from hashlib import sha256
 from pathlib import Path
 from shutil import copy2 as copyfile
 
+from .util import *
 
 parser = argparse.ArgumentParser()
 parser.add_argument("from_dir", type=Path)
 parser.add_argument("to_dir", type=Path)
-
-
-def checksum(p: Path, sum=sha256) -> str:
-    """Compute block-wise checksums of a file.
-
-    Inspired by the Dropbox content-hashing interface -
-
-    https://www.dropbox.com/developers/reference/content-hash
-
-    """
-
-    def iter_chunks(fp):
-        yield from iter(lambda: fp.read(4096), b"")
-
-    def _helper():
-        with open(p, "rb") as fp:
-            for chunk in iter_chunks(fp):
-                digest = sum()
-                digest.update(chunk)
-                yield digest.hexdigest()
-
-    return list(_helper())
 
 
 def main():
@@ -62,8 +40,8 @@ def main():
                 ):
                     pass
 
-                elif (src_checksum := checksum(abs_src_path)) != (
-                    dest_checksum := checksum(abs_dest_path)
+                elif (src_checksum := checksum_path(abs_src_path)) != (
+                    dest_checksum := checksum_path(abs_dest_path)
                 ):
                     print(
                         f"file conflict (src {src_checksum}, dest {dest_checksum}), correcting..."

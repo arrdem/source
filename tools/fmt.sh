@@ -9,8 +9,7 @@ DIRS=(projects tools)
 function brl() {
     bin="$1"
     shift
-    bazel build "//${bin}"
-    "bazel-bin/${bin}/$(basename ${bin})" "$@"
+    bazel run "//${bin}" -- "$@"
     return "$?"
 }
 
