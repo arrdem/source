@@ -17,7 +17,7 @@ Inspired by https://github.com/herval/org_photos/blob/main/org_photos.rb
 """
 
 import argparse
-from datetime import datetime
+from datetime import datetime, timedelta
 from hashlib import sha256, sha512
 from pathlib import Path
 import re
@@ -34,7 +34,7 @@ import exifread
 parser = argparse.ArgumentParser()
 parser.add_argument("src_dir", type=Path)
 parser.add_argument("dest_dir", type=Path)
-parser.add_option("destructive", action="store_true", default=False)
+parser.add_argument("destructive", action="store_true", default=False)
 
 
 MODIFIED_ISO_DATE = "%Y:%m:%dT%H:%M:%SF%f"
@@ -198,6 +198,20 @@ class ImgInfo(t.NamedTuple):
     def file_sha512sum(self):
         return checksum_path(self.file_path, sha512)
 
+    def incr(self, offset: int) -> "ImgInfo":
+        return ImgInfo(
+            self.file_path,
+            self.tags,
+            self.camera_make,
+            self.camera_model,
+            self.camera_sn,
+            self.lens_make,
+            self.lens_model,
+            self.lens_sn,
+            self.software,
+            self.date + timedelta(microseconds=offset),
+            True,
+        )
 
 def img_info(p: Path) -> ImgInfo:
     """Figure out everything we know from the image info."""
@@ -289,7 +303,7 @@ def img_info(p: Path) -> ImgInfo:
 def main():
     opts, args = parser.parse_known_args()
 
-    def _copy():
+    def _copy(src, target):
         print(f"  rename: {target}")
         try:
             if not opts.destructive:
@@ -302,10 +316,18 @@ def main():
             if opts.destructive:
                 src.chmod(0o644)
                 src.unlink()
+                print("  unlink: ok")
 
     print("---")
+
+    sequence_name = None
+    sequence = 0
+
     for src in list(opts.src_dir.glob("**/*")):
         if src.is_dir():
+            continue
+
+        elif src.name.startswith("."):
             continue
 
         print(f"{src}:")
@@ -315,6 +337,18 @@ def main():
         year_dir.mkdir(exist_ok=True)  # Ignore existing and continue
         # Figure out a stable file name
         stable_name = f"v1_{info.date.strftime(MODIFIED_ISO_DATE)}_{sanitize(info.camera_make)}_{sanitize(info.camera_model)}_{info.device_fingerprint()}"
+
+        # De-conflict using a sequence number added to the sub-seconds field
+        if sequence_name == stable_name:
+            sequence += 1
+            info = info.incr(sequence)
+            print(f"  warning: de-conflicting filenames with sequence {sequence}")
+            stable_name = f"v1_{info.date.strftime(MODIFIED_ISO_DATE)}_{sanitize(info.camera_make)}_{sanitize(info.camera_model)}_{info.device_fingerprint()}"
+
+        else:
+            sequence = 0
+            sequence_name = stable_name
+
         try:
             ext = normalize_ext(src)
         except AssertionError:
@@ -323,19 +357,19 @@ def main():
 
         if not target.exists():
             # src & !target => copy
-            _copy()
+            _copy(src, target)
         elif src == target:
             # src == target; skip DO NOT DELETE SRC
             pass
         elif checksum_path_blocks(src) == checksum_path_blocks(target):
+            print(f"  ok: {target}")
             # src != target && id(src) == id(target); delete src
             if opts.destructive:
                 src.chmod(0o644)
                 src.unlink()
         else:
             # src != target && id(src) != id(target); replace target with src?
-            print(f"  warning: {target} is a content-id collision with a different checksum")
-
+            print(f"  warning: {target} is a content-id collision with a different checksum; skipping")
 
 if __name__ == "__main__":
     main()
