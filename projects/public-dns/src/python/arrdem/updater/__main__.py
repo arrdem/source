@@ -167,7 +167,7 @@ def main():
             os.path.join(args.template_dir, task["template"]), template_bindings
         )
 
-        for zone_name in task["zones"]:
+        for zone_name in task["zones"] or []:
             try:
                 live_zone = api.domain_records(zone_name)
 
