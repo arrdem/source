@@ -31,3 +31,5 @@ Cram reads a config dir with three groups of packages
 - `hosts.d/<hostname>` contains one package for each host, and should pull in a list of profiles.
 
 The intent of this tool is to keep GNU Stow's intuitive model of deploying configs via symlinks, and augment it with a useful pattern for talking about "layers" / "packages" of related configs.
+
+Cram installs the package `hosts.d/$(hostname)`, and `profiles.d/default` by default.

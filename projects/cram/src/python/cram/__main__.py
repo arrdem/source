@@ -96,7 +96,10 @@ def main():
     hostname = os.uname()[1]
 
     # Compute the closure of packages to install
-    requirements = [f"hosts.d/{hostname}"]
+    requirements = [
+        f"hosts.d/{hostname}",
+        "profiles.d/default",
+    ]
 
     for r in requirements:
         try:
