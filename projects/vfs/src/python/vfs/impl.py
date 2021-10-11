@@ -12,8 +12,8 @@ _log = logging.getLogger(__name__)
 class Vfs(object):
     """An abstract filesystem device which can accumulate changes, and apply them in a batch."""
 
-    def __init__(self):
-        self._log = []
+    def __init__(self, log=None):
+        self._log = log or []
 
     def execute(self, execute=False):
         for e in self._log:
@@ -46,6 +46,10 @@ class Vfs(object):
                 _, dest = e
                 dest.mkdir(exist_ok=True)
 
+            elif e[0] == "unlink":
+                _, dest = e
+                dest.unlink()
+
     def _append(self, msg):
         self._log.append(msg)
 
@@ -63,3 +67,9 @@ class Vfs(object):
 
     def exec(self, dest, cmd):
         self._append(("exec", dest, cmd))
+
+    def unlink(self, dest):
+        self._append(("unlink", dest))
+
+    def copy(self):
+        return Vfs(list(self._log))

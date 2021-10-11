@@ -2,6 +2,7 @@
 
 import argparse
 from itertools import chain
+import pickle
 import logging
 import os
 from pathlib import Path
@@ -16,6 +17,9 @@ log = logging.getLogger(__name__)
 parser = argparse.ArgumentParser()
 parser.add_argument("-x", "--execute", dest="execute", action="store_true", default=False)
 parser.add_argument("-d", "--dry-run", dest="execute", action="store_false")
+parser.add_argument("-s", "--state-file", dest="statefile", default=".cram.log")
+parser.add_argument("--optimize", dest="optimize", default=False, action="store_true")
+parser.add_argument("--no-optimize", dest="optimize", action="store_false")
 parser.add_argument("confdir", type=Path)
 parser.add_argument("destdir", type=Path)
 
@@ -35,6 +39,7 @@ def stow(fs: Vfs, src_dir: Path, dest_dir: Path, skip=[]):
         if src.is_dir():
             fs.mkdir(dest)
             fs.chmod(dest, src.stat().st_mode)
+
         elif src.is_file():
             fs.link(src, dest)
 
@@ -76,18 +81,9 @@ class PackageV0(NamedTuple):
             fs.exec(self.root, ["bash", str(postf)])
 
 
-def main():
-    """The entry point of cram."""
-
-    opts, args = parser.parse_known_args()
-
-    logging.basicConfig(
-        level=logging.DEBUG,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    )
-
-    root = opts.confdir
-
+def build_fs(root: Path, dest: Path) -> Vfs:
+    """Build a VFS by configuring dest from the given config root."""
+    
     packages = {str(p.relative_to(root)): PackageV0(p, str(p))
                 for p in chain((root / "packages.d").glob("*"),
                                (root / "profiles.d").glob("*"),
@@ -114,11 +110,80 @@ def main():
     requirements = {r: packages[r].requires() for r in requirements}
     fs = Vfs()
 
+    # Abstractly execute the current packages
     for r in toposort_flatten(requirements):
         r = packages[r]
-        r.install(fs, opts.destdir)
+        r.install(fs, dest)
 
-    fs.execute(opts.execute)
+    return fs
+
+
+def load_fs(statefile: Path) -> Vfs:
+    """Load a persisted VFS state from disk. Sort of."""
+
+    oldfs = Vfs()
+
+    if statefile.exists():
+        with open(statefile, "rb") as fp:
+            oldfs._log = pickle.load(fp)
+
+    return oldfs
+    
+
+def simplify(old_fs: Vfs, new_fs: Vfs) -> Vfs:
+    """Try to reduce a new VFS using diff from the original VFS."""
+
+    old_fs = old_fs.copy()
+    new_fs = new_fs.copy()
+    
+    # Scrub anything in the new log that's in the old log
+    for txn in list(old_fs._log):
+        # Except for execs which are stateful
+        if txn[0] == "exec":
+            continue
+
+        new_fs._log.remove(txn)
+        old_fs._log.remove(txn)
+
+    # Look for files in the old log which are no longer present in the new log
+    for txn in old_fs._log:
+        if txn[0] == "link" and txn not in new_fs._log:
+            new_fs.unlink(txn[2])
+        elif txn[0] == "mkdir" and txn not in new_fs.log:
+            new_fs.unlink(txn[1])
+
+    return new_fs
+
+
+def main():
+    """The entry point of cram."""
+
+    opts, args = parser.parse_known_args()
+
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    )
+
+    # Resolve the two input paths to absolutes
+    root = opts.confdir.resolve()
+    dest = opts.destdir.resolve()
+    statef = root / opts.statefile
+
+    new_fs = build_fs(root, dest)
+    old_fs = load_fs(statef)
+
+    if opts.optimize:
+        fast_fs = simplify(old_fs, new_fs)
+        fast_fs.execute(opts.execute)
+    else:
+        new_fs.execute(opts.execute)
+
+    # Dump the new state.
+    # Note that we dump the UNOPTIMIZED state, because we want to simplify relative complete states.
+    if opts.execute:
+        with open(statef, "wb") as fp:
+            pickle.dump(new_fs._log, fp)
 
 
 if __name__ == "__main__" or 1:
