@@ -5,6 +5,7 @@ zapp_binary(
         "src/python"
     ],
     deps = [
+        "//projects/vfs",
         py_requirement("toposort"),
     ]
 )

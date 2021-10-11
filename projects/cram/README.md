@@ -2,35 +2,32 @@
 
 > To force (people or things) into a place or container that is or appears to be too small to contain them.
 
-An alternative to GNU Stow, which critically supports jinja2 templating and some other niceties.
+An alternative to GNU Stow, more some notion of packages with dependencies and install scripts.
 
 ## Usage
 
 ```
-$ cram.zapp [hostname]
+# cram [--dry-run | --execute] <configdir> <destdir>
+$ cram ~/conf ~/  # --dry-run is the default
 ```
 
-
-Cram consumes a directory tree of the following structure:
+Cram operates in terms of packages, which are directories with the following structure -
 
 ```
-# Hosts
-./hosts.d/<hostname>/
-./hosts.d/<hostname>/REQUIRES
-./hosts.d/<hostname>/PRE_INSTALL
-./hosts.d/<hostname>/INSTALL
-./hosts.d/<hostname>/POST_INSTALL
+/REQUIRES      # A list of other packages this one requires
+/BUILD         # 1. Perform any compile or package management tasks
+/PRE_INSTALL   # 2. Any other tasks required before installation occurs
+/INSTALL       # 3. Do whatever constitutes installation
+/POST_INSTALL  # 4. Any cleanup or other tasks following installation
 
-# Profiles
-./profiles.d/<profilename>/
-./profiles.d/<profilename>/REQUIRES
-./profiles.d/<profilename>/PRE_INSTALL
-./profiles.d/<profilename>/INSTALL
-./profiles.d/<profilename>/POST_INSTALL
+...            # Any other files are treated as package contents
 
-# Packages
-./packages.d/<packagename>/
-./packages.d/<packagename>/REQUIRES
-./packages.d/<packagename>/PRE_INSTALL
-./packages.d/<packagename>/POST_INSTALL
 ```
+
+Cram reads a config dir with three groups of packages
+- `packages.d/<packagename>` contains a package that installs but probably shouldn't configure a given tool, package or group of files.
+  Configuration should be left to profiles.
+- `profiles.d/<profilename>` contains a profile; a group of related profiles and packages that should be installed together.
+- `hosts.d/<hostname>` contains one package for each host, and should pull in a list of profiles.
+
+The intent of this tool is to keep GNU Stow's intuitive model of deploying configs via symlinks, and augment it with a useful pattern for talking about "layers" / "packages" of related configs.
