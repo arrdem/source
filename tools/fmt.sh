@@ -9,11 +9,15 @@ DIRS=(projects tools)
 function brl() {
     bin="$1"
     shift
-    bazel run "//${bin}" -- "$@"
+    bazel build "//${bin}"
+    "bazel-bin/${bin}/$(basename ${bin})" "$@"
     return "$?"
 }
 
-brl tools/autoflake --remove-all-unused-imports -ir "${DIRS[@]}"
-brl tools/isort     "${DIRS[@]}"
-brl tools/unify     --quote '"' -ir "${DIRS[@]}"
+for d in "${DIRS[@]}"; do
+    brl tools/autoflake --remove-all-unused-imports -ir $(realpath "$d")
+    brl tools/isort $(realpath "$d")
+    brl tools/unify --quote '"' -ir $(realpath "$d")
+done
+
 brl projects/reqman clean tools/python/requirements.txt
