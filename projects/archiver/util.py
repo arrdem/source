@@ -1,7 +1,6 @@
-import typing as t
-
 from hashlib import sha256
 from pathlib import Path
+import typing as t
 
 
 def iter_chunks(fp):

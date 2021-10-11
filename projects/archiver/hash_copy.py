@@ -8,6 +8,7 @@ from shutil import copy2 as copyfile
 
 from .util import *
 
+
 parser = argparse.ArgumentParser()
 parser.add_argument("from_dir", type=Path)
 parser.add_argument("to_dir", type=Path)
