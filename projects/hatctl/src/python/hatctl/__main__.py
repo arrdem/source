@@ -345,6 +345,7 @@ if __name__ == "__main__":
         parts = clusterhat.split(".")
         version = int(parts[0])
         version_minor = int(parts[1])
+
     elif (not os.path.isfile(hat_product)
         or not os.access(hat_product, os.R_OK)
         or not os.path.isfile(hat_uuid)
@@ -356,6 +357,7 @@ if __name__ == "__main__":
         or not os.path.isfile(hat_version)
         or not os.access(hat_version, os.R_OK)):
             clusterhat = False # No HAT found
+
     else:
         # HAT has been found validate it
         f = open(hat_product, "r")
@@ -374,6 +376,7 @@ if __name__ == "__main__":
                 version_minor = tmp - 32
             else:
                 clusterhat = False # No ClusterHAT found
+
     if (clusterhat):
         clusterhat_size = 4 if "clusterhat_size" not in config else int(config["clusterhat_size"])
         if clusterhat_size > 4: clusterhat_size = 4
@@ -451,7 +454,6 @@ if __name__ == "__main__":
                 else:
                     wp_link = -1
 
-
     # Get list of ClusterCTRL I2C devices
     busses = [] # Get list of devices
     for fn in glob.glob(clusterctrl_prefix+"*"):
@@ -488,7 +490,12 @@ if __name__ == "__main__":
         # Sort devices based on order
         ctrl.sort(key=lambda tup: tup[0])
 
-    # Are we running init and should we create the symlinks for usbboot?
+    ##############
+    ## End Init ##
+    ##############
+
+    # Parse arguments and do actions
+
     if (args == 2 and sys.argv[1] == "init"):
         if "link" in config and config["link"] == "1":
             # Only root should fiddle with the links
@@ -510,13 +517,7 @@ if __name__ == "__main__":
                             os.unlink(nfsboot+path)
                         os.symlink(nfsroot+"p"+p+"/boot/", nfsboot+path)
 
-    ##############
-    ## End Init ##
-    ##############
-
-    # Parse arguments and do actions
-
-    if (args == 2 and (sys.argv[1] == "on" or sys.argv[1] == "off")):
+    elif (args == 2 and (sys.argv[1] == "on" or sys.argv[1] == "off")):
         # Turn on/off ALL devices
         if (clusterhat):
             # Turn all ClusterHAT ports on
@@ -578,6 +579,7 @@ if __name__ == "__main__":
                     else:
                         send_cmd(c, CMD_OFF, pi)
                 send_cmd(c, CMD_ALERT_OFF)
+
     elif (args > 2 and (sys.argv[1] == "on" or sys.argv[1] == "off")):
         # Turn on/off pX
         actioned = 0
@@ -642,6 +644,7 @@ if __name__ == "__main__":
                         else:
                             send_cmd(c, CMD_OFF, zero-lastpi+c[3])
                         break
+
     elif (args > 2 and sys.argv[1] == "usbboot" and (sys.argv[2] == "on" or sys.argv[2] == "off")):
         # Enable of Disable USBBOOT (supported on Compute Modules) for Px
         actioned = 0
@@ -668,6 +671,7 @@ if __name__ == "__main__":
                             actioned+=1
                         else:
                             send_cmd(c, CMD_USBBOOT_DIS, zero-lastpi+c[3])
+
     elif (args == 2 and sys.argv[1] == "status"):
         # Show status of all Cluster HAT / ClusterCTRL devices
         print("clusterhat:{}".format(clusterhat))
@@ -775,6 +779,7 @@ if __name__ == "__main__":
                         hub.off()
                     else:
                         hub.on()
+
     #	if (clusterctrl): # TODO
     elif (args == 3 and sys.argv[1] == "hub" and (sys.argv[2] == "reset")):
         if (clusterhat and version!=1):
@@ -810,6 +815,7 @@ if __name__ == "__main__":
                     send_cmd(c, CMD_ALERT_ON)
                 else:
                     send_cmd(c, CMD_ALERT_OFF)
+
     elif (args > 3 and sys.argv[1] == "alert" and (sys.argv[2] == "on" or sys.argv[2] == "off")):
         # Turn on/off ALERT LED for pX
 
@@ -846,6 +852,7 @@ if __name__ == "__main__":
                         else:
                             send_cmd(c, CMD_ALERT_OFF)
                         break
+
     elif (args == 3 and sys.argv[1] == "led" and (sys.argv[2] == "on" or sys.argv[2] == "off")):
         # Enable or Disable LED (not supported on ClusterHAT v1.x)
         if (clusterhat and version == 2):
@@ -859,6 +866,7 @@ if __name__ == "__main__":
                     send_cmd(c, CMD_LED_EN, 0)
                 else:
                     send_cmd(c, CMD_LED_DIS, 0)
+
     elif (args == 3 and sys.argv[1] == "wp" and (sys.argv[2] == "on" or sys.argv[2] == "off")):
         # Not supported on ClusterCTRL or ClusterHAT v1.x
         if (clusterhat and version == 2):
@@ -869,10 +877,12 @@ if __name__ == "__main__":
                     print("Unable to disable EEPROM WP (Solder link set)")
                 else:
                     wp.off()
+
     elif (args > 1 and sys.argv[1] == "getpath"):
         paths = getusbpaths()
         for p, path in sorted(paths.iteritems()):
             print("p{}:{}".format(p, path))
+
     elif (args == 3 and sys.argv[1] == "savedefaults"):
         # Set default EEPROM for device with "order"
         if (int(sys.argv[2])<1 or int(sys.argv[2])>255):
@@ -885,6 +895,7 @@ if __name__ == "__main__":
                     print("saved")
                     sys.exit()
         print("Error: Unable to find Cluster CTRL device with that order")
+
     elif (args == 4 and sys.argv[1] == "setorder"):
         if (int(sys.argv[2])<1 or int(sys.argv[2])>255):
             print("Invalid order old")
@@ -896,6 +907,7 @@ if __name__ == "__main__":
             for c in ctrl:
                 if (int(sys.argv[2]) == int(c[0])):
                     send_cmd(c, CMD_SET_ORDER, int(sys.argv[3]))
+
     elif (args == 3 and sys.argv[1] == "save"):
             # Set Power on state/USBBOOT/order to EEPROM for device with "order"
             if (int(sys.argv[2])<1 or int(sys.argv[2])>255):
@@ -978,6 +990,7 @@ if __name__ == "__main__":
                     send_cmd(c, CMD_FAN, 1)
                 else:
                     send_cmd(c, CMD_FAN, 0)
+
     elif (args == 4 and sys.argv[1] == "fan" and (sys.argv[2] == "on" or sys.argv[2] == "off")):
         # Turn fan on/off for CTRL device with "order" or Controller if arg is "c"
         if (sys.argv[3] != "c" and (int(sys.argv[3])<1 or int(sys.argv[3])>255)):
@@ -1003,8 +1016,6 @@ if __name__ == "__main__":
 
     elif (args == 2 and sys.argv[1] == "maxpi"):
         print(maxpi)
-    elif (args == 2 and sys.argv[1] == "init"):
-        # First run init is handled above this is just here to allow the command to succeed
-        pass
+
     else:
         print("Error: Missing arguments")
