@@ -169,7 +169,6 @@ if __name__ == "__main__":
         sys.exit()
 
     # Read configruation file
-    #
     config = {}
     if os.path.isfile("/etc/default/clusterctrl"):
         with open ("/etc/default/clusterctrl") as configfile:
@@ -180,7 +179,8 @@ if __name__ == "__main__":
 
     # If we're not a controller of some sort exit cleanly
     if ("type" not in config or not (config["type"] == "c" or config["type"] == "cnat")):
-        sys.exit()
+        print("Unable to load config, or invalid config loaded", file=sys.stderr)
+        sys.exit(1)
 
     # Functions
     # Send command to ClusterCTRL via I2C
