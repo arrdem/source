@@ -977,6 +977,7 @@ if __name__ == "__main__":
                     print("reset")
                     sys.exit()
         print("Error: Unable to find Cluster CTRL device with that order")
+
     elif (args == 3 and sys.argv[1] == "fan" and (sys.argv[2] == "on" or sys.argv[2] == "off")):
         # Turn all fan on/off
 
