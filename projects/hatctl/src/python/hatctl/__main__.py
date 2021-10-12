@@ -114,61 +114,58 @@ nfsroot            = "/var/lib/clusterctrl/nfs/"
 if __name__ == "__main__":
     args = len(sys.argv)
 
-    if ( args == 1 or sys.argv[1] == 'help' or sys.argv[1] == '--help' or sys.argv[1] == '-h' or sys.argv[1] == '/?' ):
-        print( "Usage :{} <cmd> ".format(sys.argv[0]) )
-        print( "" )
-        print( "## Commands <cmd>")
-        print( "" )
-        print( "# <devices> can be a single device 'p1' or a list 'p2 p3 p5'" )
-        print( "# <order> is the order listed by '" + sys.argv[0] + " status' (default 20)" )
-        print( "" )
-        print( "# Power on/off all or listed device(s)" )
-        print( sys.argv[0] + " on|off [<devices>]" )
-        print( "" )
-        print( "# Show status of ClusterHAT/CTRL" )
-        print( sys.argv[0] + " status" )
-        print( "" )
-        print( "# Get number of controllable Pi" )
-        print( sys.argv[0] + " maxpi" )
-        print( "" )
-        print( "# Create/update symlinks for rpiboot [root]" )
-        print( "sudo " + sys.argv[0] + " init" )
-        print( "" )
-        print( "# Turn ALERT LED on/off for all or listed device(s)" )
-        print( sys.argv[0] + " alert on|off [<devices>]" )
-        print( "" )
-        print( "# Enable LED (Power/pX/etc.)" )
-        print( sys.argv[0] + " led on" )
-        print( "" )
-        print( "# Disable LED (Power/pX/etc.)" )
-        print( sys.argv[0] + " led off" )
-        print( "" )
-        print( "# Turns on/off or resets the USB HUB" )
-        print( sys.argv[0] + " hub off|on|reset" )
-        print( "" )
-        print( "## The following are only available on ClusterCTRL devices")
-        print( "" )
-        print( "# Set order on device <old> to <new>" )
-        print( sys.argv[0] + " setorder <old> <new>" )
-        print( "" )
-        print( "# Get USB path to Px" )
-        print( sys.argv[0] + " getpath <device>" )
-        print( "" )
-        print( "# Turns FAN on/off for CTRL with <order>" )
-        print( sys.argv[0] + " fan on|off <order>" )
-        print( "" )
-        print( "# Save current settings to EEPROM" )
-        print( sys.argv[0] + " save <order>" )
-        print( "" )
-        print( "# Save current order to EEPROM" )
-        print( sys.argv[0] + " saveorder <order>" )
-        print( "" )
-        print( "# Save current Power On State to EEPROM" )
-        print( sys.argv[0] + " savepos <order>" )
-        print( "" )
-        print( "# Save factory default settings to EEPROM" )
-        print( sys.argv[0] + " savedefaults <order>" )
-        print( "" )
+    if (args == 1 or sys.argv[1] == 'help' or sys.argv[1] == '--help' or sys.argv[1] == '-h' or sys.argv[1] == '/?' ):
+        print( """Usage :{0} <cmd>
+
+ <devices> can be a single device 'p1' or a list 'p2 p3 p5'
+ <order> is the order listed by '{0} status' (default 20)
+
+ # Power on/off all or listed device(s)
+ {0} on|off [<devices>]
+
+ # Show status of ClusterHAT/CTRL
+ {0} status
+
+ # Get number of controllable Pi
+ {0} maxpi
+
+ # Create/update symlinks for rpiboot [root]"
+ sudo {0} init
+
+ # Turn ALERT LED on/off for all or listed device(s)"
+ {0} alert on|off [<devices>]
+
+ # Enable LED (Power/pX/etc.)
+ {0} led on
+
+ # Disable LED (Power/pX/etc.)
+ {0} led off
+
+ # Turns on/off or resets the USB HUB
+ {0} hub off|on|reset
+
+ ## The following are only available on ClusterCTRL devices
+ # Set order on device <old> to <new>
+ {0} setorder <old> <new>
+
+ # Get USB path to Px
+ {0} getpath <device>
+
+ # Turns FAN on/off for CTRL with <order>
+ {0} fan on|off <order>
+
+ # Save current settings to EEPROM
+ {0} save <order>
+
+ # Save current order to EEPROM
+ {0} saveorder <order>
+
+ # Save current Power On State to EEPROM
+ {0} savepos <order>
+
+ # Save factory default settings to EEPROM
+ {0} savedefaults <order>
+ """ .format(sys.argv[0]))
         sys.exit()
 
     # Read configruation file
