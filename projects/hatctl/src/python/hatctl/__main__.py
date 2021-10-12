@@ -40,6 +40,77 @@ import smbus
 #
 # <order> selects which Cluster CTRL devices matches that <order> number
 
+# Config / constants
+
+# I2C address of ClusterCTRL device
+I2C_ADDRESS  = 0x20
+
+# Number of Pi Zero in ClusterHAT (set below)
+clusterhat_size = 0
+
+# ClusterCTRL Registers
+REG_VERSION   = 0x00 # Register layout version
+REG_MAXPI     = 0x01 # Maximum number of Pi
+REG_ORDER     = 0x02 # Order - used to sort multiple ClusterCTRL devices
+REG_MODE      = 0x03 # N/A
+REG_TYPE      = 0x04 # 0=DA, 1=pHAT
+REG_DATA7     = 0x05 #
+REG_DATA6     = 0x06 #
+REG_DATA5     = 0x07 #
+REG_DATA4     = 0x08 #
+REG_DATA3     = 0x09 #
+REG_DATA2     = 0x0a #
+REG_DATA1     = 0x0b #
+REG_DATA0     = 0x0c #
+REG_CMD       = 0x0d # Command
+REG_STATUS    = 0x0e # Status
+
+# ClusterCTRL Commands
+CMD_ON           = 0x03 # Turn on Px (data0=x)
+CMD_OFF          = 0x04 # Turn off Px (data0=x)
+CMD_ALERT_ON     = 0x05 # Turn on Alert LED
+CMD_ALERT_OFF    = 0x06 # Turn off Alert LED
+CMD_HUB_CYCLE    = 0x07 # Reset USB HUB (turn off for data0*10ms, then back on)
+CMD_LED_EN       = 0x0A # Enable Px LED (data0=x)
+CMD_LED_DIS      = 0x0B # Disable Px LED (data0=x)
+CMD_PWR_ON       = 0x0C # Turn off PWR LED
+CMD_PWR_OFF      = 0x0D # Turn off PWR LED
+CMD_RESET        = 0x0E # Resets ClusterCTRL (does not keep power state)
+CMD_GET_PSTATUS  = 0x0F # Get Px power status (data0=x)
+CMD_FAN          = 0x10 # Turn fan on (data0=1) or off (data0=0)
+CMD_GETPATH      = 0x11 # Get USB path to Px (data0=x 0=controller) returned in data7-data0
+CMD_USBBOOT_EN   = 0x12 # Turn on USBBOOT
+CMD_USBBOOT_DIS  = 0x13 # Turn off USBBOOT
+CMD_GET_USTATUS  = 0x14 # Get Px USBBOOT status (data0=x)
+CMD_SET_ORDER    = 0x15 # Set order (data0=order)
+CMD_SAVE         = 0xF0 # Save current PWR/P1-LED/P2-LED/P1/P2/Order/Mode to EEPROM
+CMD_SAVEDEFAULTS = 0xF1 # Save factory defaults
+CMD_GET_DATA     = 0xF2 # Get DATA (Temps/ADC/etc.)
+CMD_SAVE_ORDER   = 0xF3 # Save order to EEPROM
+CMD_SAVE_USBBOOT = 0xF4 # Save usbboot status to EEPROM
+CMD_SAVE_POS     = 0xF5 # Save Power On State to EEPROM
+CMD_SAVE_LED     = 0xF6 # Save LED to EEPROM
+CMD_NOP          = 0x90 # Do nothing
+
+# Get arbitrary data from ClusterCTRL
+GET_DATA_VERSION    = 0x00 # Get firmware version
+GET_DATA_ADC_CNT    = 0x01 # Returns number of ADC ClusterCTRL supports
+GET_DATA_ADC_READ   = 0x02 # Read ADC data for ADC number 'data0'
+GET_DATA_ADC_TEMP   = 0x03 # Read Temperature ADC
+GET_DATA_FANSTATUS  = 0x04 # Read fan status
+
+# Files/paths
+clusterctrl_prefix = '/dev/ClusterCTRL-'
+vcgencmdpath       = "/usr/bin/vcgencmd"
+hat_product        = "/proc/device-tree/hat/product"
+hat_version        = "/proc/device-tree/hat/product_ver"
+hat_uuid           = "/proc/device-tree/hat/uuid"
+hat_vendor         = "/proc/device-tree/hat/vendor"
+hat_pid            = "/proc/device-tree/hat/product_id"
+nfsboot            = "/var/lib/clusterctrl/boot/"
+nfsroot            = "/var/lib/clusterctrl/nfs/"
+
+
 if __name__ == "__main__":
     args = len(sys.argv)
 
@@ -113,76 +184,6 @@ if __name__ == "__main__":
     # If we're not a controller of some sort exit cleanly
     if( 'type' not in config or not ( config['type'] == "c" or config['type'] == "cnat" ) ):
         sys.exit()
-
-    # Config
-
-    # I2C address of ClusterCTRL device
-    I2C_ADDRESS	= 0x20
-
-    # Number of Pi Zero in ClusterHAT (set below)
-    clusterhat_size = 0
-
-    # ClusterCTRL Registers
-    REG_VERSION 	= 0x00 # Register layout version
-    REG_MAXPI 	= 0x01 # Maximum number of Pi
-    REG_ORDER	= 0x02 # Order - used to sort multiple ClusterCTRL devices
-    REG_MODE	= 0x03 # N/A
-    REG_TYPE	= 0x04 # 0=DA, 1=pHAT
-    REG_DATA7       = 0x05 #
-    REG_DATA6       = 0x06 #
-    REG_DATA5       = 0x07 #
-    REG_DATA4       = 0x08 #
-    REG_DATA3	= 0x09 #
-    REG_DATA2	= 0x0a #
-    REG_DATA1	= 0x0b #
-    REG_DATA0	= 0x0c #
-    REG_CMD		= 0x0d # Command
-    REG_STATUS	= 0x0e # Status
-
-    # ClusterCTRL Commands
-    CMD_ON			= 0x03 # Turn on Px (data0=x)
-    CMD_OFF			= 0x04 # Turn off Px (data0=x)
-    CMD_ALERT_ON		= 0x05 # Turn on Alert LED
-    CMD_ALERT_OFF		= 0x06 # Turn off Alert LED
-    CMD_HUB_CYCLE		= 0x07 # Reset USB HUB (turn off for data0*10ms, then back on)
-    CMD_LED_EN		= 0x0A # Enable Px LED (data0=x)
-    CMD_LED_DIS		= 0x0B # Disable Px LED (data0=x)
-    CMD_PWR_ON		= 0x0C # Turn off PWR LED
-    CMD_PWR_OFF		= 0x0D # Turn off PWR LED
-    CMD_RESET		= 0x0E # Resets ClusterCTRL (does not keep power state)
-    CMD_GET_PSTATUS		= 0x0F # Get Px power status (data0=x)
-    CMD_FAN			= 0x10 # Turn fan on (data0=1) or off (data0=0)
-    CMD_GETPATH		= 0x11 # Get USB path to Px (data0=x 0=controller) returned in data7-data0
-    CMD_USBBOOT_EN		= 0x12 # Turn on USBBOOT
-    CMD_USBBOOT_DIS		= 0x13 # Turn off USBBOOT
-    CMD_GET_USTATUS		= 0x14 # Get Px USBBOOT status (data0=x)
-    CMD_SET_ORDER		= 0x15 # Set order (data0=order)
-    CMD_SAVE	  	= 0xF0 # Save current PWR/P1-LED/P2-LED/P1/P2/Order/Mode to EEPROM
-    CMD_SAVEDEFAULTS	= 0xF1 # Save factory defaults
-    CMD_GET_DATA		= 0xF2 # Get DATA (Temps/ADC/etc.)
-    CMD_SAVE_ORDER		= 0xF3 # Save order to EEPROM
-    CMD_SAVE_USBBOOT	= 0xF4 # Save usbboot status to EEPROM
-    CMD_SAVE_POS		= 0xF5 # Save Power On State to EEPROM
-    CMD_SAVE_LED		= 0xF6 # Save LED to EEPROM
-    CMD_NOP			= 0x90 # Do nothing
-
-    # Get arbitrary data from ClusterCTRL
-    GET_DATA_VERSION	= 0x00 # Get firmware version
-    GET_DATA_ADC_CNT	= 0x01 # Returns number of ADC ClusterCTRL supports
-    GET_DATA_ADC_READ	= 0x02 # Read ADC data for ADC number 'data0'
-    GET_DATA_ADC_TEMP	= 0x03 # Read Temperature ADC
-    GET_DATA_FANSTATUS	= 0x04 # Read fan status
-
-    # Files/paths
-    clusterctrl_prefix      = '/dev/ClusterCTRL-'
-    vcgencmdpath		= "/usr/bin/vcgencmd"
-    hat_product		= "/proc/device-tree/hat/product"
-    hat_version		= "/proc/device-tree/hat/product_ver"
-    hat_uuid		= "/proc/device-tree/hat/uuid"
-    hat_vendor		= "/proc/device-tree/hat/vendor"
-    hat_pid			= "/proc/device-tree/hat/product_id"
-    nfsboot			= "/var/lib/clusterctrl/boot/"
-    nfsroot			= "/var/lib/clusterctrl/nfs/"
 
     # Functions
     # Send command to ClusterCTRL via I2C
