@@ -184,8 +184,8 @@ if __name__ == "__main__":
 
     # Functions
     # Send command to ClusterCTRL via I2C
-    def send_cmd(c, cmd, data0=None,data1=None,data2=None,data3=None,data4=None,data5=None,data6=None,data7=None):
-        #print("CMD: {} - {} {} {} {} {} {} {} {}"format(cmd, data0, data1, data2, data3,data4, data5, data6, data7))
+    def send_cmd(c, cmd, data0=None, data1=None, data2=None, data3=None, data4=None, data5=None, data6=None, data7=None):
+        #print("CMD: {} - {} {} {} {} {} {} {} {}"format(cmd, data0, data1, data2, data3, data4, data5, data6, data7))
         if (data7 is not None): c[1].write_byte_data(I2C_ADDRESS, REG_DATA7, data7)
         if (data6 is not None): c[1].write_byte_data(I2C_ADDRESS, REG_DATA6, data6)
         if (data5 is not None): c[1].write_byte_data(I2C_ADDRESS, REG_DATA5, data5)
@@ -209,7 +209,7 @@ if __name__ == "__main__":
 
     # Get throttled status
     def get_throttled():
-        if (not os.path.isfile(vcgencmdpath) or not os.access(vcgencmdpath,os.X_OK)):
+        if (not os.path.isfile(vcgencmdpath) or not os.access(vcgencmdpath, os.X_OK)):
             return 'NA'
         return ((os.popen(vcgencmdpath + ' get_throttled').readline()).split('=', 1)[-1].strip())
 
@@ -236,7 +236,7 @@ if __name__ == "__main__":
                 zeros.append(int(zero[1:]))
 
         else:
-            zeros = range(1,maxpi+1)
+            zeros = range(1, maxpi+1)
 
         cache_clusterhat = None	# USB path to HUB on Cluster HAT
         cache_clusterctrl = {}	# Cache of ClusterCTRL USB path prefixes
@@ -264,7 +264,7 @@ if __name__ == "__main__":
                             devices = {}
                             hubs = prescan.find(idVendor=0x05e3, idProduct=0x0608, find_all=1)
                             for clusterhathub in hubs:
-                                devices[str(clusterhathub.bus)+'-'+'.'.join(map(str,clusterhathub.port_numbers))] = 'pre'
+                                devices[str(clusterhathub.bus)+'-'+'.'.join(map(str, clusterhathub.port_numbers))] = 'pre'
                             pre_count = len(devices)
                             # Turn hub off
                             if (version_minor == 0):
@@ -275,7 +275,7 @@ if __name__ == "__main__":
                             import usb.core as postscan
                             hubs = postscan.find(idVendor=0x05e3, idProduct=0x0608, find_all=1)
                             for clusterhathub in hubs:
-                                devices[str(clusterhathub.bus)+'-'+'.'.join(map(str,clusterhathub.port_numbers))] = 'post'
+                                devices[str(clusterhathub.bus)+'-'+'.'.join(map(str, clusterhathub.port_numbers))] = 'post'
                             post_count = len(devices)
                             # Check we haven't gained an extra USB hubs
                             if pre_count == post_count:
@@ -364,7 +364,7 @@ if __name__ == "__main__":
         if (clusterhat):
             version = 0
             f = open(hat_version, 'r')
-            tmp = int(f.read().strip('\x00'),16)
+            tmp = int(f.read().strip('\x00'), 16)
             f.close()
             if (tmp >= 16 and tmp <=31):
                 version = 1
@@ -966,11 +966,11 @@ if __name__ == "__main__":
             GPIO.setwarnings(False)
             GPIO.setmode(GPIO.BCM)
             GPIO.setup(fangpio, GPIO.OUT)
-            GPIO.output(fangpio,1)
+            GPIO.output(fangpio, 1)
             if (sys.argv[2] == 'on'):
-                GPIO.output(fangpio,1)
+                GPIO.output(fangpio, 1)
             else:
-                GPIO.output(fangpio,0)
+                GPIO.output(fangpio, 0)
 
         if (clusterctrl):
             for c in ctrl:
@@ -988,9 +988,9 @@ if __name__ == "__main__":
             GPIO.setmode(GPIO.BCM)
             GPIO.setup(fangpio, GPIO.OUT)
             if (sys.argv[2] == 'on'):
-                GPIO.output(fangpio,1)
+                GPIO.output(fangpio, 1)
             else:
-                GPIO.output(fangpio,0)
+                GPIO.output(fangpio, 0)
             sys.exit()
         if (clusterctrl):
             for c in ctrl:
