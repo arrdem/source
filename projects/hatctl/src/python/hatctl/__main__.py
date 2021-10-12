@@ -4,7 +4,11 @@
 #
 # (c) 8086 Consultancy 2018-2020
 #
-import glob, sys, smbus, time, os
+import glob, sys, time, os
+
+from .xra1200 import Xra1200
+
+import smbus
 
 # Usage
 # clusterctl <cmd> [<devices>]
@@ -35,7 +39,7 @@ import glob, sys, smbus, time, os
 # clusterctrl on p1 p5 p9
 #
 # <order> selects which Cluster CTRL devices matches that <order> number
-#
+
 
 args = len(sys.argv)
 
@@ -387,19 +391,17 @@ if(clusterhat):
 		GPIO.setmode(GPIO.BCM)
 		GPIO.setup(ports, GPIO.OUT)
 	else: # v2.x
-		sys.path.append('/usr/share/clusterctrl/python')
-		import xra1200
 		wp_link = 0
 		bus = smbus.SMBus(1)
-		hat = xra1200.Xra1200(bus=1, address=I2C_ADDRESS)
-		p1 = xra1200.Xra1200(bus=1, address=I2C_ADDRESS, port=0)
-		p2 = xra1200.Xra1200(bus=1, address=I2C_ADDRESS, port=1)
-		p3 = xra1200.Xra1200(bus=1, address=I2C_ADDRESS, port=2)
-		p4 = xra1200.Xra1200(bus=1, address=I2C_ADDRESS, port=3)
-		led = xra1200.Xra1200(bus=1, address=I2C_ADDRESS, port=4)
-		hub = xra1200.Xra1200(bus=1, address=I2C_ADDRESS, port=5)
-		alert = xra1200.Xra1200(bus=1, address=I2C_ADDRESS, port=6)
-		wp = xra1200.Xra1200(bus=1, address=I2C_ADDRESS, port=7)
+		hat = Xra1200(bus=1, address=I2C_ADDRESS)
+		p1 = Xra1200(bus=1, address=I2C_ADDRESS, port=0)
+		p2 = Xra1200(bus=1, address=I2C_ADDRESS, port=1)
+		p3 = Xra1200(bus=1, address=I2C_ADDRESS, port=2)
+		p4 = Xra1200(bus=1, address=I2C_ADDRESS, port=3)
+		led = Xra1200(bus=1, address=I2C_ADDRESS, port=4)
+		hub = Xra1200(bus=1, address=I2C_ADDRESS, port=5)
+		alert = Xra1200(bus=1, address=I2C_ADDRESS, port=6)
+		wp = Xra1200(bus=1, address=I2C_ADDRESS, port=7)
 
 		# Get status of I/O Extender
 		dir = hat.get_dir() # I/O pin directions
