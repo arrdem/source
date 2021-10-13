@@ -2,15 +2,16 @@
 
 import argparse
 from itertools import chain
-import pickle
 import logging
 import os
 from pathlib import Path
+import pickle
 import sys
 from typing import NamedTuple
 
 from toposort import toposort_flatten
 from vfs import Vfs
+
 
 log = logging.getLogger(__name__)
 
@@ -149,6 +150,7 @@ def simplify(old_fs: Vfs, new_fs: Vfs) -> Vfs:
     for txn in old_fs._log:
         if txn[0] == "link" and txn not in new_fs._log:
             new_fs.unlink(txn[2])
+
         elif txn[0] == "mkdir" and txn not in new_fs.log:
             new_fs.unlink(txn[1])
 
