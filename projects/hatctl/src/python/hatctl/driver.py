@@ -135,6 +135,15 @@ class ClusterCTRLDriver(object):
         elif isinstance(id, Data):
             return self._call(Cmd.GET_DATA, id.value)
 
+    @staticmethod
+    def _repack(values):
+        """Pack an array of bytes back into a single value."""
+        acc = 0
+        for b in values:
+            acc = acc << 8
+            acc += b
+        return acc
+
     def _write(self, id: Reg, val: int):
         """A convenient abstraction for writing a register."""
 
@@ -204,7 +213,11 @@ class ClusterCTRLDriver(object):
     def reset_all(self):
         """[Power] cycle the entire Controller."""
 
-        return self._call(Cmd.RESET)
+        try:
+            return self._call(Cmd.RESET)
+        except OSError:
+            # An OSError I/O to the reset board is somewhat expected
+            pass
 
     ####################################################################################################
     # EEPROM management
@@ -378,7 +391,7 @@ class ClusterCTRLDriver(object):
         # DATA1 and DATA2 are a 16bi number that need to be reassembled.
         # Note that DATA2 is the high bits.
 
-        val = self._read(Reg.DATA2) << 8 + self._read(Reg.DATA1)
+        val = self._repack(self._read(Reg.DATA2, 2))
         type = self._read(Reg.DATA0)
 
         if type == 0:
@@ -397,7 +410,7 @@ class ClusterCTRLDriver(object):
         # DATA0 is ... something expected to be 2
         # DATA1 and DATA2 form a low/high 16bi number. Unit is Kelvin.
         if self._call(Cmd.GET_DATA, Data.ADC_TEMP.value) == 2:
-            return self._read(Reg.DATA2) << 8 + self._read(Reg.DATA1)
+            return self._repack(self._read(Reg.DATA2, 2))
 
 
 class ClusterHATDriver(ClusterCTRLDriver):
@@ -409,11 +422,9 @@ class ClusterHATDriver(ClusterCTRLDriver):
     def led_on(self, id: int):
         """Turn on an LED by ID."""
 
-        assert self.type is BoardType.PHAT
         return self._call(Cmd.LED_EN, id)
 
     def led_off(self, id: int):
         """Turn off an LED by ID."""
 
-        assert self.type is BoardType.PHAT
         return self._call(Cmd.LED_DIS, id)
