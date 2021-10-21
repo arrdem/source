@@ -28,12 +28,14 @@ class Vfs(object):
 
             elif e[0] == "link":
                 _, src, dest = e
-                if dest.exists() and dest.is_symlink() and dest.readlink() == dest:
-                    continue
-                else:
-                    if dest.exists():
+                if dest.is_file() or dest.is_symlink():
+                    if dest.is_symlink() and dest.readlink() == src:
+                        continue
+                    else:
                         dest.unlink()
-                    dest.symlink_to(src)
+
+                assert not dest.exists()
+                dest.symlink_to(src)
 
             elif e[0] == "copy":
                 raise NotImplementedError()
