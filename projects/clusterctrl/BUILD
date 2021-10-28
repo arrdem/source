@@ -3,8 +3,8 @@ py_project(
 )
 
 zapp_binary(
-    name = "hatctl",
-    main = "src/python/hatctl/__main__.py",
+    name = "clusterctrl",
+    main = "src/python/clusterctrl/__main__.py",
     imports = [
         "src/python",
     ],
