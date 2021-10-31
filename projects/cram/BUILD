@@ -6,6 +6,7 @@ zapp_binary(
     ],
     deps = [
         "//projects/vfs",
+        py_requirement("click"),
         py_requirement("toposort"),
     ]
 )

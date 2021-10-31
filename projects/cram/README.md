@@ -29,6 +29,7 @@ Cram reads a config dir with three groups of packages
   Configuration should be left to profiles.
 - `profiles.d/<profilename>` contains a profile; a group of related profiles and packages that should be installed together.
 - `hosts.d/<hostname>` contains one package for each host, and should pull in a list of profiles.
+- Both profiles and hosts entries may specify their own "inline" packages as a convenience.
 
 The intent of this tool is to keep GNU Stow's intuitive model of deploying configs via symlinks, and augment it with a useful pattern for talking about "layers" / "packages" of related configs.
 
