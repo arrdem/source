@@ -201,7 +201,7 @@ def cli():
 
 @cli.command()
 @click.option("--execute/--dry-run", default=False)
-@click.option("--state-file", default=".cram.log")
+@click.option("--state-file", default=".cram.log", type=Path)
 @click.option("--optimize/--no-optimize", default=False)
 @click.argument("confdir", type=Path)
 @click.argument("destdir", type=Path)
@@ -211,10 +211,11 @@ def apply(confdir, destdir, state_file, execute, optimize):
     # Resolve the two input paths to absolutes
     root = confdir.resolve()
     dest = destdir.resolve()
-    statef = root / state_file
+    if not state_file.is_absolute():
+        state_file = root / state_file
 
     new_fs = build_fs(root, dest)
-    old_fs = load_fs(statef)
+    old_fs = load_fs(state_file)
 
     # Middleware processing of the resulting filesystem(s)
     executable_fs = scrub(old_fs, new_fs)
@@ -226,7 +227,7 @@ def apply(confdir, destdir, state_file, execute, optimize):
     if execute:
         executable_fs.execute()
 
-        with open(statef, "wb") as fp:
+        with open(state_file, "wb") as fp:
             pickle.dump(new_fs._log, fp)
 
     else:
@@ -235,12 +236,14 @@ def apply(confdir, destdir, state_file, execute, optimize):
 
 
 @cli.command()
-@click.option("--state-file", default=".cram.log")
+@click.option("--state-file", default=".cram.log", type=Path)
 @click.argument("confdir", type=Path)
 def show(confdir, state_file):
+    """List out the last `apply` state in the <confdir>/.cram.log or --state-file."""
     root = confdir.resolve()
-    statef = root / state_file
-    fs = load_fs(statef)
+    if not state_file.is_absolute():
+        state_file = root / state_file
+    fs = load_fs(state_file)
     for e in fs._log:
         print(*e)
 
@@ -248,12 +251,14 @@ def show(confdir, state_file):
 @cli.command()
 @click.argument("confdir", type=Path)
 def list(confdir):
+    """List out packages, profiles, hosts and subpackages in the <confdir>."""
     packages = load_config(confdir)
     for pname in sorted(packages.keys()):
         p = packages[pname]
         print(f"{pname}:")
         for d in p.requires():
-            print(f"  - {d}")
+            print(f"- {d}")
+
 
 if __name__ == "__main__" or 1:
     logging.basicConfig(
