@@ -2,10 +2,30 @@
 
 from enum import Enum
 from itertools import chain, repeat
+import logging
+from random import SystemRandom
 from time import sleep
-from typing import Union
+from typing import NamedTuple, Union
 
-import smbus
+
+log = logging.getLogger(__name__)
+
+
+smbus = None
+if not smbus:
+    try:
+        import smbus
+    except ImportError as e:
+        log.warning(e)
+
+if not smbus:
+    try:
+        import smbus2 as smbus
+    except ImportError as e:
+        log.warning(e)
+
+if not smbus:
+    raise ImportError("Unable to load either SMBus or SMBus2")
 
 
 def once(f):
@@ -113,13 +133,42 @@ class Data(Enum):
     FANSTATUS = 0x04  # Read fan status
 
 
-class ClusterCTRLDriver(object):
-    def __init__(self, bus: smbus.SMBus, address: int = I2C_ADDRESS, delay: int = 0, clear = False):
+class PiID(NamedTuple):
+    """Represent Pi IDs as something somewhat unique; a CTRL/HAT id and the Pi ID.
+
+    These IDs are expected to be unique at the host level; not at the cluster level.
+
+    """
+    ctrl_id: int
+    pi_id: int
+
+    def __repr__(self) -> str:
+        return f"<PiID {self.ctrl_id:03d}-{self.pi_id:02d}>"
+
+
+class ClusterCTRLv2Driver(object):
+    def __init__(self, bus: smbus2.SMBus, address: int = I2C_ADDRESS, delay: int = 0, clear = False):
         """Initialize a ClusterCTRL/ClusterHAT driver instance for a given bus device."""
         self._bus = bus
         self._address = address
         self._delay = delay
         self._clear = clear
+
+        try:
+            if (version := self._read(Reg.VERSION)) != 2:
+                raise IOError(f"Unsupported register format {version}; expected 2")
+        except:
+            raise ValueError("Cannot communicate with a ClusterCTRL/ClusterHAT on the given bus")
+
+        # This is a firmware default value indicating an uninitialized board.
+        # Randomize it if present.
+        if self.get_order() == 20:
+            v = 20
+            r = SystemRandom()
+            while v == 20:
+                v = r.randint(0, 256)
+            self.set_order(v)
+            self.eeprom_save_order()
 
     def _read(self, id: Union[Reg, Data], len: int = 1):
         """A convenient abstraction for reading data back."""
@@ -182,24 +231,32 @@ class ClusterCTRLDriver(object):
         # Return the (mostly) meaningful return code
         return self._read(Reg.DATA0)
 
+    def _id(self, id: PiID) -> int:
+        """Validate a logical ID and convert it to a numeric one."""
+        assert self.min_pi <= id <= self.max_pi
+        assert self.get_order() == id.ctrl_id
+        return id.pi_id
+
     @property
     def min_pi(self):
         """Get the minimum supported Pi ID on this controller."""
 
-        return 1
+        return PiID(self.get_order(), 1)
 
     @property
     @once
     def max_pi(self):
         """Get the maximum supported Pi ID on this controller."""
 
-        return self._read(Reg.MAXPI)
+        return PiID(self.get_order(), self._read(Reg.MAXPI))
 
     @property
     def pi_ids(self):
         """Iterate over the IDs of Pis which could be connected to this controller."""
 
-        return range(self.min_pi, self.max_pi + 1)
+        order = self.get_order()
+        for i in range(1, 6):
+            yield PiID(order, i)
 
     @property
     def type(self) -> BoardType:
@@ -275,22 +332,22 @@ class ClusterCTRLDriver(object):
     ####################################################################################################
     # Power management
     ####################################################################################################
-    def power_on(self, id: int):
+    def power_on(self, id: PiID):
         """Power on a given slot by ID."""
 
-        assert 0 < id <= self.max_pi
+        id = self._id(id)
         return self._call(Cmd.ON, id)
 
-    def power_off(self, id: int):
+    def power_off(self, id: PiID):
         """Power off a given slot by ID."""
 
-        assert 0 < id <= self.max_pi
+        id = self._id(id)
         return self._call(Cmd.OFF, id)
 
-    def power_status(self, id: int):
+    def power_status(self, id: PiID):
         """Read the status of a given slot by ID."""
 
-        assert 0 < id <= self.max_pi
+        id = self._id(id)
         return self._call(Cmd.GET_PSTATUS, id)
 
     def power_all_on(self):
@@ -348,28 +405,29 @@ class ClusterCTRLDriver(object):
     def set_order(self, order: int):
         """Set an 'order' (Controller ID) value."""
 
-        assert 0 < order <= 255
+        assert 0 < order <= 255, "Order must be in the single byte range"
+        assert order != 20, "20 is the uninitialized order value, use something else"
         return self._call(Cmd.SET_ORDER, order)
 
     ####################################################################################################
     # USB booting
     ####################################################################################################
-    def usbboot_on(self, id: int):
+    def usbboot_on(self, id: PiID):
         """Enable USB booting for the given Pi."""
 
-        assert 0 < id <= self.max_pi
+        id = self._id(id)
         return self._call(Cmd.USBBOOT_EN, id)
 
-    def usbboot_off(self, id: int):
+    def usbboot_off(self, id: PiID):
         """Disable USB booting for the given Pi."""
 
-        assert 0 < id <= self.max_pi
+        id = self._id(id)
         return self._call(Cmd.USBBOOT_DIS, id)
 
-    def usbboot_status(self, id: int):
+    def usbboot_status(self, id: PiID):
         """Get the current USB booting status for the given Pi."""
 
-        assert 0 < id <= self.max_pi
+        id = self._id(id)
         return self._call(Cmd.GET_USTATUS, id)
 
     ####################################################################################################
@@ -384,7 +442,8 @@ class ClusterCTRLDriver(object):
     def adc_ids(self):
         return range(1, self.max_adc + 1)
 
-    def read_adc(self, id: int):
+    def read_adc(self, id: PiID):
+        id = self._id(id)
         self._call(Cmd.GET_DATA, Data.ADC_READ.value, id)
         # Now this is screwy.
         # DATA0 gets set to 0 or 1, indicating the voldage type
@@ -412,19 +471,17 @@ class ClusterCTRLDriver(object):
         if self._call(Cmd.GET_DATA, Data.ADC_TEMP.value) == 2:
             return self._repack(self._read(Reg.DATA2, 2))
 
-
-class ClusterHATDriver(ClusterCTRLDriver):
-    """The ClusterHAT controller supports some verbs not supported by the basic ClusterCTRL board."""
-
-    # FIXME: The ClusterHAT also has some CONSIDERABLE differences in how it does I/O, due to leveraging RPi GPIO not
-    # just i2c. Whether this is essential or incidental is unclear.
-
-    def led_on(self, id: int):
+    ####################################################################################################
+    # Operations with inconsistent platform support
+    ####################################################################################################
+    def led_on(self, id: PiID):
         """Turn on an LED by ID."""
 
+        id = self._id(id)
         return self._call(Cmd.LED_EN, id)
 
-    def led_off(self, id: int):
+    def led_off(self, id: PiID):
         """Turn off an LED by ID."""
 
+        id = self._id(id)
         return self._call(Cmd.LED_DIS, id)

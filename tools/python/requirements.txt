@@ -75,6 +75,7 @@ requests-toolbelt==0.9.1
 requirements-parser==0.2.0
 setuptools==51.0.0
 six==1.15.0
+smbus2==0.4.1
 snowballstemmer==2.1.0
 sortedcontainers==2.3.0
 soupsieve==2.2.1

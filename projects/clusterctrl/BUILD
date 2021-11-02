@@ -1,5 +1,8 @@
 py_project(
-    name = "lib"
+    name = "lib",
+    lib_deps = [
+        py_requirement("smbus2"),
+    ],
 )
 
 zapp_binary(
