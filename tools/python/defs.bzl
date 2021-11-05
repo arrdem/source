@@ -46,6 +46,7 @@ def py_pytest(name, srcs, deps, main=None, python_version=None, args=None, **kwa
         py_requirement("pytest"),
         py_requirement("jedi"),
         py_requirement("pytest-pudb"),
+        py_requirement("pytest-cov"),
     ] + deps))
 
     srcs = [f] + srcs
