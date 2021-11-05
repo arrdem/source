@@ -22,6 +22,8 @@ This behavior can be disabled by subclassing the driver and overloading `_post_i
 
 This API is built atop a `PiRef(board_id, pi_id)` tuple which is intended to allow for the construction of cluster management APIs which allow for automatic but predictable mapping of requests (eg. `power_on`, `power_status`) to a given device.
 
+If you provide an "unqualified" integer ID directly, the driver will attempt to interpret it as being in `[min_pi, max_pi]` specific to this device.
+
 ``` python
 hat.fw_version  # => (1, 6)
 hat.min_pi      # => <PiRef XXX-01>
@@ -33,10 +35,10 @@ hat.max_adc     # => int (ADC support is incomplete)
 
 ### Power status
 
-```
-hat.power_on(<int | PiRef>)
-hat.power_off(<int | PiRef>)
-hat.power_status(<int | PiRef>)
+``` python
+hat.power_on(Union[int, PiRef])
+hat.power_off(Union[int, PiRef])
+hat.power_status(Union[int, PiRef])
 
 hat.power_all_off()
 hat.power_all_on()
@@ -84,6 +86,10 @@ hat.hub_reset()
 ```
 
 ### USB booting
+
+**WARNING**: Support for USB booting is specific to the ClusterHAT family of devices, to which I don't have access.
+As such no promises can be made for whether this machinery does what it's supposed to do.
+The upstream drivers have a lot of oddities around USB booting and ClusterHAT specific use of GPIO pins.
 
 ``` python
 hat.usbboot_on()
