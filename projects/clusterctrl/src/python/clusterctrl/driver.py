@@ -42,6 +42,7 @@ def once(f):
     """
 
     unset = val = object()
+
     def _helper(*args, **kwargs):
         nonlocal val
         if val is unset:
@@ -56,13 +57,13 @@ I2C_ADDRESS = 0x20
 
 
 class BoardType(Enum):
-    DA = 0x00      # Unknown, presunably a prototype
+    DA = 0x00  # Unknown, presunably a prototype
     SINGLE = 0x01  # Do the 'single' and 'triple' really use the same board ID?
     TRIPLE = 0x01  # ???
-    PHAT = 0x02    # The ClusterHAT boards
-    CTRL = 0x02    # The ClusterCTRL boards
-    A6 = 0x03      # https://clusterctrl.com/p/aplus6
-    STACK = 0x04   # https://shop.pimoroni.com/products/clusterctrl-stack
+    PHAT = 0x02  # The ClusterHAT boards
+    CTRL = 0x02  # The ClusterCTRL boards
+    A6 = 0x03  # https://clusterctrl.com/p/aplus6
+    STACK = 0x04  # https://shop.pimoroni.com/products/clusterctrl-stack
 
 
 class Status(Enum):
@@ -105,8 +106,8 @@ class Cmd(Enum):
     ALERT_ON = 0x05  # Turn on Alert LED
     ALERT_OFF = 0x06  # Turn off Alert LED
     HUB_CYCLE = 0x07  # Reset USB HUB (turn off for data0*10ms, then back on)
-    HUB_ON = 0x08 # Turn on the USB hub
-    HUB_OFF = 0x09 # Turn off the USB hub
+    HUB_ON = 0x08  # Turn on the USB hub
+    HUB_OFF = 0x09  # Turn off the USB hub
     LED_EN = 0x0A  # Enable Px LED (data0=x) (PHAT only)
     LED_DIS = 0x0B  # Disable Px LED (data0=x) (PHAT only)
     PWR_ON = 0x0C  # Turn off PWR LED
@@ -146,6 +147,7 @@ class PiRef(NamedTuple):
     These IDs are expected to be unique at the host level; not at the cluster level.
 
     """
+
     controller_id: int
     pi_id: int
 
@@ -154,11 +156,13 @@ class PiRef(NamedTuple):
 
 
 class ClusterCTRLv2Driver(object):
-    def __init__(self,
-                 bus: smbus.SMBus,
-                 address: int = I2C_ADDRESS,
-                 delay: int = 0,
-                 clear: bool = False):
+    def __init__(
+        self,
+        bus: smbus.SMBus,
+        address: int = I2C_ADDRESS,
+        delay: int = 0,
+        clear: bool = False,
+    ):
         """Initialize a ClusterCTRL/ClusterHAT driver instance for a given bus device."""
         self._bus = bus
         self._address = address
@@ -169,7 +173,9 @@ class ClusterCTRLv2Driver(object):
             if (version := self._read(Reg.VERSION)) != 2:
                 raise IOError(f"Unsupported register format {version}; expected 2")
         except:
-            raise ValueError("Cannot communicate with a ClusterCTRL/ClusterHAT on the given bus")
+            raise ValueError(
+                "Cannot communicate with a ClusterCTRL/ClusterHAT on the given bus"
+            )
 
         self._post_init()
 
@@ -212,7 +218,7 @@ class ClusterCTRLv2Driver(object):
 
         return self._bus.write_byte_data(self._address, id.value, val)
 
-    def _call(self, op: Cmd, *args, clear = False):
+    def _call(self, op: Cmd, *args, clear=False):
         """A convenient abstraction over the 'calling' convention for ops.
 
         Operations are "called" when Reg.CMD is written to.
@@ -228,7 +234,19 @@ class ClusterCTRLv2Driver(object):
         if self._clear or clear:
             args = chain(args, repeat(0))
 
-        args = zip([Reg.DATA0, Reg.DATA1, Reg.DATA2, Reg.DATA3, Reg.DATA4, Reg.DATA5, Reg.DATA6, Reg.DATA7], args)
+        args = zip(
+            [
+                Reg.DATA0,
+                Reg.DATA1,
+                Reg.DATA2,
+                Reg.DATA3,
+                Reg.DATA4,
+                Reg.DATA5,
+                Reg.DATA6,
+                Reg.DATA7,
+            ],
+            args,
+        )
         for r, v in args:
             self._write(r, v)
 
@@ -259,7 +277,7 @@ class ClusterCTRLv2Driver(object):
 
         maxpi = self._read(Reg.MAXPI)
         if 0 <= id <= maxpi:
-           return id
+            return id
         else:
             raise ValueError("Expected an id in [0,{maxpi:d}], got {id:d}")
 
@@ -421,7 +439,7 @@ class ClusterCTRLv2Driver(object):
     # 'order' (board ID) management
     ####################################################################################################
     def get_order(self):
-        """Get the 'order' value of this device. Can be updated via """
+        """Get the 'order' value of this device. Can be updated via"""
 
         return self._read(Reg.ORDER)
 

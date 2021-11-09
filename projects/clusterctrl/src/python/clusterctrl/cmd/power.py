@@ -9,6 +9,7 @@ import click
 def power():
     pass
 
+
 @power.command("on")
 @click.argument("devices", nargs="*")
 def power_on(devices):
