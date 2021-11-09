@@ -92,20 +92,27 @@ class PackageV0(NamedTuple):
 def load_config(root: Path) -> dict:
     """Load the configured packages."""
 
-    packages = {str(p.relative_to(root)): PackageV0(p, str(p.relative_to(root)))
-                for p in (root / "packages.d").glob("*")}
+    packages = {
+        str(p.relative_to(root)): PackageV0(p, str(p.relative_to(root)))
+        for p in (root / "packages.d").glob("*")
+    }
 
     # Add profiles, hosts which contain subpackages.
-    for mp_root in chain((root / "profiles.d").glob("*"),
-                         (root / "hosts.d").glob("*")):
+    for mp_root in chain((root / "profiles.d").glob("*"), (root / "hosts.d").glob("*")):
 
         # First find all subpackages
-        for p in mp_root.glob("*", ):
+        for p in mp_root.glob(
+            "*",
+        ):
             if p.is_dir():
-                packages[str(p.relative_to(root))] = PackageV0(p, str(p.relative_to(root)))
+                packages[str(p.relative_to(root))] = PackageV0(
+                    p, str(p.relative_to(root))
+                )
 
         # Register the metapackages themselves
-        packages[str(mp_root.relative_to(root))] = PackageV0(mp_root, str(mp_root.relative_to(root)), True)
+        packages[str(mp_root.relative_to(root))] = PackageV0(
+            mp_root, str(mp_root.relative_to(root)), True
+        )
 
     return packages
 
@@ -157,14 +164,14 @@ def load_fs(statefile: Path) -> Vfs:
         log.warning("No previous statefile %s", statefile)
 
     return oldfs
-    
+
 
 def simplify(old_fs: Vfs, new_fs: Vfs) -> Vfs:
     """Try to reduce a new VFS using diff from the original VFS."""
 
     old_fs = old_fs.copy()
     new_fs = new_fs.copy()
-    
+
     # Scrub anything in the new log that's in the old log
     for txn in list(old_fs._log):
         # Except for execs which are stateful
@@ -188,7 +195,7 @@ def scrub(old_fs: Vfs, new_fs: Vfs) -> Vfs:
         if txn[0] == "link" and txn not in new_fs._log:
             new_fs.unlink(txn[2])
 
-        elif txn[0] == "mkdir" and txn not in new_fs.log:
+        elif txn[0] == "mkdir" and txn not in new_fs._log:
             new_fs.unlink(txn[1])
 
     return new_fs
@@ -199,13 +206,13 @@ def cli():
     pass
 
 
-@cli.command()
+@cli.command("apply")
 @click.option("--execute/--dry-run", default=False)
+@click.option("--optimize/--no-optimize", default=True)
 @click.option("--state-file", default=".cram.log", type=Path)
-@click.option("--optimize/--no-optimize", default=False)
 @click.argument("confdir", type=Path)
 @click.argument("destdir", type=Path)
-def apply(confdir, destdir, state_file, execute, optimize):
+def cmd_apply(confdir, destdir, state_file, execute, optimize):
     """The entry point of cram."""
 
     # Resolve the two input paths to absolutes
@@ -232,25 +239,28 @@ def apply(confdir, destdir, state_file, execute, optimize):
 
     else:
         for e in executable_fs._log:
-            print("-", e)
+            print("-", *e)
 
 
-@cli.command()
+@cli.command("show")
 @click.option("--state-file", default=".cram.log", type=Path)
 @click.argument("confdir", type=Path)
-def show(confdir, state_file):
+def cmd_show(confdir, state_file):
     """List out the last `apply` state in the <confdir>/.cram.log or --state-file."""
     root = confdir.resolve()
+
     if not state_file.is_absolute():
         state_file = root / state_file
+
     fs = load_fs(state_file)
+
     for e in fs._log:
         print(*e)
 
 
-@cli.command()
+@cli.command("list")
 @click.argument("confdir", type=Path)
-def list(confdir):
+def cmd_list(confdir):
     """List out packages, profiles, hosts and subpackages in the <confdir>."""
     packages = load_config(confdir)
     for pname in sorted(packages.keys()):
