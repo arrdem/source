@@ -1,5 +1,6 @@
 zapp_binary(
     name = "cram",
+    shebang = "/usr/bin/env /usr/bin/python3.10",
     main = "src/python/cram/__main__.py",
     imports = [
         "src/python"

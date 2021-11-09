@@ -22,35 +22,31 @@ class Vfs(object):
             if not execute:
                 continue
 
-            elif e[0] == "exec":
-                _, dir, cmd = e
-                run(cmd, cwd=str(dir))
+            match e:
+                case ["exec", dir, cmd]:
+                    run(cmd, cwd=str(dir))
 
-            elif e[0] == "link":
-                _, src, dest = e
-                if dest.is_file() or dest.is_symlink():
-                    if dest.is_symlink() and dest.readlink() == src:
-                        continue
-                    else:
-                        dest.unlink()
+                case ["link", src, dest]:
+                    if dest.is_file() or dest.is_symlink():
+                        if dest.is_symlink() and dest.readlink() == src:
+                            continue
+                        else:
+                            dest.unlink()
 
-                assert not dest.exists()
-                dest.symlink_to(src)
+                    assert not dest.exists()
+                    dest.symlink_to(src)
 
-            elif e[0] == "copy":
-                raise NotImplementedError()
+                case ["copy", src, dest]:
+                    raise NotImplementedError()
 
-            elif e[0] == "chmod":
-                _, dest, mode = e
-                dest.chmod(mode)
+                case ["chmod", dest, mode]:
+                    dest.chmod(mode)
 
-            elif e[0] == "mkdir":
-                _, dest = e
-                dest.mkdir(exist_ok=True)
+                case ["mkdir", dest]:
+                    dest.mkdir(exist_ok=True)
 
-            elif e[0] == "unlink":
-                _, dest = e
-                dest.unlink()
+                case ["unlink", dest]:
+                    dest.unlink()
 
     def _append(self, msg):
         self._log.append(msg)
