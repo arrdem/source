@@ -6,15 +6,19 @@ when packet delivery latencies radically degrade and maintain a report file.
 
 """
 
-import sys
 import argparse
-import logging
+from collections import defaultdict, deque
 from datetime import datetime, timedelta
-from ping import ping
-from traceroute import TraceElem, traceroute
-from subprocess import CalledProcessError
-from typing import NamedTuple
-from collections import defaultdict
+import logging
+from multiprocessing import Process, Queue
+import queue
+import sys
+from typing import List
+
+from .lib import *
+
+import graphviz
+import requests
 
 
 log = logging.getLogger(__name__)
@@ -35,103 +39,156 @@ def distinct(iter):
     return l
 
 
-class Host(NamedTuple):
-    hostname: str
-    ip: str
-    rank: int
-    latency: timedelta
-    samples: int = 1
-
-    def mean_latency(self):
-        return self.latency / self.samples
-
-
 class Topology(object):
-    LOCALHOST = Host("localhost", "127.0.0.1", 0, timedelta(seconds=0.1))
+    LOCALHOST = Hop("127.0.0.1", 1, [0.0], 0)
 
     def __init__(self):
-        self._graph = defaultdict(set) # Dict[ip, List[ip]]
-        self._nodes = {self.LOCALHOST.ip: self.LOCALHOST} # Dict[ip, Host]
+        self._graph = defaultdict(set) # Dict[address, List[address]]
+        self._nodes = {self.LOCALHOST.address: self.LOCALHOST} # Dict[address, Host]
+
+    def next_hops(self, address: str) -> List[str]:
+        return list(self._graph.get(address))
+
+    def node(self, address: str) -> Hop:
+        return self._nodes.get(address)
 
     def add_traceroute(self, trace):
-        trace = list(trace)
-        hosts = []
-        newhosts = [self.LOCALHOST.ip]
-        rank = 0
         for e in trace:
-            if e.ip not in self._nodes:
-                self._nodes[e.ip] = Host(e.hostname, e.ip, e.rank, e.latency, 1)
+            if e.address not in self._nodes:
+                self._nodes[e.address] = e
             else:
-                self._nodes[e.ip] = Host(e.hostname, e.ip, e.rank, e.latency + self._nodes[e.ip].latency, self._nodes[e.ip].samples + 1)
+                e0 = self._nodes[e.address]
+                e0._packets_sent += e._packets_sent
+                e0._rtts.extend(e.rtts)
+                e0._distance = max(e.distance, e0.distance)
 
-            if e.rank > rank:
-                if newhosts:
-                    for h2 in newhosts:
-                        for h1 in hosts:
-                            self._graph[h1].add(h2)
-                    hosts = newhosts
-                    newhosts = []
-                rank = e.rank
+        hosts = [(self.LOCALHOST.address, self.LOCALHOST.distance)] + [(e.address, e.distance) for e in trace]
+        i1 = iter(hosts)
+        i2 = iter(hosts)
+        next(i2)
 
-            if e.rank == rank:
-                newhosts.append(e.ip)
+        for (parent, _), (child, _) in zip(i1, i2):
+            self._graph[parent].add(child)
 
     def render(self):
-        for n in sorted(self._nodes.values(), key=lambda n: n.rank):
-            print(f"{n.hostname} ({n.ip}) => {self._graph[n.ip]}")
+        g = graphviz.Digraph()
+        for n in sorted(self._nodes.values(), key=lambda n: n.distance):
+            g.node(n.address)
+            for next in self._graph[n.address]:
+                g.edge(n.address, next)
 
+        # Lol. Lmao.
+        return requests.post("https://dot-to-ascii.ggerganov.com/dot-to-ascii.php", params={"boxart":1, "src": g.source}).text
+        # return g.source
 
-def compute_topology(hostlist):
+    def __iter__(self):
+        return iter(sorted(self._nodes.values(), key=lambda n: n.distance))
+
+    def __delitem__(self, key):
+        del self._graph[key]
+        del self._nodes[key]
+
+def compute_topology(hostlist, topology=None):
     """Walk a series of traceroute tuples, computing a 'worst expected latency' topology from them."""
 
-    topology = Topology()
+    topology = topology or Topology()
     for h in hostlist:
-        topology.add_traceroute(traceroute(h))
+        trace = traceroute(h)
+        # Restrict the trace to hosts which ICMP ping
+        trace = [e for e in trace if ping(e.address, count=1).is_alive]
+        topology.add_traceroute(trace)
 
-    return sorted(topology._nodes.values(), key=lambda n: n.rank)
+    return topology
+
+
+def cycle(iter):
+    while True:
+        for e in iter:
+            yield e
+
+
+def pinger(host, id, queue):
+    # Mokney patch the RTT tracking
+    host._rtts = deque(host._rtts, maxlen=100)
+    while True:
+        timeout = h.avg_rtt * 2 / 1000.0  # rtt is in ms but timeout is in sec.
+        start = datetime.now()
+        res = ping(host.address, id=id, timeout=timeout, count=3)
+        queue.put((start, res))
+        if res.is_alive:
+            host._rtts.extend(res._rtts)
+            host._packets_sent += res._packets_sent
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.DEBUG)
     opts, args = parser.parse_known_args()
 
     now = start = datetime.now()
     reconfigure_delay = timedelta(minutes=5)
     configure_at = now - reconfigure_delay
+    flush_delay = timedelta(seconds=5)
+    flush_at = now + flush_delay
 
-    topology = []
+    recovered_duration = timedelta(seconds=5)
+    dead_duration = timedelta(seconds=30)
+
+    topology = None
+    id = unique_identifier()
+
+    q = Queue()
+    workers = {}
+    last_seen = {}
+
+    spinner = cycle("|/-\\")
 
     with open("incidents.txt", "a") as fp:
         while True:
             now = datetime.now()
 
+            if flush_at <= now:
+                fp.flush()
+                flush_at = now + flush_delay
+
             if configure_at <= now:
                 log.info("Attempting to reconfigure network topology...")
-                try:
-                    topology = compute_topology(opts.hosts)
-                    configure_at = now + reconfigure_delay
-                    for h in topology:
-                        log.info(f"in topology {h}")
-                except CalledProcessError:
+                topology = compute_topology(opts.hosts, topology)
+                configure_at = now + reconfigure_delay
+                log.info("Graph -\n" + topology.render())
+
+                for h in topology:
+                    if h.distance < 1 or h.distance > 6:
+                        continue
+
+                    if h.address in workers:
+                        continue
+
+                    else:
+                        p = workers[h.address] = Process(target=pinger, args=(h, id, q))
+                        p.start()
+
+            try:
+                timestamp, res = q.get(timeout=0.1)
+                last = last_seen.get(res.address)
+
+                if res.address not in workers:
                     pass
 
-            for h in topology:
-                if h.rank == 0:
-                    continue
+                elif res.is_alive:
+                    if last and (delta := timestamp - last) > recovered_duration:
+                        fp.write(f"RECOVERED\t{res.address}\t{timestamp.isoformat()}\t{delta.total_seconds()}\n")
+                    last_seen[res.address] = timestamp
 
-                fail = False
-                try:
-                    if ping(h.ip, timeout=h.mean_latency() * 2) != 0:
-                        fail = True
-                except Exception as e:
-                    fail = True
-                    log.exception(e)
+                elif not res.is_alive:
+                    if last and (delta := timestamp - last) > dead_duration:
+                        workers[h.address].terminate()
+                        del workers[h.address]
+                        del topology[h.address]
+                        fp.write(f"DEAD\t{res.address}\t{timestamp.isoformat()}\t{delta.total_seconds()}\n")
 
-                if fail:
-                    msg = f"{datetime.now()} failed to reach {h.hostname} ({h.ip})"
-                    log.warning(msg)
-                    fp.write(msg + "\n")
+                    else:
+                        fp.write(f"DOWN\t{res.address}\t{timestamp.isoformat()}\n")
 
-                else:
-                    sys.stderr.write('.')
-                    sys.stderr.flush()
+            except queue.Empty:
+                sys.stderr.write("\r" + next(spinner))
+                sys.stderr.flush()
