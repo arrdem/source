@@ -9,15 +9,16 @@ when packet delivery latencies radically degrade and maintain a report file.
 import argparse
 from collections import defaultdict, deque
 from datetime import datetime, timedelta
+from itertools import cycle
 import logging
 from multiprocessing import Process, Queue
 import queue
 import sys
 from typing import List
 
-from .lib import *
-
 import graphviz
+from icmplib import Hop, ping, traceroute
+from icmplib.utils import *
 import requests
 
 
@@ -27,24 +28,12 @@ parser = argparse.ArgumentParser()
 parser.add_argument("hosts", nargs="+")
 
 
-def distinct(iter):
-    s = set()
-    l = []
-    for e in iter:
-        if e in s:
-            continue
-        else:
-            l.append(e)
-            s.add(e)
-    return l
-
-
 class Topology(object):
     LOCALHOST = Hop("127.0.0.1", 1, [0.0], 0)
 
     def __init__(self):
-        self._graph = defaultdict(set) # Dict[address, List[address]]
-        self._nodes = {self.LOCALHOST.address: self.LOCALHOST} # Dict[address, Host]
+        self._graph = defaultdict(set)
+        self._nodes = {self.LOCALHOST.address: self.LOCALHOST}
 
     def next_hops(self, address: str) -> List[str]:
         return list(self._graph.get(address))
@@ -60,9 +49,11 @@ class Topology(object):
                 e0 = self._nodes[e.address]
                 e0._packets_sent += e._packets_sent
                 e0._rtts.extend(e.rtts)
-                e0._distance = max(e.distance, e0.distance)
+                e0._distance = min(e.distance, e0.distance)
 
-        hosts = [(self.LOCALHOST.address, self.LOCALHOST.distance)] + [(e.address, e.distance) for e in trace]
+        hosts = [(self.LOCALHOST.address, self.LOCALHOST.distance)] + [
+            (e.address, e.distance) for e in trace
+        ]
         i1 = iter(hosts)
         i2 = iter(hosts)
         next(i2)
@@ -78,8 +69,10 @@ class Topology(object):
                 g.edge(n.address, next)
 
         # Lol. Lmao.
-        return requests.post("https://dot-to-ascii.ggerganov.com/dot-to-ascii.php", params={"boxart":1, "src": g.source}).text
-        # return g.source
+        return requests.post(
+            "https://dot-to-ascii.ggerganov.com/dot-to-ascii.php",
+            params={"boxart": 1, "src": g.source},
+        ).text
 
     def __iter__(self):
         return iter(sorted(self._nodes.values(), key=lambda n: n.distance))
@@ -87,6 +80,7 @@ class Topology(object):
     def __delitem__(self, key):
         del self._graph[key]
         del self._nodes[key]
+
 
 def compute_topology(hostlist, topology=None):
     """Walk a series of traceroute tuples, computing a 'worst expected latency' topology from them."""
@@ -99,12 +93,6 @@ def compute_topology(hostlist, topology=None):
         topology.add_traceroute(trace)
 
     return topology
-
-
-def cycle(iter):
-    while True:
-        for e in iter:
-            yield e
 
 
 def pinger(host, id, queue):
@@ -143,6 +131,7 @@ if __name__ == "__main__":
     spinner = cycle("|/-\\")
 
     with open("incidents.txt", "a") as fp:
+        fp.write("RESTART\n")
         while True:
             now = datetime.now()
 
@@ -157,7 +146,7 @@ if __name__ == "__main__":
                 log.info("Graph -\n" + topology.render())
 
                 for h in topology:
-                    if h.distance < 1 or h.distance > 6:
+                    if h.distance == 0:
                         continue
 
                     if h.address in workers:
@@ -176,7 +165,11 @@ if __name__ == "__main__":
 
                 elif res.is_alive:
                     if last and (delta := timestamp - last) > recovered_duration:
-                        fp.write(f"RECOVERED\t{res.address}\t{timestamp.isoformat()}\t{delta.total_seconds()}\n")
+                        fp.write(
+                            f"RECOVERED\t{res.address}\t{timestamp.isoformat()}\t{delta.total_seconds()}\n"
+                        )
+                    elif not last:
+                        fp.write(f"UP\t{res.address}\t{timestamp.isoformat()}\n")
                     last_seen[res.address] = timestamp
 
                 elif not res.is_alive:
@@ -184,7 +177,9 @@ if __name__ == "__main__":
                         workers[h.address].terminate()
                         del workers[h.address]
                         del topology[h.address]
-                        fp.write(f"DEAD\t{res.address}\t{timestamp.isoformat()}\t{delta.total_seconds()}\n")
+                        fp.write(
+                            f"DEAD\t{res.address}\t{timestamp.isoformat()}\t{delta.total_seconds()}\n"
+                        )
 
                     else:
                         fp.write(f"DOWN\t{res.address}\t{timestamp.isoformat()}\n")
