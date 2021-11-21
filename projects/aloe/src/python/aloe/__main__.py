@@ -119,7 +119,7 @@ if __name__ == "__main__":
     flush_at = now + flush_delay
 
     recovered_duration = timedelta(seconds=5)
-    dead_duration = timedelta(seconds=30)
+    dead_duration = timedelta(minutes=30)
 
     topology = None
     id = unique_identifier()
@@ -159,29 +159,34 @@ if __name__ == "__main__":
             try:
                 timestamp, res = q.get(timeout=0.1)
                 last = last_seen.get(res.address)
+                delta = timestamp - last if last else None
 
                 if res.address not in workers:
                     pass
 
                 elif res.is_alive:
-                    if last and (delta := timestamp - last) > recovered_duration:
+                    last_seen[res.address] = timestamp
+                    if last and delta > recovered_duration:
                         fp.write(
                             f"RECOVERED\t{res.address}\t{timestamp.isoformat()}\t{delta.total_seconds()}\n"
                         )
                     elif not last:
                         fp.write(f"UP\t{res.address}\t{timestamp.isoformat()}\n")
-                    last_seen[res.address] = timestamp
 
                 elif not res.is_alive:
-                    if last and (delta := timestamp - last) > dead_duration:
+                    if last and delta > dead_duration:
                         workers[h.address].terminate()
                         del workers[h.address]
                         del topology[h.address]
+                        del last_seen[h.address]
                         fp.write(
                             f"DEAD\t{res.address}\t{timestamp.isoformat()}\t{delta.total_seconds()}\n"
                         )
 
-                    else:
+                    elif last and delta < recovered:
+                        fp.write(f"WARN\t{res.address}\t{timestamp.isoformat()}\n")
+
+                    elif last and delta > recovered:
                         fp.write(f"DOWN\t{res.address}\t{timestamp.isoformat()}\n")
 
             except queue.Empty:
