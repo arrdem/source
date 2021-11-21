@@ -183,10 +183,10 @@ if __name__ == "__main__":
                             f"DEAD\t{res.address}\t{timestamp.isoformat()}\t{delta.total_seconds()}\n"
                         )
 
-                    elif last and delta < recovered:
+                    elif last and delta < recovered_duration:
                         fp.write(f"WARN\t{res.address}\t{timestamp.isoformat()}\n")
 
-                    elif last and delta > recovered:
+                    elif last and delta > recovered_duration:
                         fp.write(f"DOWN\t{res.address}\t{timestamp.isoformat()}\n")
 
             except queue.Empty:
