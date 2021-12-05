@@ -10,6 +10,7 @@ bleach==4.0.0
 certifi==2020.12.5
 chardet==4.0.0
 click==8.0.3
+colored==1.4.3
 commonmark==0.9.1
 coverage==5.5
 docutils==0.17
@@ -41,6 +42,7 @@ mirakuru==2.4.1
 mistune==0.8.4
 multidict==5.1.0
 mypy-extensions==0.4.3
+octorest==0.4
 openapi-schema-validator==0.1.5
 openapi-spec-validator==0.3.0
 packaging==20.9
@@ -103,6 +105,7 @@ urllib3==1.26.4
 urwid==2.1.2
 wcwidth==0.2.5
 webencodings==0.5.1
+websocket-client==1.2.1
 Werkzeug==2.0.1
 wheel==0.36.2
 yamllint==1.26.1
