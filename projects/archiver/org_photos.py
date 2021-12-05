@@ -29,6 +29,14 @@ from .util import *
 
 # FIXME: use piexif, which supports writeback not exifread.
 import exifread
+from yaspin import Spinner, yaspin
+
+
+_print = print
+
+
+def print(*strs, **kwargs):
+    _print("\r", *strs, **kwargs)
 
 
 parser = argparse.ArgumentParser()
@@ -38,6 +46,17 @@ parser.add_argument("destructive", action="store_true", default=False)
 
 
 MODIFIED_ISO_DATE = "%Y:%m:%dT%H:%M:%SF%f"
+SPINNER = Spinner(["|", "/", "-", "\\"], 200)
+KNOWN_IMG_TYPES = {
+    ".jpg": ".jpeg",
+    ".jpeg": ".jpeg",
+    ".png": ".png",
+    ".mov": ".mov",
+    ".gif": ".gif",
+    ".mp4": ".mp4",
+    ".m4a": ".m4a",
+    ".oga": ".oga",  # How the hell do I have ogg files kicking around
+}
 
 
 def exif_tags(p: Path) -> object:
@@ -60,14 +79,29 @@ def safe_strptime(date, format):
     try:
         return datetime.strptime(date, format)
     except ValueError:
-        return None
+        pass
 
 
-def date_from_name(p: Path):
-    """Try to munge a datestamp out of a path."""
+def safe_ymdhmms(date):
+    fmt = (
+        r"(?P<year>\d{4})(?P<month>\d{2})(?P<day>\d{2})"
+        r" "
+        r"(?P<hour>\d{2})(?P<minute>\d{2})(?P<second>\d{2})(?P<millisecond>\d{3})"
+    )
+    m = re.match(fmt, date)
+    if m:
+        return datetime(
+            year=int(m.group("year")),
+            month=int(m.group("month")),
+            day=int(m.group("day")),
+            hour=int(m.group("hour")),
+            minute=int(m.group("minute")),
+            second=int(m.group("second")),
+            microsecond=int(m.group("millisecond")) * 1000,
+        )
 
-    fname = ".".join(p.name.split(".")[:-1])
 
+def date_from_name(fname: str):
     # Discard common prefixes
     fname = fname.replace("IMG_", "")
     fname = fname.replace("PXL_", "")
@@ -93,54 +127,59 @@ def date_from_name(p: Path):
 
     # Try to guess the date
     # File date formats:
-    for fmt in [
+    for unfmt in [
         # Our date format
-        MODIFIED_ISO_DATE,
+        lambda d: safe_strptime(d, MODIFIED_ISO_DATE),
         # A bug
         # 2014:08:21T19:4640F1408672000
         # 2015:12:14T23:0933F1450159773
-        "%Y:%m:%dT%H:%M%SF%f",
+        lambda d: safe_strptime(d, "%Y:%m:%dT%H:%M%SF%f"),
         # 2020-12-21 17.15.09.0
-        "%Y-%m-%d %H.%M.%S.%f",
+        lambda d: safe_strptime(d, "%Y-%m-%d %H.%M.%S.%f"),
         # 2020-12-21 17.15.09
-        "%Y-%m-%d %H.%M.%S",
+        lambda d: safe_strptime(d, "%Y-%m-%d %H.%M.%S"),
         # 2019-02-09 12.45.32-6
         # 2019-01-13 13.43.45-16
-        "%Y-%m-%d %H.%M.%S-%f",
+        lambda d: safe_strptime(d, "%Y-%m-%d %H.%M.%S-%f"),
         # Note the _1 or such may not be millis, but we assume it is.
         # 20171113_130826_1
         # 20171113 130826 1
-        "%Y%m%d %H%M%S %f",
+        lambda d: safe_strptime(d, "%Y%m%d %H%M%S %f"),
         # 20180404_114639
         # 20180404 114639
-        "%Y%m%d %H%M%S",
+        lambda d: safe_strptime(d, "%Y%m%d %H%M%S"),
         # 2017-11-05_15:15:55
         # 2017-11-05 15:15:55
-        "%Y-%m-%d %H:%M:%S",
+        lambda d: safe_strptime(d, "%Y-%m-%d %H:%M:%S"),
+        lambda d: safe_strptime(d, "%Y%m%d %h%m%s%f"),
+        # HACK:
+        #   Python doesn't support %s as milliseconds; these don't quite work.
+        #   So use a custom matcher.
+        # 20210526 002327780
         # 20210417_220753284
         # 20210417 220753284
         # 20210304 204755545
-        "%Y%m%d %h%m%s%f",
+        # 20211111 224304117
+        safe_ymdhmms,
     ]:
-        try:
-            return datetime.strptime(fname, fmt)
-        except ValueError:
-            continue
-    else:
+        val = unfmt(fname)
+        if val is not None:
+            return val
+
+
+def date_from_path(p: Path):
+    """Try to munge a datestamp out of a path."""
+
+    fname = ".".join(p.name.split(".")[:-1])
+
+    date = date_from_name(fname)
+    if not date:
         print(f"Warning: Unable to infer datetime from {fname!r}", file=sys.stderr)
+    return date
 
 
 def normalize_ext(p: Path):
-    renaming = {
-        ".jpg": ".jpeg",
-        ".jpeg": ".jpeg",
-        ".png": ".png",
-        ".mov": ".mov",
-        ".gif": ".gif",
-        ".mp4": ".mp4",
-        ".m4a": ".m4a",
-        ".oga": ".oga",  # How the hell do I have ogg files kicking around
-    }
+    renaming = KNOWN_IMG_TYPES
     exts = [e.lower() for e in p.suffixes]
     # Guess an ext out of potentially many, allowing only for folding of effective dupes
     exts = set(renaming[e] for e in exts if e in renaming)
@@ -264,7 +303,7 @@ def img_info(p: Path) -> ImgInfo:
     )
     if date and (date := safe_strptime(date, "%Y:%m:%d %H:%M:%S")):
         pass
-    elif date := date_from_name(p):
+    elif date := date_from_path(p):
         dirty |= True
     else:
         # The oldest of the mtime and the ctime
@@ -284,6 +323,9 @@ def img_info(p: Path) -> ImgInfo:
         subsec = int(m.group(1))
 
     date = date.replace(microsecond=subsec)
+
+    if not (2015 <= date.year <= datetime.now().year):
+        raise ValueError(f"{p}'s inferred date ({date!r}) is beyond the sanity-check range!")
 
     return ImgInfo(
         p,
@@ -310,66 +352,78 @@ def main():
                 raise OSError()
 
             src.rename(target)  # Execute the rename
-        except OSError:  # cross-device move
-            copyfile(src, target)
 
-            if opts.destructive:
-                src.chmod(0o644)
-                src.unlink()
-                print("  unlink: ok")
+        except OSError:  # cross-device move
+            with yaspin(SPINNER):
+                copyfile(src, target)
+
+                if opts.destructive:
+                    src.unlink()
+                    print("  unlink: ok")
 
     print("---")
 
     sequence_name = None
     sequence = 0
 
-    for src in list(opts.src_dir.glob("**/*")):
+    for src in opts.src_dir.glob("**/*"):
+        print(f"{src}:")
+        ext = "." + src.name.lower().split(".")[-1]
+        print(f"  msg: ext inferred as {ext}")
+
         if src.is_dir():
             continue
 
-        elif src.name.startswith("."):
+        elif ext in ["thm", "lrv", "ico", "sav"] or src.name.startswith("._"):
+            if opts.destructive:
+                src.unlink()
             continue
 
-        print(f"{src}:")
-
-        info = img_info(src)
-        year_dir = Path(opts.dest_dir / str(info.date.year))
-        year_dir.mkdir(exist_ok=True)  # Ignore existing and continue
-        # Figure out a stable file name
-        stable_name = f"v1_{info.date.strftime(MODIFIED_ISO_DATE)}_{sanitize(info.camera_make)}_{sanitize(info.camera_model)}_{info.device_fingerprint()}"
-
-        # De-conflict using a sequence number added to the sub-seconds field
-        if sequence_name == stable_name:
-            sequence += 1
-            info = info.incr(sequence)
-            print(f"  warning: de-conflicting filenames with sequence {sequence}")
+        elif ext in KNOWN_IMG_TYPES:
+            info = img_info(src)
+            year_dir = Path(opts.dest_dir / str(info.date.year))
+            year_dir.mkdir(exist_ok=True)  # Ignore existing and continue
+            # Figure out a stable file name
             stable_name = f"v1_{info.date.strftime(MODIFIED_ISO_DATE)}_{sanitize(info.camera_make)}_{sanitize(info.camera_model)}_{info.device_fingerprint()}"
 
-        else:
-            sequence = 0
-            sequence_name = stable_name
+            # De-conflict using a sequence number added to the sub-seconds field
+            if sequence_name == stable_name:
+                sequence += 1
+                info = info.incr(sequence)
+                print(f"  warning: de-conflicting filenames with sequence {sequence}")
+                stable_name = f"v1_{info.date.strftime(MODIFIED_ISO_DATE)}_{sanitize(info.camera_make)}_{sanitize(info.camera_model)}_{info.device_fingerprint()}"
 
-        try:
-            ext = normalize_ext(src)
-        except AssertionError:
-            continue  # Just skip fucked up files
-        target = Path(year_dir / f"{stable_name}{ext}")
+            else:
+                sequence = 0
+                sequence_name = stable_name
 
-        if not target.exists():
-            # src & !target => copy
-            _copy(src, target)
-        elif src == target:
-            # src == target; skip DO NOT DELETE SRC
-            pass
-        elif checksum_path_blocks(src) == checksum_path_blocks(target):
-            print(f"  ok: {target}")
-            # src != target && id(src) == id(target); delete src
-            if opts.destructive:
-                src.chmod(0o644)
-                src.unlink()
+            try:
+                ext = normalize_ext(src)
+            except AssertionError:
+                continue  # Just skip fucked up files
+            target = Path(year_dir / f"{stable_name}{ext}")
+
+            if not target.exists():
+                # src & !target => copy
+                _copy(src, target)
+
+            elif src == target:
+                # src == target; skip DO NOT DELETE SRC
+                pass
+
+            elif checksum_path_blocks(src) == checksum_path_blocks(target):
+                print(f"  ok: {target}")
+                # src != target && id(src) == id(target); delete src
+                if opts.destructive:
+                    src.unlink()
+
+            else:
+                # src != target && id(src) != id(target); replace target with src?
+                print(f"  warning: {target} is a content-id collision with a different checksum; skipping")
+
         else:
-            # src != target && id(src) != id(target); replace target with src?
-            print(f"  warning: {target} is a content-id collision with a different checksum; skipping")
+            print(f"  msg: unknown filetype {ext}")
+
 
 if __name__ == "__main__":
     main()

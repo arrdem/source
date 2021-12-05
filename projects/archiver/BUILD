@@ -14,5 +14,6 @@ zapp_binary(
     ],
     deps = [
         py_requirement("ExifRead"),
+        py_requirement("yaspin"),
     ]
 )
