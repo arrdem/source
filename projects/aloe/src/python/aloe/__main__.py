@@ -43,6 +43,7 @@ class HostState(object):
                  is_up: bool = False,
                  lost: int = 0,
                  up: float = 0.0):
+        self._lock = Lock()
         self._state = ringbuffer(maxlen=history_size)
         self._is_up = is_up
         self._lost = lost
@@ -52,43 +53,46 @@ class HostState(object):
             self.append(resp)
 
     def append(self, resp):
-        if resp and not self._is_up:
-            # log.debug(f"Host {self._hostname} is up!")
-            self._is_up = self._is_up or resp
-            self._up = resp._time
+        with self._lock:
+            if resp and not self._is_up:
+                # log.debug(f"Host {self._hostname} is up!")
+                self._is_up = self._is_up or resp
+                self._up = resp._time
 
-        elif resp and self._is_up:
-            # log.debug(f"Host {self._hostname} holding up...")
-            pass
+            elif resp and self._is_up:
+                # log.debug(f"Host {self._hostname} holding up...")
+                pass
 
-        elif not resp and self._is_up:
-            # log.debug(f"Host {self._hostname} is down!")
-            self._is_up = None
-            self._up = None
+            elif not resp and self._is_up:
+                # log.debug(f"Host {self._hostname} is down!")
+                self._is_up = None
+                self._up = None
 
-        elif not resp and not self._is_up:
-            pass
+            elif not resp and not self._is_up:
+                pass
 
-        if not resp:
-            self._lost += 1
+            if not resp:
+                self._lost += 1
 
-        if self._state and not self._state[0]:
-            self._lost -= 1
+            if self._state and not self._state[0]:
+                self._lost -= 1
 
-        self._state.append(resp)
+            self._state.append(resp)
 
     def last(self):
-        return next(reversed(self._state), None)
+        with self._lock:
+            return next(reversed(self._state), None)
 
     def last_window(self, duration: timedelta = None):
-        l = []
-        t = time() - duration.total_seconds()
-        for i in reversed(self._state):
-            if not i or i._time > t:
-                l.insert(0, i)
-            else:
-                break
-        return l
+        with self._lock:
+            l = []
+            t = time() - duration.total_seconds()
+            for i in reversed(self._state):
+                if not i or i._time > t:
+                    l.insert(0, i)
+                else:
+                    break
+            return l
 
     def loss(self, duration: timedelta):
         log = self.last_window(duration)
@@ -140,7 +144,7 @@ def retrace(shutdown, q, opts, hl, hosts):
         with hl:
             if address not in hosts:
                 log.info(f"Monitoring {address}...")
-                monitor = MonitoredHost(address, timedelta(seconds=1))
+                monitor = MonitoredHost(address, timedelta(seconds=2))
                 hosts[address] = (distance, monitor)
                 threads[address] = t = Thread(target=monitor, args=(shutdown, q))
                 t.start()
