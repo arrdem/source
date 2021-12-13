@@ -1,5 +1,7 @@
 """Aloe - A shitty weathermapping tool.
 
+Think MTR but with the ability to detect/declare incidents and emit logs.
+
 Periodically traceroutes the egress network, and then walks pings out the egress network recording times and hosts which
 failed to respond. Expects a network in excess of 90% packet delivery, but with variable timings. Intended to probe for
 when packet delivery latencies radically degrade and maintain a report file.
@@ -7,211 +9,233 @@ when packet delivery latencies radically degrade and maintain a report file.
 """
 
 import argparse
-from collections import defaultdict, deque
-from datetime import datetime, timedelta
-from itertools import cycle
+from collections import deque as ringbuffer
+import curses
+from datetime import timedelta
+from itertools import count
 import logging
-from multiprocessing import Process, Queue
-from random import randint
 import queue
+from queue import Queue
 import sys
-from time import sleep
-from typing import List
+from threading import Event, Lock, Thread
+from time import sleep, time
 
-import graphviz
-from icmplib import Hop, traceroute
-from icmplib.utils import *
-import requests
+from .icmp import *
+from .icmp import _ping
+from .cursedlogger import CursesHandler
+
 import pytz
 
-from .urping import ping, urping
 
 log = logging.getLogger(__name__)
 
 parser = argparse.ArgumentParser()
 parser.add_argument("hosts", nargs="+")
 
-
-class Topology(object):
-    LOCALHOST = Hop("127.0.0.1", 1, [0.0], 0)
-
-    def __init__(self):
-        self._graph = defaultdict(set)
-        self._nodes = {self.LOCALHOST.address: self.LOCALHOST}
-
-    def next_hops(self, address: str) -> List[str]:
-        return list(self._graph.get(address))
-
-    def node(self, address: str) -> Hop:
-        return self._nodes.get(address)
-
-    def add_traceroute(self, trace):
-        for e in trace:
-            if e.address not in self._nodes:
-                self._nodes[e.address] = e
-            else:
-                e0 = self._nodes[e.address]
-                e0._packets_sent += e._packets_sent
-                e0._rtts.extend(e.rtts)
-                e0._distance = min(e.distance, e0.distance)
-
-        hosts = [(self.LOCALHOST.address, self.LOCALHOST.distance)] + [
-            (e.address, e.distance) for e in trace
-        ]
-        i1 = iter(hosts)
-        i2 = iter(hosts)
-        next(i2)
-
-        for (parent, _), (child, _) in zip(i1, i2):
-            self._graph[parent].add(child)
-
-    def render(self):
-        g = graphviz.Digraph()
-        for n in sorted(self._nodes.values(), key=lambda n: n.distance):
-            g.node(n.address)
-            for next in self._graph[n.address]:
-                g.edge(n.address, next)
-
-        # Lol. Lmao.
-        return requests.post(
-            "https://dot-to-ascii.ggerganov.com/dot-to-ascii.php",
-            params={"boxart": 1, "src": g.source},
-        ).text
-
-    def __iter__(self):
-        return iter(sorted(self._nodes.values(), key=lambda n: n.distance))
-
-    def __delitem__(self, key):
-        del self._graph[key]
-        del self._nodes[key]
-
 INTERVAL = 0.5
+
 Z = pytz.timezone("America/Denver")
 
-def compute_topology(hostlist, topology=None):
-    """Walk a series of traceroute tuples, computing a 'worst expected latency' topology from them."""
 
-    topology = topology or Topology()
-    for h in hostlist:
-        trace = traceroute(h)
-        # Restrict the trace to hosts which ICMP ping
-        trace = [e for e in trace if ping(e.address, interval=INTERVAL, count=3).is_alive]
-        topology.add_traceroute(trace)
+class HostState(object):
+    """A model of a (bounded) time series of host state.
 
-    return topology
+    """
 
 
-def pinger(host, queue, next=None):
-    # Mokney patch the RTT tracking
-    host._rtts = deque(host._rtts, maxlen=100)
-    id = randint(1, 1<<16 - 1)
-    sequence = 0
+class MonitoredHost(object):
+    def __init__(self, hostname: str, timeout: timedelta, id=None):
+        self._hostname = hostname
+        self._timeout = timeout
+        self._sequence = request_sequence(hostname, timeout, id)
+        self._lock = Lock()
+        self._state = ringbuffer(maxlen=360)
+        self._is_up = False
+        self._lost = 0
+        self._up = 0
 
-    while True:
-        timeout = min(h.avg_rtt / 1000.0, 0.5)  # rtt is in ms but timeout is in sec.
-        start = datetime.now(tz=Z)
+    def __call__(self, shutdown: Event, q: Queue):
+        """Monitor a given host by throwing requests into the queue; intended to be a Thread target."""
 
-        res = ping(host.address, timeout=timeout, interval=INTERVAL, count=3, id=id, sequence=sequence)
-        sequence += res._packets_sent
+        while not shutdown.is_set():
+            req = next(self._sequence)
+            resp = _ping(q, req)
 
-        queue.put((start, res))
-        sleep(INTERVAL)
-        if res.is_alive:
-            host._rtts.extend(res._rtts)
-            host._packets_sent += res._packets_sent
+            if resp and not self._is_up:
+                # log.debug(f"Host {self._hostname} is up!")
+                self._is_up = self._is_up or resp
+                self._up = resp._time
+
+            elif resp and self._is_up:
+                # log.debug(f"Host {self._hostname} holding up...")
+                pass
+
+            elif not resp and self._is_up:
+                # log.debug(f"Host {self._hostname} is down!")
+                self._is_up = None
+                self._up = None
+
+            elif not resp and not self._is_up:
+                pass
+
+            with self._lock:
+                if not resp:
+                    self._lost += 1
+                if self._state and not self._state[0]:
+                    self._lost -= 1
+
+                # self._state = (self._state + [req])[:-3600]
+                self._state.append(resp)
+
+            sleep(1)
+
+    def last(self):
+        with self._lock:
+            return next(reversed(self._state), None)
+
+    def last_window(self, duration: timedelta = None):
+        with self._lock:
+            l = []
+            t = time() - duration.total_seconds()
+            for i in reversed(self._state):
+                if not i or i._time > t:
+                    l.insert(0, i)
+                else:
+                    break
+            return l
+
+    def loss(self, duration: timedelta):
+        log = self.last_window(duration)
+        if log:
+            return log.count(None) / len(log)
+        else:
+            return 0.0
+
+    def is_up(self, duration: timedelta, threshold = 0.25):
+        return self.loss(duration) <= threshold
+
+    def last_seen(self, now: datetime) -> timedelta:
+        if state := self.last():
+            return now - datetime.fromtimestamp(state._time)
+
+    def up(self, duration: datetime):
+        if self._up:
+            return datetime.fromtimestamp(self._up)
+
+
+def main():
+    stdscr = curses.initscr()
+    maxy, maxx = stdscr.getmaxyx()
+
+    begin_x = 2; begin_y = maxy - 12
+    height = 10; width = maxx - 4
+    logscr = curses.newwin(height, width, begin_y, begin_x)
+
+    handler = CursesHandler(logscr)
+    formatter = logging.Formatter('%(asctime)s %(name)-12s %(levelname)-8s %(message)s')
+    handler.setFormatter(formatter)
+    log.addHandler(handler)
+    log.setLevel(logging.DEBUG)
+
+    stdscr = curses.newwin(maxy - height - 2, width, 0, begin_x)
+
+    opts, args = parser.parse_known_args()
+
+    q = queue.Queue()
+    shutdown = Event()
+
+    p = Thread(target=icmp_worker, args=(shutdown, q,))
+    p.start()
+
+    hosts = {}
+    hl = Lock()
+    threads = {}
+
+    def create_host(address):
+        if address not in hosts:
+            log.info(f"Monitoring {address}...")
+            with hl:
+                hosts[address] = monitor = MonitoredHost(address, timedelta(seconds=8))
+                threads[address] = t = Thread(target=monitor, args=(shutdown, q))
+            t.start()
+
+        else:
+            log.debug(f"Already monitoring {address}...")
+
+        stdscr.refresh()
+
+    def render():
+        dt = timedelta(seconds=8)
+
+        with open("incidents.txt", "w") as fp:
+            incident = False
+            while not shutdown.is_set():
+                rows, cols = stdscr.getmaxyx()
+                down = 0
+                now = datetime.now()
+                i = 0
+                with hl:
+                    for host, i in zip(hosts.values(), count(1)):
+                        name = host._hostname
+                        loss = host.loss(dt) * 100
+                        state = host.last()
+                        if not state:
+                            down += 1
+                            last_seen = "Down"
+                        else:
+                            last_seen = f"{host.last_seen(now).total_seconds():.2f}s ago"
+
+                        if up := host.up(dt):
+                            up = f" up: {(now - up).total_seconds():.2f}"
+                        else:
+                            up = ""
+
+                        stdscr.addstr(i, 2, f"{name: <16s}]{up} lost: {loss:.2f}% last: {last_seen}".ljust(cols))
+
+                stdscr.border()
+                stdscr.refresh()
+
+                msg = None
+                if down >= 3 and not incident:
+                    incident = True
+                    msg = f"{datetime.now()} - {down} hosts down"
+
+                elif down < 3 and incident:
+                    incident = False
+                    msg = f"{datetime.now()} - network recovered"
+
+                if i != 0 and msg:
+                    log.info(msg)
+                    fp.write(msg + "\n")
+                    fp.flush()
+
+                sleep(1)
+
+    rt = Thread(target=render)
+    rt.start()
+
+    def retrace():
+        while not shutdown.is_set():
+            for h in opts.hosts:
+                # FIXME: Use a real topology model
+                for hop in traceroute(q, h):
+                    if ping(q, hop.address).is_alive:
+                        create_host(hop.address)
+
+            sleep(60 * 5)
+
+    tt = Thread(target=retrace)
+    tt.start()
+
+    try:
+        while True:
+            sleep(1)
+    finally:
+        curses.endwin()
+        sys.stdout.flush()
+        sys.stderr.flush()
+        shutdown.set()
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
-    opts, args = parser.parse_known_args()
-
-    now = start = datetime.now(tz=Z)
-    reconfigure_delay = timedelta(minutes=5)
-    configure_at = now - reconfigure_delay
-    flush_delay = timedelta(seconds=1)
-    flush_at = now + flush_delay
-
-    recovered_duration = timedelta(seconds=5)
-    dead_duration = timedelta(minutes=30)
-
-    topology = None
-
-    q = Queue()
-    workers = {}
-    last_seen = {}
-    state = {}
-
-    spinner = cycle("|/-\\")
-
-    with open("incidents.txt", "a") as fp:
-        fp.write("RESTART\n")
-        while True:
-            now = datetime.now(tz=Z)
-
-            if flush_at <= now:
-                fp.flush()
-                flush_at = now + flush_delay
-
-            if configure_at <= now:
-                log.info("Attempting to reconfigure network topology...")
-                try:
-                    topology = compute_topology(opts.hosts, topology)
-                    configure_at = now + reconfigure_delay
-                    log.info("Graph -\n" + topology.render())
-
-                    for h in topology:
-                        if h.distance == 0:
-                            continue
-
-                        if h.address in workers:
-                            continue
-
-                        else:
-                            n = next(iter(topology.next_hops(h.address)), None)
-                            p = workers[h.address] = Process(target=pinger, args=(h, q, n))
-                            p.start()
-
-                except Exception as e:
-                    log.exception(e)
-
-            try:
-                # Revert to "logical now" of whenever the last ping results came in.
-                now, res = q.get(timeout=0.1)
-                last = last_seen.get(res.address)
-                delta = now - last if last else None
-
-                sys.stderr.write("\r" + next(spinner) + " " + f"ICMPResponse({res.address}, {res._rtts}, {res._packets_sent})" + " " * 20)
-                sys.stderr.flush()
-
-                if res.address not in workers:
-                    pass
-
-                elif res.is_alive:
-                    last_seen[res.address] = now
-                    if last and delta > recovered_duration:
-                        state[res.address] = True
-                        fp.write(
-                            f"RECOVERED\t{res.address}\t{now.isoformat()}\t{delta.total_seconds()}\n"
-                        )
-                    elif not last:
-                        state[res.address] = True
-                        fp.write(f"UP\t{res.address}\t{now.isoformat()}\n")
-
-                elif not res.is_alive:
-                    if last and delta > dead_duration:
-                        workers[res.address].terminate()
-                        del workers[res.address]
-                        del topology[res.address]
-                        del last_seen[res.address]
-                        del state[res.address]
-                        fp.write(
-                            f"DEAD\t{res.address}\t{now.isoformat()}\t{delta.total_seconds()}\n"
-                        )
-
-                    elif last and delta > recovered_duration and state[res.address]:
-                        fp.write(f"DOWN\t{res.address}\t{now.isoformat()}\n")
-                        state[res.address] = False
-
-            except queue.Empty:
-                sys.stderr.write("\r" + next(spinner))
-                sys.stderr.flush()
+    main()
