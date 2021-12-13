@@ -95,7 +95,7 @@ def icmp_worker(shutdown: Event, q: queue.Queue):
         while not shutdown.is_set():
             # Send one
             try:
-                item = q.get(block=False, timeout=0.1)
+                item = q.get(block=False, timeout=0.001)
                 request = item._request
                 state[(request._id, request._sequence)] = item
                 # log.info(f"Sending request {item._request!r}")
@@ -105,7 +105,7 @@ def icmp_worker(shutdown: Event, q: queue.Queue):
 
             # Recieve one
             try:
-                if response := sock.receive(None, 0.1):
+                if response := sock.receive(None, 0.001):
                     key = (response.id, response.sequence)
                     if key in state:
                         # log.info(f"Got response {response!r}")
@@ -123,7 +123,7 @@ def icmp_worker(shutdown: Event, q: queue.Queue):
                     del state[key]
 
             # Sleep one
-            sleep(shutdown, 0.1)
+            sleep(shutdown, 0.001)
 
 
 def traceroute(q: queue.Queue,

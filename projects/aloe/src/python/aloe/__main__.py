@@ -137,29 +137,29 @@ def retrace(shutdown, q, opts, hl, hosts):
     threads = {}
 
     def create_host(distance, address):
-        if address not in hosts:
-            log.info(f"Monitoring {address}...")
-            with hl:
-                hosts[(distance, address)] = monitor = MonitoredHost(address, timedelta(seconds=8))
-                threads[(distance, address)] = t = Thread(target=monitor, args=(shutdown, q))
-            t.start()
+        with hl:
+            if address not in hosts:
+                log.info(f"Monitoring {address}...")
+                monitor = MonitoredHost(address, timedelta(seconds=1))
+                hosts[address] = (distance, monitor)
+                threads[address] = t = Thread(target=monitor, args=(shutdown, q))
+                t.start()
 
-        else:
-            log.debug(f"Already monitoring {address}...")
-
+            else:
+                log.debug(f"Already monitoring {address}...")
 
     while not shutdown.is_set():
         for h in opts.hosts:
             # FIXME: Use a real topology model
-            for distance, hop in zip(count(1), traceroute(q, h)):
+            for hop in traceroute(q, h):
                 if ping(q, hop.address).is_alive:
-                    create_host(distance, hop.address)
+                    create_host(hop.distance, hop.address)
 
         sleep(shutdown, 60 * 5)
 
 
 def render(shutdown, q, stdscr, hl, hosts):
-    dt = timedelta(seconds=8)
+    dt = timedelta(minutes=30)
 
     with open("incidents.txt", "w") as fp:
         incident = False
@@ -169,7 +169,7 @@ def render(shutdown, q, stdscr, hl, hosts):
             now = datetime.now()
             i = 0
             with hl:
-                for i, ((distance, name), host) in zip(count(1), sorted(hosts.items(), key=lambda x: x[0][0])):
+                for i, (name, (distance, host)) in zip(count(1), sorted(hosts.items(), key=lambda x: x[1][0])):
                     loss = host.state.loss(dt) * 100
                     state = host.state.last()
                     if not state:
