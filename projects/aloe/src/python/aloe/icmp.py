@@ -6,7 +6,7 @@ import logging
 import queue
 from random import randint
 from threading import Event, Lock
-from time import sleep
+from time import sleep as _sleep
 
 from icmplib.exceptions import (
     ICMPLibError,
@@ -33,6 +33,16 @@ def better_repr(self):
 
 ICMPRequest.__repr__ = better_repr
 ICMPReply.__repr__ = better_repr
+
+
+def sleep(event, duration, interval=0.1):
+    total = 0
+    while total < duration:
+        if event.is_set():
+            raise SystemExit()
+        else:
+            _sleep(interval)
+            total += interval
 
 
 class ICMPRequestResponse(object):
@@ -113,7 +123,7 @@ def icmp_worker(shutdown: Event, q: queue.Queue):
                     del state[key]
 
             # Sleep one
-            sleep(0.1)
+            sleep(shutdown, 0.1)
 
 
 def traceroute(q: queue.Queue,
@@ -151,11 +161,11 @@ def traceroute(q: queue.Queue,
 
             q.put(request)
             while not request.ready():
-                sleep(0.1)
+                _sleep(0.1)
 
             _reply = request.get()
             if _reply is ICMPRequestResponse.TIMEOUT:
-                sleep(0.1)
+                _sleep(0.1)
                 continue
 
             elif _reply:
@@ -215,7 +225,7 @@ def request_sequence(hostname: str,
 def _ping(q: queue.Queue, request: ICMPRequestResponse):
         q.put(request)
         while not request.ready():
-            sleep(0.1)
+            _sleep(0.1)
 
         _response = request.get()
         if _response is not ICMPRequestResponse.TIMEOUT:

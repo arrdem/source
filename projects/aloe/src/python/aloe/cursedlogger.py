@@ -1,3 +1,5 @@
+"""A CURSES screen targeted log record handler."""
+
 import logging
 import curses
 
@@ -9,6 +11,7 @@ class CursesHandler(logging.Handler):
     def __init__(self, screen):
         logging.Handler.__init__(self)
         self._screen = screen
+        # FIXME: This should be dynamic not static.
         self._buff = ringbuffer(maxlen=screen.getmaxyx()[0] - 2)
 
     def emit(self, record):
@@ -23,5 +26,6 @@ class CursesHandler(logging.Handler):
 
         except (KeyboardInterrupt, SystemExit):
             raise
+
         except:
             self.handleError(record)
