@@ -1,10 +1,8 @@
 """A CURSES screen targeted log record handler."""
 
-import logging
-import curses
-
 from collections import deque as ringbuffer
 from itertools import count
+import logging
 
 
 class CursesHandler(logging.Handler):

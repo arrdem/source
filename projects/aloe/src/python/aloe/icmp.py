@@ -11,7 +11,6 @@ from time import sleep as _sleep
 from icmplib.exceptions import (
     ICMPLibError,
     ICMPSocketError,
-    TimeoutExceeded,
 )
 from icmplib.models import (
     Hop,

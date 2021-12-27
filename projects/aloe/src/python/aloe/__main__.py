@@ -18,11 +18,11 @@ import queue
 from queue import Queue
 import sys
 from threading import Event, Lock, Thread
-from time import sleep as _sleep, time
+from time import time
 
+from .cursedlogger import CursesHandler
 from .icmp import *
 from .icmp import _ping
-from .cursedlogger import CursesHandler
 
 
 log = logging.getLogger(__name__)
@@ -218,7 +218,7 @@ def main():
     logscr = curses.newwin(height, width, begin_y, begin_x)
 
     handler = CursesHandler(logscr)
-    formatter = logging.Formatter('%(asctime)s %(name)-12s %(levelname)-8s %(message)s')
+    formatter = logging.Formatter("%(asctime)s %(name)-12s %(levelname)-8s %(message)s")
     handler.setFormatter(formatter)
     log.addHandler(handler)
     log.setLevel(logging.DEBUG)
