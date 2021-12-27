@@ -5,5 +5,6 @@ zapp_binary(
     deps = [
         py_requirement("colored"),
         py_requirement("octorest"),
+        py_requirement("pyyaml"),
     ],
 )
