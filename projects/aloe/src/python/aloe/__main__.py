@@ -144,7 +144,7 @@ def retrace(shutdown, q, opts, hl, hosts):
         with hl:
             if address not in hosts:
                 log.info(f"Monitoring {address}...")
-                monitor = MonitoredHost(address, timedelta(seconds=2))
+                monitor = MonitoredHost(address, timedelta(seconds=4))
                 hosts[address] = (distance, monitor)
                 threads[address] = t = Thread(target=monitor, args=(shutdown, q))
                 t.start()
@@ -165,7 +165,7 @@ def retrace(shutdown, q, opts, hl, hosts):
 def render(shutdown, q, stdscr, hl, hosts):
     dt = timedelta(minutes=30)
 
-    with open("incidents.txt", "w") as fp:
+    with open("incidents.txt", "a") as fp:
         incident = False
         while not shutdown.is_set():
             rows, cols = stdscr.getmaxyx()
