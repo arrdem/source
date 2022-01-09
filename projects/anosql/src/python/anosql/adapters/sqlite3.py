@@ -4,6 +4,7 @@ A driver object implementing support for SQLite3
 
 from contextlib import contextmanager
 import logging
+import re
 import sqlite3
 
 
@@ -13,18 +14,31 @@ log = logging.getLogger(__name__)
 class SQLite3DriverAdapter(object):
     @staticmethod
     def process_sql(_query_name, _op_type, sql):
-        """Pass through function because the ``sqlite3`` driver already handles the :var_name
-        "named style" syntax used by anosql variables. Note, it will also accept "qmark style"
-        variables.
+        """Munge queries.
 
         Args:
-            _query_name (str): The name of the sql query. Unused.
+            _query_name (str): The name of the sql query.
             _op_type (anosql.SQLOperationType): The type of SQL operation performed by the sql.
             sql (str): The sql as written before processing.
 
         Returns:
-            str: Original SQL text unchanged.
+            str: A normalized form of the query suitable to logging or copy/paste.
+
         """
+
+        # Normalize out comments
+        sql = re.sub(r"-{2,}.*?\n", "", sql)
+
+        # Normalize out a variety of syntactically irrelevant whitespace
+        #
+        # FIXME: This is technically invalid, because what if you had `foo ` as
+        # a table name. Shit idea, but this won't handle it correctly.
+        sql = re.sub(r"\s+", " ", sql)
+        sql = re.sub(r"\(\s+", "(", sql)
+        sql = re.sub(r"\s+\)", ")", sql)
+        sql = re.sub(r"\s+,", ",", sql)
+        sql = re.sub(r"\s+;", ";", sql)
+
         return sql
 
     @staticmethod
