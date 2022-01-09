@@ -1,11 +1,19 @@
 """The shogoth reader."""
 
 
+import re
 from typing import Any
-from shogoth.parser import parse
 
-from lark import Tree, Token
-from lark import Lark, Transformer, v_args
+from lark import (
+    Lark,
+    Token,
+    Transformer,
+    Tree,
+    v_args,
+)
+from shogoth.parser import parse
+from shogoth.types import Keyword, Symbol
+
 
 # Monkeypatching for py3.10 matching
 Tree.__match_args__ = ("data", "children")
@@ -22,41 +30,57 @@ class Reader(object):
         return parse(buffer)
 
     def symbol(self, x):
-        return ["read-eval", ["symbol", x]]
+        return Symbol(x)
 
     def keyword(self, x):
-        return ["read-eval", ["keyword", x]]
+        return Keyword(x)
+
+    def pattern(self, x):
+        return re.compile(x[1:-1].replace("\\/", "/"))
 
     def _read(self, tree: Tree) -> Any:
         match tree:
-          case Tree(Token('RULE', 'expr'), children):
+          case Tree(Token("RULE", "expr"), children):
             return self._read(children[0])
 
-          case Tree(Token('RULE', 'plist'), children):
+          case Tree(Token("RULE", "plist"), children):
             return [self._read(c) for c in children]
 
-          case Tree(Token('RULE', 'blist'), children):
+          case Tree(Token("RULE", "blist"), children):
             return [self._read(c) for c in children]
 
-          case Tree(Token('RULE', 'mapping'), children):
+          case Tree(Token("RULE", "mapping"), children):
             return dict(self._read(c) for c in children)
 
-          case Tree(Token('RULE', 'kv'), [k, v]):
+          case Tree(Token("RULE", "kv"), [k, v]):
             return (self._read(k), self._read(v))
 
-          case Tree(Token('RULE', 'atom'), [a]):
+          case Tree(Token("RULE", "atom"), [a]):
             return self._read(a)
 
-          case Token('INT', x):
+          case Token("INT", x):
             return int(x)
 
-          case Token('FLOAT', x):
+          case Token("FLOAT", x):
             return float(x)
 
-          case Token('KEYWORD', x):
+          case Token("KEYWORD", x):
             return self.keyword(x)
 
-          case Token('SYMBOL', x):
+          case Token("PATTERN", x):
+            return self.pattern(x)
+
+          case Token("TRUE", _):
+            return True
+
+          case Token("FALSE", _):
+            return False
+
+          case Token("NIL", _):
+            return None
+
+          # Symbol is very much the catch-all of the grammar
+          case Token("SYMBOL", x):
             return self.symbol(x)
 
           case _:
