@@ -3,6 +3,7 @@ The implementation.
 """
 
 import logging
+from shutil import rmtree
 from subprocess import run
 
 
@@ -15,14 +16,11 @@ class Vfs(object):
     def __init__(self, log=None):
         self._log = log or []
 
-    def execute(self, execute=False):
+    def execute(self):
         for e in self._log:
             _log.debug(e)
 
-            if not execute:
-                continue
-
-            elif e[0] == "exec":
+            if e[0] == "exec":
                 _, dir, cmd = e
                 run(cmd, cwd=str(dir))
 
@@ -36,6 +34,7 @@ class Vfs(object):
 
                 assert not dest.exists()
                 dest.symlink_to(src)
+                assert dest.exists()
 
             elif e[0] == "copy":
                 raise NotImplementedError()
@@ -50,7 +49,10 @@ class Vfs(object):
 
             elif e[0] == "unlink":
                 _, dest = e
-                dest.unlink()
+                if dest.is_dir():
+                    rmtree(dest)   
+                elif dest.is_file():
+                    dest.unlink()
 
     def _append(self, msg):
         self._log.append(msg)

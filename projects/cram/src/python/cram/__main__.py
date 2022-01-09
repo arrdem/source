@@ -9,9 +9,10 @@ import re
 import sys
 from typing import NamedTuple
 
+from vfs import Vfs
+
 import click
 from toposort import toposort_flatten
-from vfs import Vfs
 
 
 log = logging.getLogger(__name__)
@@ -68,7 +69,7 @@ class PackageV0(NamedTuple):
 
         return requires
 
-    def install(self, fs: Vfs, dest):
+    def install(self, fs: Vfs, dest: Path):
         """Install this package."""
         buildf = self.root / "BUILD"
         if buildf.exists():
@@ -89,6 +90,26 @@ class PackageV0(NamedTuple):
             fs.exec(self.root, ["bash", str(postf)])
 
 
+class ProfileV0(PackageV0):
+    def install(self, fs: Vfs, dest: Path):
+        """Profiles differ from Packages in that they don't support literal files."""
+        buildf = self.root / "BUILD"
+        if buildf.exists():
+            fs.exec(self.root, ["bash", str(buildf)])
+
+        pref = self.root / "PRE_INSTALL"
+        if pref.exists():
+            fs.exec(self.root, ["bash", str(pref)])
+
+        installf = self.root / "INSTALL"
+        if installf.exists():
+            fs.exec(self.root, ["bash", str(installf)])
+
+        postf = self.root / "POST_INSTALL"
+        if postf.exists():
+            fs.exec(self.root, ["bash", str(postf)])
+
+    
 def load_config(root: Path) -> dict:
     """Load the configured packages."""
 
@@ -109,8 +130,8 @@ def load_config(root: Path) -> dict:
                     p, str(p.relative_to(root))
                 )
 
-        # Register the metapackages themselves
-        packages[str(mp_root.relative_to(root))] = PackageV0(
+        # Register the metapackages themselves using the profile type
+        packages[str(mp_root.relative_to(root))] = ProfileV0(
             mp_root, str(mp_root.relative_to(root)), True
         )
 
@@ -206,13 +227,13 @@ def cli():
     pass
 
 
-@cli.command("apply")
+@cli.command()
 @click.option("--execute/--dry-run", default=False)
-@click.option("--optimize/--no-optimize", default=True)
 @click.option("--state-file", default=".cram.log", type=Path)
+@click.option("--optimize/--no-optimize", default=False)
 @click.argument("confdir", type=Path)
 @click.argument("destdir", type=Path)
-def cmd_apply(confdir, destdir, state_file, execute, optimize):
+def apply(confdir, destdir, state_file, execute, optimize):
     """The entry point of cram."""
 
     # Resolve the two input paths to absolutes
@@ -239,35 +260,49 @@ def cmd_apply(confdir, destdir, state_file, execute, optimize):
 
     else:
         for e in executable_fs._log:
-            print("-", *e)
+            print("-", e)
 
 
-@cli.command("show")
+@cli.command()
 @click.option("--state-file", default=".cram.log", type=Path)
 @click.argument("confdir", type=Path)
-def cmd_show(confdir, state_file):
+def show(confdir, state_file):
     """List out the last `apply` state in the <confdir>/.cram.log or --state-file."""
     root = confdir.resolve()
-
     if not state_file.is_absolute():
         state_file = root / state_file
-
     fs = load_fs(state_file)
-
     for e in fs._log:
         print(*e)
 
 
-@cli.command("list")
+@cli.command()
 @click.argument("confdir", type=Path)
-def cmd_list(confdir):
+@click.argument("list_packages", nargs=-1)
+def list(confdir, list_packages):
     """List out packages, profiles, hosts and subpackages in the <confdir>."""
     packages = load_config(confdir)
-    for pname in sorted(packages.keys()):
-        p = packages[pname]
-        print(f"{pname}:")
-        for d in p.requires():
-            print(f"- {d}")
+
+    if list_packages:
+        dest = Path("~/")
+        for pname in list_packages:
+            fs = Vfs()
+            p = packages[pname]
+            p.install(fs, dest)
+            print(f"{pname}: ({type(p).__name__})")
+            print("requires:")
+            for e in p.requires():
+                print("  -", e)
+            print("log:")
+            for e in fs._log:
+                print("  -", *e)
+
+    else:
+        for pname in sorted(packages.keys()):
+            p = packages[pname]
+            print(f"{pname}: ({type(p).__name__})")
+            for d in p.requires():
+                print(f"- {d}")
 
 
 if __name__ == "__main__" or 1:
