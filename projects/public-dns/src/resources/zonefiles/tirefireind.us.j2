@@ -1,7 +1,7 @@
 # -*- mode: conf -*-
 
 # Fastmail
-@              {{ ttl}}  IN MX 10 in1-smtp.messagingengine.com.
+@              {{ ttl }} IN MX 10 in1-smtp.messagingengine.com.
 @              {{ ttl }} IN MX 20 in2-smtp.messagingengine.com.
 fm1._domainkey {{ ttl }} IN CNAME fm1.tirefireind.us.dkim.fmhosted.com.
 fm2._domainkey {{ ttl }} IN CNAME fm2.tirefireind.us.dkim.fmhosted.com.
@@ -16,6 +16,7 @@ www         {{ ttl }} IN A {{ link }}
 registry    {{ ttl }} IN A {{ link }}
 mirror      {{ ttl }} IN A {{ link }}
 buildcache  {{ ttl }} IN A {{ link }}
+feed        {{ ttl }} IN A {{ link }}
 {% endfor %}
 
 # Gitlab
