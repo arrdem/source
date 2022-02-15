@@ -21,28 +21,28 @@ version = 1
 [package]
   # The package.require list names depended artifacts.
   [[package.require]]
-  name = packages.d/some-other-package
+  name = "packages.d/some-other-package"
 
   # (optional) The package.build list enumerates either
   # inline scripts or script files. These are run as a
   # package is 'built' before it is installed.
   [[package.build]]
-  run = some-build-command
+  run = "some-build-command"
 
   # (optional) Hook script(s) which occur before installation.
   [[package.pre_install]]
-  run = some-hook
+  run = "some-hook"
 
   # (optional) Override installation scrpt(s).
   # By default, everthing under the package directory
   # (the `pkg.toml` excepted) treated is as a file to be
   # installed and stow is emulated using symlinks.
   [[package.install]]
-  run = some-install-command
+  run = "some-install-command"
 
   # (optional) Hook script(s) which after installation.
   [[package.post_install]]
-  run = some-other-hook
+  run = "some-other-hook"
 ```
 
 To take a somewhat real example from my own dotfiles -
