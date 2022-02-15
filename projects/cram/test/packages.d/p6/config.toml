@@ -1,0 +1,5 @@
+[cram]
+version = 1
+
+[package]
+install = "true"

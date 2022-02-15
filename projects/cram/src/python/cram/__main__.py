@@ -1,13 +1,15 @@
-#!/usr/bin/env python3
+"""Cram's entry point."""
 
 from itertools import chain
 import logging
 import os
 from pathlib import Path
 import pickle
-import re
 import sys
-from typing import NamedTuple
+from typing import List
+
+from .v0 import PackageV0, ProfileV0
+from .v1 import PackageV1, ProfileV1
 
 from vfs import Vfs
 
@@ -18,138 +20,51 @@ from toposort import toposort_flatten
 log = logging.getLogger(__name__)
 
 
-def stow(fs: Vfs, src_dir: Path, dest_dir: Path, skip=[]):
-    """Recursively 'stow' (link) the contents of the source into the destination."""
-
-    dest_root = Path(dest_dir)
-    src_root = Path(src_dir)
-    skip = [src_root / n for n in skip]
-
-    for src in src_root.glob("**/*"):
-        if src in skip:
-            continue
-
-        dest = dest_root / src.relative_to(src_root)
-        if src.is_dir():
-            fs.mkdir(dest)
-            fs.chmod(dest, src.stat().st_mode)
-
-        elif src.is_file():
-            fs.link(src, dest)
+def load(root: Path, name: str, clss):
+    for c in clss:
+        i = c(root, name)
+        if i.test():
+            return i
 
 
-class PackageV0(NamedTuple):
-    """The original package format from install.sh."""
-
-    root: Path
-    name: str
-    subpackages: bool = False
-
-    SPECIAL_FILES = ["BUILD", "PRE_INSTALL", "INSTALL", "POST_INSTALL", "REQUIRES"]
-
-    def requires(self):
-        """Get the dependencies of this package."""
-        requiresf = self.root / "REQUIRES"
-        requires = []
-
-        # Listed dependencies
-        if requiresf.exists():
-            with open(requiresf) as fp:
-                for l in fp:
-                    l = l.strip()
-                    l = re.sub(r"\s*#.*\n", "", l)
-                    if l:
-                        requires.append(l)
-
-        # Implicitly depended subpackages
-        if self.subpackages:
-            for p in self.root.glob("*"):
-                if p.is_dir():
-                    requires.append(self.name + "/" + p.name)
-
-        return requires
-
-    def install(self, fs: Vfs, dest: Path):
-        """Install this package."""
-        buildf = self.root / "BUILD"
-        if buildf.exists():
-            fs.exec(self.root, ["bash", str(buildf)])
-
-        pref = self.root / "PRE_INSTALL"
-        if pref.exists():
-            fs.exec(self.root, ["bash", str(pref)])
-
-        installf = self.root / "INSTALL"
-        if installf.exists():
-            fs.exec(self.root, ["bash", str(installf)])
-        else:
-            stow(fs, self.root, dest, self.SPECIAL_FILES)
-
-        postf = self.root / "POST_INSTALL"
-        if postf.exists():
-            fs.exec(self.root, ["bash", str(postf)])
+def load_package(root, name):
+    return load(root, name, [PackageV1, PackageV0])
 
 
-class ProfileV0(PackageV0):
-    def install(self, fs: Vfs, dest: Path):
-        """Profiles differ from Packages in that they don't support literal files."""
-        buildf = self.root / "BUILD"
-        if buildf.exists():
-            fs.exec(self.root, ["bash", str(buildf)])
-
-        pref = self.root / "PRE_INSTALL"
-        if pref.exists():
-            fs.exec(self.root, ["bash", str(pref)])
-
-        installf = self.root / "INSTALL"
-        if installf.exists():
-            fs.exec(self.root, ["bash", str(installf)])
-
-        postf = self.root / "POST_INSTALL"
-        if postf.exists():
-            fs.exec(self.root, ["bash", str(postf)])
+def load_profile(root, name):
+    return load(root, name, [ProfileV1, ProfileV0])
 
     
-def load_config(root: Path) -> dict:
+def load_packages(root: Path) -> dict:
     """Load the configured packages."""
 
-    packages = {
-        str(p.relative_to(root)): PackageV0(p, str(p.relative_to(root)))
-        for p in (root / "packages.d").glob("*")
-    }
+    packages = {}
+    for p in (root / "packages.d").glob("*"):
+        name = str(p.relative_to(root))
+        packages[name] = load_package(p, name)
 
     # Add profiles, hosts which contain subpackages.
     for mp_root in chain((root / "profiles.d").glob("*"), (root / "hosts.d").glob("*")):
 
         # First find all subpackages
-        for p in mp_root.glob(
-            "*",
-        ):
+        for p in mp_root.glob("*"):
             if p.is_dir():
-                packages[str(p.relative_to(root))] = PackageV0(
-                    p, str(p.relative_to(root))
-                )
+                name = str(p.relative_to(root))
+                packages[name] = load_package(p, name)
 
         # Register the metapackages themselves using the profile type
-        packages[str(mp_root.relative_to(root))] = ProfileV0(
-            mp_root, str(mp_root.relative_to(root)), True
-        )
+        mp_name = str(mp_root.relative_to(root))
+        packages[mp_name] = load_profile(mp_root, mp_name)
 
     return packages
 
 
-def build_fs(root: Path, dest: Path) -> Vfs:
+def build_fs(root: Path, dest: Path, prelude: List[str]) -> Vfs:
     """Build a VFS by configuring dest from the given config root."""
 
-    packages = load_config(root)
-
-    hostname = os.uname()[1]
-
-    # Compute the closure of packages to install
-    requirements = [
-        f"hosts.d/{hostname}",
-        "profiles.d/default",
-    ]
+    packages = load_packages(root)
+    requirements = []
+    requirements.extend(prelude)
 
     for r in requirements:
         try:
@@ -172,7 +87,7 @@ def build_fs(root: Path, dest: Path) -> Vfs:
     return fs
 
 
-def load_fs(statefile: Path) -> Vfs:
+def load_state(statefile: Path) -> Vfs:
     """Load a persisted VFS state from disk. Sort of."""
 
     oldfs = Vfs()
@@ -187,7 +102,7 @@ def load_fs(statefile: Path) -> Vfs:
     return oldfs
 
 
-def simplify(old_fs: Vfs, new_fs: Vfs) -> Vfs:
+def simplify(old_fs: Vfs, new_fs: Vfs, /, exec_idempotent=True) -> Vfs:
     """Try to reduce a new VFS using diff from the original VFS."""
 
     old_fs = old_fs.copy()
@@ -196,11 +111,21 @@ def simplify(old_fs: Vfs, new_fs: Vfs) -> Vfs:
     # Scrub anything in the new log that's in the old log
     for txn in list(old_fs._log):
         # Except for execs which are stateful
-        if txn[0] == "exec":
+        if txn[0] == "exec" and not exec_idempotent:
             continue
 
-        new_fs._log.remove(txn)
-        old_fs._log.remove(txn)
+        try:
+            new_fs._log.remove(txn)
+        except ValueError:
+            pass
+
+    # Dedupe the new log while preserving order
+    distinct = set()
+    for txn, idx in zip(new_fs._log, range(len(new_fs._log))):
+        if txn in distinct:
+            new_fs._log.pop(idx)
+        else:
+            distinct.add(txn)
 
     return new_fs
 
@@ -227,13 +152,15 @@ def cli():
     pass
 
 
-@cli.command()
+@cli.command("apply")
 @click.option("--execute/--dry-run", default=False)
 @click.option("--state-file", default=".cram.log", type=Path)
-@click.option("--optimize/--no-optimize", default=False)
+@click.option("--optimize/--no-optimize", default=True)
+@click.option("--require", type=str, multiple=True, default=[f"hosts.d/{os.uname()[1]}", "profiles.d/default"])
+@click.option("--exec-idempotent/--exec-always", "exec_idempotent", default=True)
 @click.argument("confdir", type=Path)
 @click.argument("destdir", type=Path)
-def apply(confdir, destdir, state_file, execute, optimize):
+def do_apply(confdir, destdir, state_file, execute, optimize, require, exec_idempotent):
     """The entry point of cram."""
 
     # Resolve the two input paths to absolutes
@@ -242,46 +169,37 @@ def apply(confdir, destdir, state_file, execute, optimize):
     if not state_file.is_absolute():
         state_file = root / state_file
 
-    new_fs = build_fs(root, dest)
-    old_fs = load_fs(state_file)
+    new_fs = build_fs(root, dest, require)
+    old_fs = load_state(state_file)
 
     # Middleware processing of the resulting filesystem(s)
     executable_fs = scrub(old_fs, new_fs)
     if optimize:
-        executable_fs = simplify(old_fs, new_fs)
+        executable_fs = simplify(old_fs, new_fs,
+                                 exec_idempotent=exec_idempotent)
 
     # Dump the new state.
     # Note that we dump the UNOPTIMIZED state, because we want to simplify relative complete states.
+    def cb(e):
+        print("-", *e)
+
     if execute:
-        executable_fs.execute()
+        executable_fs.execute(callback=cb)
 
         with open(state_file, "wb") as fp:
             pickle.dump(new_fs._log, fp)
 
     else:
         for e in executable_fs._log:
-            print("-", e)
+            cb(e)
 
 
-@cli.command()
-@click.option("--state-file", default=".cram.log", type=Path)
-@click.argument("confdir", type=Path)
-def show(confdir, state_file):
-    """List out the last `apply` state in the <confdir>/.cram.log or --state-file."""
-    root = confdir.resolve()
-    if not state_file.is_absolute():
-        state_file = root / state_file
-    fs = load_fs(state_file)
-    for e in fs._log:
-        print(*e)
-
-
-@cli.command()
+@cli.command("list")
 @click.argument("confdir", type=Path)
 @click.argument("list_packages", nargs=-1)
-def list(confdir, list_packages):
+def do_list(confdir, list_packages):
     """List out packages, profiles, hosts and subpackages in the <confdir>."""
-    packages = load_config(confdir)
+    packages = load_packages(confdir)
 
     if list_packages:
         dest = Path("~/")
@@ -305,9 +223,22 @@ def list(confdir, list_packages):
                 print(f"- {d}")
 
 
+@cli.command("state")
+@click.option("--state-file", default=".cram.log", type=Path)
+@click.argument("confdir", type=Path)
+def do_state(confdir, state_file):
+    """List out the last `apply` state in the <confdir>/.cram.log or --state-file."""
+    root = confdir.resolve()
+    if not state_file.is_absolute():
+        state_file = root / state_file
+    fs = load_state(state_file)
+    for e in fs._log:
+        print(*e)
+
+
 if __name__ == "__main__" or 1:
     logging.basicConfig(
-        level=logging.DEBUG,
+        level=logging.INFO,
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
 

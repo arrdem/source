@@ -1,0 +1,6 @@
+[cram]
+version = 1
+
+[package]
+  [[package.install]]
+  run = "true"

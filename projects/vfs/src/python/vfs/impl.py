@@ -16,9 +16,11 @@ class Vfs(object):
     def __init__(self, log=None):
         self._log = log or []
 
-    def execute(self):
+    def execute(self, /, callback=None):
         for e in self._log:
             _log.debug(e)
+            if callback:
+                callback(e)
 
             if e[0] == "exec":
                 _, dir, cmd = e
