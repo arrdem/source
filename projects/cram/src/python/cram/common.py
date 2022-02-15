@@ -10,6 +10,7 @@ from vfs import Vfs
 
 SHELL = "/bin/sh"
 
+
 def sh(cmd: List[str], /,
        env: Optional[dict] = None):
 

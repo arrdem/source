@@ -4,61 +4,116 @@
 
 An alternative to GNU Stow, more some notion of packages with dependencies and install scripts.
 
-Think an Ansible or Puppet but anyarch and lite enough to check in with your dotfiles.
+Think an Ansible, Puppet or even NixOS but anyarch and lite enough to check in with your dotfiles.
 
 ## Overview
 
-Somewhat like Stow, Cram operates in terms of packages, which are directories with the following structure -
+Cram operates on a directory of packages called `packages.d/`, and two directories of metapackages called `profiles.d` and `hosts.d`.
 
+### Packages
+
+A Cram package consists of a directory containing a `pkg.toml` file with the following format -
+
+```toml
+[cram]
+version = 1
+
+[package]
+  # The package.require list names depended artifacts.
+  [[package.require]]
+  name = packages.d/some-other-package
+
+  # (optional) The package.build list enumerates either
+  # inline scripts or script files. These are run as a
+  # package is 'built' before it is installed.
+  [[package.build]]
+  run = some-build-command
+
+  # (optional) Hook script(s) which occur before installation.
+  [[package.pre_install]]
+  run = some-hook
+
+  # (optional) Override installation scrpt(s).
+  # By default, everthing under the package directory
+  # (the `pkg.toml` excepted) treated is as a file to be
+  # installed and stow is emulated using symlinks.
+  [[package.install]]
+  run = some-install-command
+
+  # (optional) Hook script(s) which after installation.
+  [[package.post_install]]
+  run = some-other-hook
 ```
-/REQUIRES      # A list of other packages this one requires.
-/BUILD         # 1. Perform any compile or package management tasks.
-/PRE_INSTALL   # 2. Any other tasks required before installation occurs.
-/INSTALL       # 3. Do whatever constitutes installation.
-               #    This supercedes the default copying of files.
-/POST_INSTALL  # 4. Any cleanup or other tasks following installation
-...            # Any other files are treated as package contents.
 
+To take a somewhat real example from my own dotfiles -
+
+```shell
+$ tree -a packages.d/tmux
+packages.d/tmux
+├── pkg.toml
+└── .tmux.conf
 ```
 
-Cram reads a config dir with three groups of packages
-- `packages.d/<packagename>` contains a package that installs but probably shouldn't configure a given tool, package or group of files.
-  Configuration should be left to profiles.
-- `profiles.d/<profilename>` contains a profile; a group of related profiles and packages that should be installed together.
-- `hosts.d/<hostname>` contains one package for each host, and should pull in a list of profiles.
-- Both profiles and hosts entries may specify their own "inline" packages as a convenience.
+This TMUX package provides only my `.tmux.conf` file, and a stub `pkg.toml` that does nothing.
+A fancier setup could use `pkg.toml` to install TMUX either as a `pre_install` task or by using a separate TMUX package and providing the config in a profile.
 
-The intent of this tool is to keep GNU Stow's intuitive model of deploying configs via symlinks, and augment it with a useful pattern for talking about "layers" / "packages" of related configs.
+### Metapackages
 
-Cram installs the package `hosts.d/$(hostname)`, and `profiles.d/default` by default.
+Writing lots of packages gets cumbersome quickly, as does managing long lists of explicit dependencies.
+To try and manage this, Cram provides metapackages - packages which contain no stowable files, but instad contain subpackages.
+
+To take a somewhat real example from my own dotfiles -
+
+```shell
+$ tree -a -L 1 profiles.d/macos
+profiles.d/macos
+├── pkg.toml
+├── emacs/
+├── homebrew/
+└── zsh/
+```
+
+The `profiles.d/macos` package depends AUTOMATICALLY on the contents of the `profiles.d/macos/emacs`, `profiles.d/macos/homebrew` and `profiles.d/macos/zsh` packages, which are normal packages.
+These sub-packages can have normal dependencies on other packages both within and without the profile and install files or run scripts.
+
+Profiles allow users to write groups of related packages, especially configs, which go together and allows for scoped reuse of meaningful names.
+
+Likewise the `hosts.d/` tree allows users to store host-specific packages.
 
 ## Usage
 
 ```
-$ cram apply [--dry-run|--execute] [--optimize] <configdir> <destdir>
+$ cram apply [--dry-run|--execute] [--optimize] [--require <package>] <configdir> <destdir>
 ```
 
 The `apply` task applies a configuration to a destination directory.
-The most common uses of this would be `--dry-run`, which functions as a `diff` or `--execute ~/conf ~/` for emulating Stow and installing dotfiles.
+The most common uses of this would be `--dry-run` (the default), which functions as a `diff` or `--execute ~/conf ~/` for emulating Stow and installing dotfiles.
+
+By default `cram` installs two packages - `profiles.d/default` and `hosts.d/$(hostname -s)`.
+This default can be overriden by providing `--require <package>` one or more times to enumerate specific packages to install.
 
 Cram always reads the `.cram.log` state file and diffs the current state against the configured state.
 Files and directories no longer defined by the configured state are cleaned up automatically.
 
 ```
-$ cram show <configdir>
+$ cram state <configdir>
 ```
 
-The `list` task loads up and prints the `.cram.log` state file generated by any previous `cram apply --execute` so you can read a manifest of what cram thinks it did.
+The `state` task loads up and prints the `.cram.log` state file generated by any previous `cram apply --execute` so you can read a manifest of what cram thinks it did.
+This is useful because `cram` attempts to optimize repeated executions and implement change detection using the state file.
+
+This cache can be busted if needed by using `apply --execute --no-optimize`, which will cause cram to take all actions it deems presently required.
+This can result in dangling symlinks in the filesystem.
 
 ```
-$ cram list <configdir>
+$ cram list <configdir> [package]
 ```
 
-The `show` task lists out all available packages (eg. packages, profiles, hosts, and subpackages) as a dependency graph.
+The `list` task lists out all available packages (eg. packages, profiles, hosts, and subpackages) as a dependency graph.
+When provided a specific package, the details of that package (its requirements and installation task log) will be printed.
 
 ## License
 
-Copyright Reid 'arrdem' McKenzie, 31/10/2021.
+Copyright Reid 'arrdem' McKenzie, 15/02/2022.
 
-Published under the terms of the MIT license.
-See the included `LICENSE` file for more.
+Published under the terms of the Anticapitalist Software License (https://anticapitalist.software).

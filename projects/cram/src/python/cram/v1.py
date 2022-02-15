@@ -26,7 +26,7 @@ def tempf(name):
 class PackageV1(Package):
     """The v1 package format."""
 
-    SPECIAL_FILES = ["config.toml"]
+    SPECIAL_FILES = ["pkg.toml"]
     _config = None
 
     def config(self):

@@ -8,6 +8,7 @@ import pickle
 import sys
 from typing import List
 
+from . import __version__, __author__, __license__, __copyright__
 from .v0 import PackageV0, ProfileV0
 from .v1 import PackageV1, ProfileV1
 
@@ -148,6 +149,21 @@ def scrub(old_fs: Vfs, new_fs: Vfs) -> Vfs:
 
 
 @click.group()
+@click.version_option(version=1, message=f"""Cram {__version__}
+
+Documentation
+  https://github.com/arrdem/source/tree/trunk/projects/cram/
+
+Features
+ - 0.0.0 legacy config format
+ - 0.1.0 TOML config format
+ - 0.1.0 log based optimizer
+ - 0.1.0 idempotent default for scripts
+
+About
+  {__copyright__}, {__author__}.
+  Published under the terms of the {__license__} license.
+""")
 def cli():
     pass
 
@@ -175,7 +191,7 @@ def do_apply(confdir, destdir, state_file, execute, optimize, require, exec_idem
     # Middleware processing of the resulting filesystem(s)
     executable_fs = scrub(old_fs, new_fs)
     if optimize:
-        executable_fs = simplify(old_fs, new_fs,
+        executable_fs = simplify(old_fs, executable_fs,
                                  exec_idempotent=exec_idempotent)
 
     # Dump the new state.

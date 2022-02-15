@@ -83,3 +83,14 @@ rm -r "${dest}"/*
 
 # If multiple packages provide the same _effective_ script, do it once
 ./cram apply --require packages.d/p6 --require packages.d/p7 --execute test/ "${dest}" | sort | uniq -c | grep "/tmp/stow/b5bea41b6c623f7c09f1bf24dcae58ebab3c0cdd90ad966bc43a45b44867e12b.sh" | grep "1 - exec"
+
+# Test log-based cleanup
+./cram apply --require packages.d/p1 --require packages.d/p2 --execute test/ "${dest}"
+[ -L "${dest}"/foo ]
+[ -L "${dest}"/bar ]
+# And how bar shouldn't be installed...
+./cram state test/
+./cram apply --require packages.d/p1 --execute test/ "${dest}"
+./cram state test/
+[ -L "${dest}"/foo ]
+[ ! -L "${dest}"/bar ]
