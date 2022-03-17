@@ -117,3 +117,5 @@ When provided a specific package, the details of that package (its requirements 
 Copyright Reid 'arrdem' McKenzie, 15/02/2022.
 
 Published under the terms of the Anticapitalist Software License (https://anticapitalist.software).
+
+Unlimited commercial licensing is available at nominal pricing.
