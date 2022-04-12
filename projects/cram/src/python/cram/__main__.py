@@ -1,4 +1,4 @@
-"""Cram's entry point."""
+ """Cram's entry point."""
 
 from itertools import chain
 import logging
@@ -8,7 +8,12 @@ import pickle
 import sys
 from typing import List
 
-from . import __version__, __author__, __license__, __copyright__
+from . import (
+    __author__,
+    __copyright__,
+    __license__,
+    __version__,
+)
 from .v0 import PackageV0, ProfileV0
 from .v1 import PackageV1, ProfileV1
 
@@ -250,6 +255,13 @@ def do_state(confdir, state_file):
     fs = load_state(state_file)
     for e in fs._log:
         print(*e)
+
+
+@cli.command("migrate-to-toml")
+@click.argument("confdir", type=Path)
+@click.argument("requirement", type=str)
+def do_migrate(confdig, requirement):
+    """Convert from the 0.0.0 config format to the 0.1.0 TOML format"""
 
 
 if __name__ == "__main__" or 1:

@@ -8,7 +8,6 @@ Based on well* defined TOML manifests, rather than many files.
 from hashlib import sha256
 from pathlib import Path
 from typing import List, Optional, Union
-from typing import NamedTuple
 
 from .common import Package, sh, stow
 

@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-from abc import abstractmethod
 from pathlib import Path
 from shlex import quote as sh_quote
 from typing import List, Optional

@@ -5,7 +5,6 @@ An ill-considered pseudo-format.
 
 from pathlib import Path
 import re
-from typing import NamedTuple
 
 from .common import Package, sh, stow
 
