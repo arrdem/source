@@ -2,26 +2,30 @@
 Tests coverign the VM interpreter
 """
 
+import pytest
 from shogoth.vm import *
 
-vm = Interpreter(BOOTSTRAP)
+
+@pytest.fixture
+def vm():
+    return Interpreter(BOOTSTRAP)
 
 
-def test_true():
+def test_true(vm):
     assert vm.run([Opcode.TRUE(), Opcode.RETURN(1)]) == [True]
 
 
-def test_false():
+def test_false(vm):
     assert vm.run([Opcode.FALSE(), Opcode.RETURN(1)]) == [False]
 
 
-def test_return():
+def test_return(vm):
     assert vm.run([Opcode.FALSE(), Opcode.RETURN(0)]) == []
     assert vm.run([Opcode.TRUE(), Opcode.FALSE(), Opcode.RETURN(1)]) == [False]
     assert vm.run([Opcode.TRUE(), Opcode.FALSE(), Opcode.RETURN(2)]) == [False, True]
 
 
-def test_dup():
+def test_dup(vm):
     assert vm.run([
         Opcode.TRUE(),
         Opcode.FALSE(),
@@ -37,7 +41,7 @@ def test_dup():
     ]) == [False, True, False, True]
 
 
-def test_rot():
+def test_rot(vm):
     assert vm.run([
         Opcode.TRUE(),
         Opcode.FALSE(),
@@ -54,7 +58,7 @@ def test_rot():
     ]) == [False, False, True]
 
 
-def test_drop():
+def test_drop(vm):
     assert vm.run([
         Opcode.TRUE(),
         Opcode.FALSE(),
@@ -63,7 +67,7 @@ def test_drop():
     ]) == [True]
 
 
-def test_not():
+def test_not(vm):
     assert vm.run([
         Opcode.TRUE(),
         Opcode.CALL(NOT),
@@ -77,7 +81,7 @@ def test_not():
     ]) == [True]
 
 
-def test_or():
+def test_or(vm):
     assert vm.run([
         Opcode.FALSE(),
         Opcode.FALSE(),
@@ -107,7 +111,7 @@ def test_or():
     ]) == [True]
 
 
-def test_and():
+def test_and(vm):
     assert vm.run([
         Opcode.FALSE(),
         Opcode.FALSE(),
@@ -137,7 +141,7 @@ def test_and():
     ]) == [True]
 
 
-def test_xor():
+def test_xor(vm):
     assert vm.run([
         Opcode.FALSE(),
         Opcode.FALSE(),
@@ -165,3 +169,27 @@ def test_xor():
         Opcode.CALL(XOR),
         Opcode.RETURN(1)
     ]) == [False]
+
+
+def test_dup_too_many(vm):
+    with pytest.raises(InterpreterError):
+        vm.run([Opcode.DUP(1)])
+
+    with pytest.raises(InterpreterError):
+        vm.run([Opcode.FALSE(), Opcode.DUP(2)])
+
+
+def test_rot_too_many(vm):
+    with pytest.raises(InterpreterError):
+        vm.run([Opcode.ROT(1)])
+
+    with pytest.raises(InterpreterError):
+        vm.run([Opcode.TRUE(), Opcode.ROT(2)])
+
+
+def test_drop_too_many(vm):
+    with pytest.raises(InterpreterError):
+        vm.run([Opcode.DROP(1)])
+
+    with pytest.raises(InterpreterError):
+        vm.run([Opcode.TRUE(), Opcode.DROP(2)])

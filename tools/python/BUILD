@@ -17,7 +17,7 @@ exports_files([
 py_runtime(
     name = "python3_runtime",
     files = [],
-    interpreter_path = "/usr/bin/python3.9",
+    interpreter_path = "/usr/bin/python3.10",
     python_version = "PY3",
     visibility = ["//visibility:public"],
 )

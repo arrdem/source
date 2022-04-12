@@ -16,151 +16,13 @@ context (a virtual machine) which DOES have an easily introspected and serialize
 
 """
 
-from random import Random
-from typing import NamedTuple
+from copy import deepcopy
 
-class Module(NamedTuple):
-    opcodes: list = []
-    functions: dict = {}
-    types: dict = {}
-    constants: dict = {}
-
-    rand: Random = Random()
-
-    def copy(self):
-        return Module(
-            self.opcodes.copy(),
-            self.functions.copy(),
-            self.types.copy(),
-            self.constants.copy(),
-        )
-
-    @staticmethod
-    def translate(offset: int, i: "Opcode"):
-        match i:
-            case Opcode.IF(t):
-                return Opcode.IF(t + offset)
-            case Opcode.GOTO(t, anywhere=False):
-                return Opcode.GOTO(t + offset)
-            case _:
-                return i
-
-    def define_function(self, name, opcodes):
-        start = len(self.opcodes)
-        self.functions[name] = start
-        for op in opcodes:
-            self.opcodes.append(self.translate(start, op))
-        return name
-
-
-class Opcode:
-    class TRUE(NamedTuple):
-        """() -> (bool)
-        Push the constant TRUE onto the stack.
-        """
-
-    class FALSE(NamedTuple):
-        """() -> (bool)
-        Push the constant FALSE onto the stack.
-        """
-
-    class IF(NamedTuple):
-        """(bool) -> ()
-        Branch to another point if the top item of the stack is TRUE.
-        Otherwise fall through.
-        """
-
-        target: int
-
-    # not, and, or, xor etc. can all be functions given if.
-
-    class DUP(NamedTuple):
-        """(A, B, ...) -> (A, B, ...)
-        Duplicate the top N items of the stack.
-        """
-
-        nargs: int = 1
-
-    class ROT(NamedTuple):
-        """(A, B, ... Z) -> (Z, A, B, ...)
-        Rotate the top N elements of the stack.
-        """
-
-        nargs: int = 2
-
-    class DROP(NamedTuple):
-        """(*) -> ()
-        Drop the top N items of the stack.
-        """
-
-        nargs: int = 1
-
-    class CALL(NamedTuple):
-        """(*) -> ()
-        Branch to `target` pushing the current point onto the call stack.
-        The callee will see a stack containg only the provided `nargs`.
-        A subsequent RETURN will return execution to the next point.
-        """
-
-        funref: str
-
-    class RETURN(NamedTuple):
-        """(*) -> ()
-        Return to the source of the last `CALL`.
-        The returnee will see the top `nargs` values of the present stack appended to theirs.
-        All other values on the stack will be discarded.
-        If the call stack is empty, `RETURN` will exit the interpreter.
-        """
-
-        nargs: int
-
-    class GOTO(NamedTuple):
-        """() -> ()
-        Branch to another point within the same bytecode segment.
-        """
-
-        target: int
-        anywhere: bool = False
-
-    class STRUCT(NamedTuple):
-        """(*) -> (T)
-        Consume the top N items of the stack, producing a struct.
-        """
-
-        nargs: int
-        structref: str
-
-    class FIELD(NamedTuple):
-        """(A) -> (B)
-        Consume the struct reference at the top of the stack, producing the value of the referenced field.
-        """
-
-        fieldref: str
+from .isa import FunctionSignature, Opcode
 
 
 def rotate(l):
     return [l[-1]] + l[:-1]
-
-
-class FunctionSignature(NamedTuple):
-    type_params: list
-    name: str
-    args: list
-    sig: list
-
-    @staticmethod
-    def parse_list(l):
-        return [e for e in l.split(",") if e]
-
-    @classmethod
-    def parse(cls, name: str):
-        vars, name, args, sig = name.split(";")
-        return cls(
-            cls.parse_list(vars),
-            name,
-            cls.parse_list(args),
-            cls.parse_list(sig)
-        )
 
 
 class Stackframe(object):
@@ -176,12 +38,13 @@ class Stackframe(object):
     def pop(self):
         return self.stack.pop(0)
 
-    def call(self, signature, ip):
+    def call(self, signature: FunctionSignature, ip):
+        print(signature)
         nargs = len(signature.args)
         args, self.stack = self.stack[:nargs], self.stack[nargs:]
         return Stackframe(
                 stack=args,
-                name=signature.name,
+                name=signature.raw,
                 ip=ip,
                 parent=self
             )
@@ -199,8 +62,24 @@ class Stackframe(object):
     def rot(self, nargs):
         self.stack = rotate(self.stack[:nargs]) + self.stack[nargs:]
 
+    def __getitem__(self, key):
+        return self.stack.__getitem__(key)
+
+    def __len__(self):
+        return len(self.stack)
+
+
+class InterpreterError(Exception):
+    """An error raised by the interpreter when something goes awry."""
+
+    def __init__(self, module, stack, message=None):
+        self.module = module
+        self.stack = stack
+        super().__init__(message)
+
 
 class Interpreter(object):
+    """A shit simple instruction pointer based interpreter."""
     def __init__(self, bootstrap_module):
         self.bootstrap = bootstrap_module
 
@@ -212,9 +91,13 @@ class Interpreter(object):
         mod.define_function(";<entry>;;", opcodes)
         stack.ip = mod.functions[";<entry>;;"]
 
+        def _error(msg=None):
+            # Note this is pretty expensive because we have to snapshot the stack BEFORE we do anything
+            # And the stack object isn't immutable or otherwise designed for cheap snapshotting
+            raise InterpreterError(mod, deepcopy(stack), msg)
+
         while True:
             op = mod.opcodes[stack.ip]
-            print(stack.ip, op, stack.stack)
             match op:
                 case Opcode.TRUE():
                     stack.push(True)
@@ -223,32 +106,66 @@ class Interpreter(object):
                     stack.push(False)
 
                 case Opcode.IF(target):
-                    if not stack.pop():
+                    if len(stack) < 1:
+                        _error("Stack size violation")
+
+                    val = stack.pop()
+                    if val not in [True, False]:
+                        _error("Type violation")
+
+                    if val is False:
                         stack.ip = target
                         continue
 
                 case Opcode.DUP(n):
+                    if (n > len(stack)):
+                        _error("Stack size violation")
+
                     stack.dup(n)
 
                 case Opcode.ROT(n):
+                    if (n > len(stack)):
+                        _error("Stack size violation")
+
                     stack.rot(n)
 
                 case Opcode.DROP(n):
+                    if (n > len(stack)):
+                        _error("Stack size violation")
+
                     stack.drop(n)
 
                 case Opcode.CALL(dest):
-                    sig = FunctionSignature.parse(dest)
-                    ip = mod.functions[dest]
+                    try:
+                        sig = FunctionSignature.parse(dest)
+                    except:
+                        _error("Invalid target")
+
+                    try:
+                        ip = mod.functions[dest]
+                    except KeyError:
+                        _error("Unknown target")
+
                     stack = stack.call(sig, ip)
                     continue
 
                 case Opcode.RETURN(n):
+                    if (n > len(stack)):
+                        _error("Stack size violation")
+
                     if stack.parent:
+                        sig = FunctionSignature.parse(stack.name)
+                        if (len(sig.ret) != n):
+                            _error("Signature violation")
+
                         stack = stack.ret(n)
                     else:
-                        return stack.stack[:n]
+                        return stack[:n]
 
                 case Opcode.GOTO(n, _):
+                    if (n < 0):
+                        _error("Illegal branch target")
+
                     stack.ip = n
                     continue
 
@@ -256,70 +173,3 @@ class Interpreter(object):
                     raise Exception(f"Unhandled interpreter state {op}")
 
             stack.ip += 1
-
-
-BOOTSTRAP = Module()
-
-NOT = ";/lang/shogoth/v0/bootstrap/not;bool;bool"
-BOOTSTRAP.define_function(
-    NOT,
-    [
-        Opcode.IF(target=3),
-        Opcode.FALSE(),
-        Opcode.RETURN(1),
-        Opcode.TRUE(),
-        Opcode.RETURN(1),
-    ],
-)
-
-OR = ";/lang/shogoth/v0/bootstrap/or;bool,bool;bool"
-BOOTSTRAP.define_function(
-    OR,
-    [
-        Opcode.IF(target=3),
-        Opcode.TRUE(),
-        Opcode.RETURN(1),
-        Opcode.IF(target=6),
-        Opcode.TRUE(),
-        Opcode.RETURN(1),
-        Opcode.FALSE(),
-        Opcode.RETURN(1)
-    ],
-)
-
-AND = ";/lang/shogoth/v0/bootstrap/and;bool,bool;bool"
-BOOTSTRAP.define_function(
-    AND,
-    [
-        Opcode.IF(target=3),
-        Opcode.IF(target=3),
-        Opcode.GOTO(target=5),
-        Opcode.FALSE(),
-        Opcode.RETURN(1),
-        Opcode.TRUE(),
-        Opcode.RETURN(1),
-    ],
-)
-
-XOR = ";/lang/shogoth/v0/bootstrap/xor;bool,bool;bool"
-BOOTSTRAP.define_function(
-    XOR,
-    [
-        Opcode.DUP(nargs=2),
-        # !A && B
-        Opcode.CALL(";/lang/shogoth/v0/bootstrap/not;bool;bool"),
-        Opcode.CALL(";/lang/shogoth/v0/bootstrap/and;bool,bool;bool"),
-        Opcode.IF(target=6),
-        Opcode.TRUE(),
-        Opcode.RETURN(1),
-        # !B && A
-        Opcode.ROT(2),
-        Opcode.CALL(";/lang/shogoth/v0/bootstrap/not;bool;bool"),
-        Opcode.CALL(";/lang/shogoth/v0/bootstrap/and;bool,bool;bool"),
-        Opcode.IF(target=12),
-        Opcode.TRUE(),
-        Opcode.RETURN(1),
-        Opcode.FALSE(),
-        Opcode.RETURN(1),
-    ],
-)

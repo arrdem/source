@@ -40,8 +40,8 @@ bazel_skylib_workspace()
 git_repository(
     name = "rules_python",
     remote = "https://github.com/bazelbuild/rules_python.git",
-    tag = "0.4.0",
-    # commit = "...",
+    # tag = "0.4.0",
+    commit = "888fa20176cdcaebb33f968dc7a8112fb678731d",
 )
 
 register_toolchains("//tools/python:python3_toolchain")
@@ -53,7 +53,7 @@ load("@rules_python//python:pip.bzl", "pip_parse")
 pip_parse(
     name = "arrdem_source_pypi",
     requirements_lock = "//tools/python:requirements.txt",
-    python_interpreter = "/usr/bin/python3.9",
+    python_interpreter = "/usr/bin/python3.10"
 )
 
 # Load the starlark macro which will define your dependencies.
