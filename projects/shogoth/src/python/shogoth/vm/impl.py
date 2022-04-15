@@ -83,10 +83,10 @@ class Interpreter(object):
     def __init__(self, bootstrap_module):
         self.bootstrap = bootstrap_module
 
-    def run(self, opcodes):
+    def run(self, opcodes, stack=[]):
         """Directly interpret some opcodes in the configured environment."""
 
-        stack = Stackframe()
+        stack = Stackframe(stack=stack)
         mod = self.bootstrap.copy()
         mod.define_function(";<entry>;;", opcodes)
         stack.ip = mod.functions[";<entry>;;"]

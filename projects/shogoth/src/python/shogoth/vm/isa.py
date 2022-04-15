@@ -3,6 +3,8 @@
 
 from typing import NamedTuple
 
+from shogoth.types import Function, FunctionSignature
+
 
 class Opcode:
     class TRUE(NamedTuple):
@@ -51,6 +53,8 @@ class Opcode:
         Branch to `target` pushing the current point onto the call stack.
         The callee will see a stack containg only the provided `nargs`.
         A subsequent RETURN will return execution to the next point.
+
+        Executing a `CALL` pushes the name and module path of the current function.
         """
 
         funref: str
@@ -60,6 +64,9 @@ class Opcode:
         Return to the source of the last `CALL`.
         The returnee will see the top `nargs` values of the present stack appended to theirs.
         All other values on the stack will be discarded.
+
+        Executing a `RETURN` pops (restores) the name and module path of the current function back to that of the caller.
+
         If the call stack is empty, `RETURN` will exit the interpreter.
         """
 
@@ -68,6 +75,8 @@ class Opcode:
     class GOTO(NamedTuple):
         """() -> ()
         Branch to another point within the same bytecode segment.
+        The target MUST be within the same module range as the current function.
+        Branching does NOT update the name or module of the current function.
         """
 
         target: int
@@ -75,11 +84,13 @@ class Opcode:
 
     class STRUCT(NamedTuple):
         """(*) -> (T)
-        Consume the top N items of the stack, producing a struct.
+        Consume the top N items of the stack, producing a struct of the type `structref`.
+
+        The name and module path of the current function MUST match the name and module path of `structref`.
         """
 
-        nargs: int
         structref: str
+        nargs: int
 
     class FIELD(NamedTuple):
         """(A) -> (B)
@@ -87,29 +98,6 @@ class Opcode:
         """
 
         fieldref: str
-
-
-class FunctionSignature(NamedTuple):
-    raw: str
-    type_params: list
-    name: str
-    args: list
-    ret: list
-
-    @staticmethod
-    def parse_list(l):
-        return [e for e in l.split(",") if e]
-
-    @classmethod
-    def parse(cls, raw: str):
-        vars, name, args, ret = raw.split(";")
-        return cls(
-            raw,
-            cls.parse_list(vars),
-            name,
-            cls.parse_list(args),
-            cls.parse_list(ret)
-        )
 
 
 class Module(NamedTuple):

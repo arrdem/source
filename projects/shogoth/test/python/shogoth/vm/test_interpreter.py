@@ -5,10 +5,7 @@ Tests coverign the VM interpreter
 import pytest
 from shogoth.vm import *
 
-
-@pytest.fixture
-def vm():
-    return Interpreter(BOOTSTRAP)
+from .fixtures import * # noqa
 
 
 def test_true(vm):
@@ -65,110 +62,6 @@ def test_drop(vm):
         Opcode.DROP(1),
         Opcode.RETURN(1)
     ]) == [True]
-
-
-def test_not(vm):
-    assert vm.run([
-        Opcode.TRUE(),
-        Opcode.CALL(NOT),
-        Opcode.RETURN(1)
-    ]) == [False]
-
-    assert vm.run([
-        Opcode.FALSE(),
-        Opcode.CALL(NOT),
-        Opcode.RETURN(1)
-    ]) == [True]
-
-
-def test_or(vm):
-    assert vm.run([
-        Opcode.FALSE(),
-        Opcode.FALSE(),
-        Opcode.CALL(OR),
-        Opcode.RETURN(1)
-    ]) == [False]
-
-    assert vm.run([
-        Opcode.TRUE(),
-        Opcode.FALSE(),
-        Opcode.CALL(OR),
-        Opcode.RETURN(1)
-    ]) == [True]
-
-    assert vm.run([
-        Opcode.FALSE(),
-        Opcode.TRUE(),
-        Opcode.CALL(OR),
-        Opcode.RETURN(1)
-    ]) == [True]
-
-    assert vm.run([
-        Opcode.TRUE(),
-        Opcode.TRUE(),
-        Opcode.CALL(OR),
-        Opcode.RETURN(1)
-    ]) == [True]
-
-
-def test_and(vm):
-    assert vm.run([
-        Opcode.FALSE(),
-        Opcode.FALSE(),
-        Opcode.CALL(AND),
-        Opcode.RETURN(1)
-    ]) == [False]
-
-    assert vm.run([
-        Opcode.TRUE(),
-        Opcode.FALSE(),
-        Opcode.CALL(AND),
-        Opcode.RETURN(1)
-    ]) == [False]
-
-    assert vm.run([
-        Opcode.FALSE(),
-        Opcode.TRUE(),
-        Opcode.CALL(AND),
-        Opcode.RETURN(1)
-    ]) == [False]
-
-    assert vm.run([
-        Opcode.TRUE(),
-        Opcode.TRUE(),
-        Opcode.CALL(AND),
-        Opcode.RETURN(1)
-    ]) == [True]
-
-
-def test_xor(vm):
-    assert vm.run([
-        Opcode.FALSE(),
-        Opcode.FALSE(),
-        Opcode.CALL(XOR),
-        Opcode.RETURN(1)
-    ]) == [False]
-
-    assert vm.run([
-        Opcode.TRUE(),
-        Opcode.FALSE(),
-        Opcode.CALL(XOR),
-        Opcode.RETURN(1)
-    ]) == [True]
-
-    assert vm.run([
-        Opcode.FALSE(),
-        Opcode.TRUE(),
-        Opcode.CALL(XOR),
-        Opcode.RETURN(1)
-    ]) == [True]
-
-    assert vm.run([
-        Opcode.TRUE(),
-        Opcode.TRUE(),
-        Opcode.CALL(XOR),
-        Opcode.RETURN(1)
-    ]) == [False]
 
 
 def test_dup_too_many(vm):
