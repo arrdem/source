@@ -18,7 +18,7 @@ context (a virtual machine) which DOES have an easily introspected and serialize
 
 from copy import deepcopy
 
-from .isa import FunctionSignature, Opcode
+from .isa import FunctionRef, Opcode
 
 
 def rotate(l):
@@ -38,7 +38,7 @@ class Stackframe(object):
     def pop(self):
         return self.stack.pop(0)
 
-    def call(self, signature: FunctionSignature, ip):
+    def call(self, signature: FunctionRef, ip):
         print(signature)
         nargs = len(signature.args)
         args, self.stack = self.stack[:nargs], self.stack[nargs:]
@@ -135,9 +135,9 @@ class Interpreter(object):
 
                     stack.drop(n)
 
-                case Opcode.CALL(dest):
+                case Opcode.CALLS(dest):
                     try:
-                        sig = FunctionSignature.parse(dest)
+                        sig = FunctionRef.parse(dest)
                     except:
                         _error("Invalid target")
 
@@ -154,7 +154,7 @@ class Interpreter(object):
                         _error("Stack size violation")
 
                     if stack.parent:
-                        sig = FunctionSignature.parse(stack.name)
+                        sig = FunctionRef.parse(stack.name)
                         if (len(sig.ret) != n):
                             _error("Signature violation")
 
@@ -167,6 +167,30 @@ class Interpreter(object):
                         _error("Illegal branch target")
 
                     stack.ip = n
+                    continue
+
+                case Opcode.FUNREF(funref):
+                    try:
+                        # FIXME: Verify this statically
+                        stack.push(FunctionRef.parse(funref))
+                    except:
+                        _error("Invalid function ref")
+
+                case Opcode.CALLF(n):
+                    sig = stack.pop()
+                    if not isinstance(sig, FunctionRef):
+                        _error("CALLF requires a funref at top of stack")
+                    if not n == len(sig.args):
+                        _error("CALLF target violation; not enough arguments provided")
+                    if n > len(stack):
+                        _error("Stack size violation")
+
+                    try:
+                        ip = mod.functions[sig.raw]
+                    except KeyError:
+                        _error("Unknown target")
+
+                    stack = stack.call(sig, ip)
                     continue
 
                 case _:

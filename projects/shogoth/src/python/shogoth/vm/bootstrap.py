@@ -5,7 +5,7 @@ Hopefully no "real" interpreter ever uses this code, since it's obviously replac
 """
 
 from .isa import Module, Opcode
-
+from shogoth.types import *
 
 BOOTSTRAP = Module()
 
@@ -52,19 +52,32 @@ XOR = BOOTSTRAP.define_function(
     [
         Opcode.DUP(nargs=2),
         # !A && B
-        Opcode.CALL(NOT),
-        Opcode.CALL(AND),
+        Opcode.CALLS(NOT),
+        Opcode.CALLS(AND),
         Opcode.IF(target=6),
         Opcode.TRUE(),
         Opcode.RETURN(1),
         # !B && A
         Opcode.ROT(2),
-        Opcode.CALL(NOT),
-        Opcode.CALL(AND),
+        Opcode.CALLS(NOT),
+        Opcode.CALLS(AND),
         Opcode.IF(target=12),
         Opcode.TRUE(),
         Opcode.RETURN(1),
         Opcode.FALSE(),
+
         Opcode.RETURN(1),
     ],
+)
+
+TRUE = BOOTSTRAP.define_type(
+    "true", ProductExpr([]),
+)
+
+FALSE = BOOTSTRAP.define_type(
+    "false", ProductExpr([]),
+)
+
+BOOL = BOOTSTRAP.define_type(
+    "bool", SumExpr([TRUE, FALSE])
 )

@@ -11,7 +11,7 @@ from .fixtures import * # noqa
     [[True], [False]],
 ])
 def test_not(vm, stack, ret):
-    assert vm.run([Opcode.CALL(NOT)], stack = stack) == ret
+    assert vm.run([Opcode.CALLS(NOT)], stack = stack) == ret
 
 
 @pytest.mark.parametrize('stack,ret', [
@@ -21,7 +21,7 @@ def test_not(vm, stack, ret):
     [[True, True], [True]],
 ])
 def test_or(vm, stack, ret):
-    assert vm.run([Opcode.CALL(OR)], stack = stack) == ret
+    assert vm.run([Opcode.CALLS(OR)], stack = stack) == ret
 
 
 @pytest.mark.parametrize('stack,ret', [
@@ -31,7 +31,7 @@ def test_or(vm, stack, ret):
     [[True, True], [True]],
 ])
 def test_and(vm, stack, ret):
-    assert vm.run([Opcode.CALL(AND)], stack = stack) == ret
+    assert vm.run([Opcode.CALLS(AND)], stack = stack) == ret
 
 
 @pytest.mark.parametrize('stack,ret', [
@@ -41,4 +41,18 @@ def test_and(vm, stack, ret):
     [[True, True], [False]],
 ])
 def test_xor(vm, stack, ret):
-    assert vm.run([Opcode.CALL(XOR)], stack = stack) == ret
+    assert vm.run([Opcode.CALLS(XOR)], stack = stack) == ret
+
+
+@pytest.mark.parametrize('stack,ret', [
+    [[], [FunctionRef.parse(NOT)]]
+])
+def test_funref(vm, stack, ret):
+    assert vm.run([Opcode.FUNREF(NOT), Opcode.RETURN(1)], stack = stack) == ret
+
+
+@pytest.mark.parametrize('stack,ret', [
+    [[], [True]]
+])
+def test_callf(vm, stack, ret):
+    assert vm.run([Opcode.FALSE(), Opcode.FUNREF(NOT), Opcode.CALLF(1)], stack = stack) == ret
