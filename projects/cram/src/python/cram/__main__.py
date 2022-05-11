@@ -1,4 +1,4 @@
- """Cram's entry point."""
+"""Cram's entry point."""
 
 from itertools import chain
 import logging
