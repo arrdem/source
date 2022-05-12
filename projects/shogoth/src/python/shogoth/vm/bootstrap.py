@@ -71,13 +71,16 @@ XOR = BOOTSTRAP.define_function(
 )
 
 TRUE = BOOTSTRAP.define_type(
-    "true", ProductExpr([]),
+    "/lang/shogoth/v0/true",
+    ProductExpr([]),
 )
 
 FALSE = BOOTSTRAP.define_type(
-    "false", ProductExpr([]),
+    "/lang/shogoth/v0/false",
+    ProductExpr([]),
 )
 
 BOOL = BOOTSTRAP.define_type(
-    "bool", SumExpr([TRUE, FALSE])
+    "/lang/shogoth/v0/bool",
+    SumExpr([TRUE, FALSE])
 )

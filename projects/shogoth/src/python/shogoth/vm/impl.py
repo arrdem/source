@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.10
+#!/usr/bin/env python3
 
 """The Shogoth VM implementation.
 
@@ -15,6 +15,10 @@ context (a virtual machine) which DOES have an easily introspected and serialize
 - RETURN [n, ...]
 
 """
+
+
+import sys
+assert sys.version_info > (3, 10, 0), "`match` support is required"
 
 from copy import deepcopy
 

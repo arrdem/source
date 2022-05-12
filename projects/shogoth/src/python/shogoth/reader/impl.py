@@ -1,5 +1,9 @@
+#!/usr/bin/env python3
+
 """The shogoth reader."""
 
+import sys
+assert sys.version_info > (3, 10, 0), "`match` support is required"
 
 import re
 from typing import Any
@@ -50,6 +54,9 @@ class Reader(object):
             return (self._read(k), self._read(v))
 
           case Tree(Token("RULE", "atom"), [a]):
+            return self._read(a)
+
+          case Tree(Token("RULE", "num"), [a]):
             return self._read(a)
 
           case Token("INT", x):
