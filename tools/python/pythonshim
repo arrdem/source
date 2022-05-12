@@ -1,0 +1,21 @@
+#!/bin/sh
+
+# Bazel STRONGLY disapproves of linking dynamically to a Python interpreter.
+# But ... that's exactly what we want to do.
+# So this script exists to find a 'compliant' Python install and use that.
+
+PYTHONREV="3.10"
+CMD="python${PYTHONREV}"
+
+if [ -x "$(command -v "$CMD")" ]; then
+    exec "$(which "$CMD")" "$@"
+else
+    case "$(uname)" in
+        Darwin)
+            # FIXME: What if it isn't there?
+            exec /opt/homebrew/bin/"$CMD" "$@"
+            ;;
+    esac
+    echo "Error: Unable to find a viable Python executable" >&2
+    exit 1
+fi

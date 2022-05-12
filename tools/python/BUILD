@@ -12,12 +12,13 @@ exports_files([
     "defs.bzl",
     "bzl_pytest_shim.py",
     "bzl_unittest_shim.py",
+    "pythonshim",
 ])
 
 py_runtime(
     name = "python3_runtime",
     files = [],
-    interpreter_path = "/usr/bin/python3.10",
+    interpreter = ":pythonshim",
     python_version = "PY3",
     visibility = ["//visibility:public"],
 )

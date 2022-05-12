@@ -53,7 +53,7 @@ load("@rules_python//python:pip.bzl", "pip_parse")
 pip_parse(
     name = "arrdem_source_pypi",
     requirements_lock = "//tools/python:requirements.txt",
-    python_interpreter = "/usr/bin/python3.10"
+    python_interpreter_target = "//tools/python:pythonshim",
 )
 
 # Load the starlark macro which will define your dependencies.
@@ -62,13 +62,14 @@ load("@arrdem_source_pypi//:requirements.bzl", "install_deps")
 # Call it to define repos for your requirements.
 install_deps()
 
-# git_repository(
-#     name = "rules_zapp",
-#     remote = "https://github.com/arrdem/rules_zapp.git",
-#     tag = "0.1.2",
-# )
-
-local_repository(
+git_repository(
     name = "rules_zapp",
-    path = "/home/arrdem/doc/hobby/programming/lang/python/rules_zapp",
+    remote = "https://github.com/arrdem/rules_zapp.git",
+    commit = "d7a0382927fb8a68115b560f4fee7dca743068f8",
+    # tag = "0.1.2",
 )
+
+# local_repository(
+#     name = "rules_zapp",
+#     path = "/home/arrdem/doc/hobby/programming/lang/python/rules_zapp",
+# )
