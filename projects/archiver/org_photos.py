@@ -24,6 +24,7 @@ import re
 from shutil import copy2 as copyfile
 import sys
 import typing as t
+import stat
 
 from .util import *
 
@@ -152,6 +153,11 @@ def date_from_name(fname: str):
         # 2017-11-05 15:15:55
         lambda d: safe_strptime(d, "%Y-%m-%d %H:%M:%S"),
         lambda d: safe_strptime(d, "%Y%m%d %h%m%s%f"),
+        # From the dashcam(s)
+        # 20220427_211616_00023F
+        # 20220510_213347_04187R
+        lambda d: safe_strptime(d, "%Y%m%d %h%m%s %fF"),
+        lambda d: safe_strptime(d, "%Y%m%d %h%m%s %fR"),
         # HACK:
         #   Python doesn't support %s as milliseconds; these don't quite work.
         #   So use a custom matcher.
@@ -342,8 +348,24 @@ def img_info(p: Path) -> ImgInfo:
     )
 
 
+def is_readonly(src: Path) -> bool:
+    statinfo = os.stat(src, dir_fd=None, follow_symlinks=True)
+    if statinfo.st_flags & stat.UF_IMMUTABLE:
+        return True
+
+    return False
+
+
 def main():
     opts, args = parser.parse_known_args()
+
+    def _delete(src):
+        if opts.destructive:
+            if is_readonly(src):
+                print(f"  warning: {src} is read-only, unable to remove")
+            else:
+                src.unlink()
+                print("  unlink: ok")
 
     def _copy(src, target):
         print(f"  rename: {target}")
@@ -357,9 +379,7 @@ def main():
             with yaspin(SPINNER):
                 copyfile(src, target)
 
-                if opts.destructive:
-                    src.unlink()
-                    print("  unlink: ok")
+                _delete(src)
 
     print("---")
 
@@ -372,6 +392,9 @@ def main():
         print(f"  msg: ext inferred as {ext}")
 
         if src.is_dir():
+            continue
+
+        elif src.name.lower().startswith("."):
             continue
 
         elif ext in ["thm", "lrv", "ico", "sav"] or src.name.startswith("._"):
@@ -415,7 +438,10 @@ def main():
                 print(f"  ok: {target}")
                 # src != target && id(src) == id(target); delete src
                 if opts.destructive:
-                    src.unlink()
+                    if is_readonly(src):
+                        print(f"  warning: {src} is read-only, unable to remove")
+                    else:
+                        src.unlink()
 
             else:
                 # src != target && id(src) != id(target); replace target with src?
