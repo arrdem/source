@@ -127,7 +127,7 @@ class Opcode:
         """
 
     class CALLC(NamedTuple):
-        """(`CLOSURE<... A, ... B>`, ... A) -> (... B)
+        """(`CLOSURE<... A to ... B>`, ... A) -> (... B)
         Call [closure]
 
         Make a dynamic call to the closure at the top of stack.
@@ -139,32 +139,32 @@ class Opcode:
 
         nargs: int = 0
 
-    # ####################################################################################################
-    # # Structures
-    # ####################################################################################################
-    # class STRUCT(NamedTuple):
-    #     """(*) -> (T)
-    #     Consume the top N items of the stack, producing a struct of the type `structref`.
-    #
-    #     The name and module path of the current function MUST match the name and module path of `structref`.
-    #     """
-    #
-    #     structref: str
-    #     nargs: int
+    ####################################################################################################
+    # Structures
+    ####################################################################################################
+    class STRUCT(NamedTuple):
+        """(*) -> (T)
+        Consume the top N items of the stack, producing a struct of the type `structref`.
 
-    # class FLOAD(NamedTuple):
-    #     """(A) -> (B)
-    #     Consume the struct reference at the top of the stack, producing the value of the referenced field.
-    #     """
-    #
-    #     fieldref: str
+        The name and module path of the current function MUST match the name and module path of `structref`.
+        """
 
-    # class FSTORE(NamedTuple):
-    #     """(A) -> (B)
-    #     Consume the struct reference at the top of the stack, producing the value of the referenced field.
-    #     """
-    #
-    #     fieldref: str
+        structref: str
+        nargs: int
+
+    class FLOAD(NamedTuple):
+        """(A) -> (B)
+        Consume the struct reference at the top of the stack, producing the value of the referenced field.
+        """
+
+        fieldref: str
+
+    class FSTORE(NamedTuple):
+        """(A) -> (B)
+        Consume the struct reference at the top of the stack, producing the value of the referenced field.
+        """
+
+        fieldref: str
 
     ####################################################################################################
     # Arrays

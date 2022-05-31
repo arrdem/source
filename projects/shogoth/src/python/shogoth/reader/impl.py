@@ -10,7 +10,7 @@ from typing import Any
 
 from lark import Token, Tree
 from shogoth.parser import parse
-from shogoth.types import Keyword, Symbol
+from shogoth.types import Keyword, Symbol, List, Vec
 
 
 # Monkeypatching for py3.10 matching
@@ -42,10 +42,10 @@ class Reader(object):
             return self._read(children[0])
 
           case Tree(Token("RULE", "plist"), children):
-            return [self._read(c) for c in children]
+            return List([self._read(c) for c in children])
 
           case Tree(Token("RULE", "blist"), children):
-            return [self._read(c) for c in children]
+            return Vec([self._read(c) for c in children])
 
           case Tree(Token("RULE", "mapping"), children):
             return dict(self._read(c) for c in children)

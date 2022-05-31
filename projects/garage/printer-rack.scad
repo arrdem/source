@@ -1,14 +1,16 @@
 use <box.scad>
 use <casters.scad>
 
-padding = 1.5;
+function mm2in(x) = x * 0.0393701;
+
 mdf_thickness = 0.75;
+padding = mdf_thickness;
 pin_inset = 3;
 
 function padded(dims, padding) = [for(e=dims) e+padding];
 
 // dimensions for things
-prusa = padded([31.5, 31.5, 35.5], padding);
+prusa = padded([mm2in(180 * 2 + 504), mm2in(115 + 660), mm2in(910)], padding);
 cr10 = padded([19, 27, 25], padding);
 repbox = padded([19, 12.5, 12.5], padding);
 cart = [prusa.x, prusa.y, 6.75 + mdf_thickness];
@@ -35,14 +37,15 @@ module printer_rack() {
     translate([0, 0, 0])
     cart();
        
-    //translate([0, 0, cart.z])
-    //box(prusa, mdf_thickness);
-
     translate([0, 0, cart.z])
+    box(prusa, mdf_thickness);
+
+    translate([0, 0, cart.z + prusa.z])
     box([prusa.x, prusa.y, repbox.z], mdf_thickness);
 
-    translate([0, 0, cart.z + repbox.z + mdf_thickness * 2])
+    translate([0, 0, cart.z + prusa.z + repbox.z + mdf_thickness * 2])
     box([prusa.x, prusa.y, cr10.z], mdf_thickness);
 }
 
 printer_rack();
+echo(prusa);

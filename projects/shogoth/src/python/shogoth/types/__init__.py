@@ -4,37 +4,37 @@ from .keyword import Keyword
 from .symbol import Symbol
 
 from abc import ABC
-from typing import NamedTuple, List, Mapping, Any
+import typing as t
 
 from uuid import UUID, uuid4
 
 
-class TypeVariable(NamedTuple):
+class TypeVariable(t.NamedTuple):
     name: str
     id: UUID = uuid4()
 
 
-class ArrayExpr(NamedTuple):
-    child: Any
+class ArrayExpr(t.NamedTuple):
+    child: t.Any
 
 
-class SumExpr(NamedTuple):
-    children: List[Any]
+class SumExpr(t.NamedTuple):
+    children: t.List[t.Any]
 
 
-class ProductExpr(NamedTuple):
-    children: Mapping[str, Any]
+class ProductExpr(t.NamedTuple):
+    children: t.Mapping[str, t.Any]
 
 
 ####################################################################################################
 ####################################################################################################
 ####################################################################################################
 
-class Function(NamedTuple):
+class Function(t.NamedTuple):
     """The type of a function; a subset of its signature."""
 
 
-class FunctionRef(NamedTuple):
+class FunctionRef(t.NamedTuple):
     raw: str
     type_params: list
     name: str
@@ -55,3 +55,18 @@ class FunctionRef(NamedTuple):
             cls.parse_list(args),
             cls.parse_list(ret)
         )
+
+
+class Closure(t.NamedTuple):
+    target: t.Union["Closure", FunctionRef]
+    args: t.List[t.Any]
+
+
+# FIXME (arrdem 2022-05-30):
+#   Find a better name for this
+class Vec(list):
+    pass
+
+
+class List(list):
+    pass

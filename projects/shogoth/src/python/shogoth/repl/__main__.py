@@ -1,7 +1,8 @@
 """A testing REPL."""
 
-
 from shogoth.reader import Reader
+from shogoth.types import Symbol
+from shogoth.analyzer import Analyzer, SPECIALS, GLOBALS, Namespace
 
 from prompt_toolkit import (
     print_formatted_text,
@@ -24,12 +25,16 @@ STYLE = Style.from_dict(
     }
 )
 
-SPINNER = Spinner(["|", "/", "-", "\\"], 200)
+SPINNER = Spinner("|/-\\", 200)
 
 
 def main():
     reader = Reader()
+    analyzer = Analyzer(SPECIALS, GLOBALS)
+    ns = Namespace(Symbol("user"), {})
+
     session = PromptSession(history=FileHistory(".shogoth.history"))
+
     while True:
         try:
             line = session.prompt([("class:prompt", ">>> ")], style=STYLE)
@@ -40,8 +45,11 @@ def main():
 
         with yaspin(SPINNER):
             read = reader.read(line)
-
         print(read, type(read))
+
+        with yaspin(SPINNER):
+            expr = analyzer.analyze(ns, read)
+        print('analyze ]', expr, type(expr))
 
 
 if __name__ == "__main__":

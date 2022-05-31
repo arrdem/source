@@ -2,6 +2,8 @@ use <steel-shelving.scad>
 use <Z4M.scad>
 use <tire-loft.scad>
 use <printer-rack.scad>
+use <worktop.scad>
+use <worktop2.scad>
 
 // Note 16" stud spacing
 // Note 2.5" downgrade over run of garage; height to minimums
@@ -136,9 +138,8 @@ translate([4, 232 - 37 - 1 - toolchest_size, 0]) {
 
 //// worktop
 let(tops=2)
-translate([24 + 1, 232 - 1 - 37 - 1 - toolchest_size - 1- (48 * tops), 0]) {
-    rotate([0, 0, 90])
-    shelving(48 * tops, 24, 32, shelves=3);
+translate([4, 232 - 1 - 37 - 1 - toolchest_size - 1- (48 * tops), 0]) {
+    worktop2();
     label("Worktop", pos=[-12, (48*tops)/2, 32]);
 }
 

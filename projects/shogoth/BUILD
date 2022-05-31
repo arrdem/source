@@ -7,5 +7,6 @@ py_project(
     ],
     lib_deps = [
         py_requirement("lark"),
+        py_requirement("flask"),
     ],
 )
