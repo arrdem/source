@@ -22,9 +22,9 @@ from hashlib import sha256, sha512
 from pathlib import Path
 import re
 from shutil import copy2 as copyfile
+import stat
 import sys
 import typing as t
-import stat
 
 from .util import *
 

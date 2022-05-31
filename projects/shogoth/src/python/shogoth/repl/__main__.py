@@ -1,18 +1,16 @@
 """A testing REPL."""
 
-from shogoth.reader import Reader
-from shogoth.types import Symbol
-from shogoth.analyzer import Analyzer, SPECIALS, GLOBALS, Namespace
-
-from prompt_toolkit import (
-    print_formatted_text,
-    PromptSession,
-)
-from prompt_toolkit.formatted_text import (
-    FormattedText,
-)
+from prompt_toolkit import PromptSession
 from prompt_toolkit.history import FileHistory
 from prompt_toolkit.styles import Style
+from shogoth.analyzer import (
+    Analyzer,
+    GLOBALS,
+    Namespace,
+    SPECIALS,
+)
+from shogoth.reader import Reader
+from shogoth.types import Symbol
 from yaspin import Spinner, yaspin
 
 
@@ -49,7 +47,7 @@ def main():
 
         with yaspin(SPINNER):
             expr = analyzer.analyze(ns, read)
-        print('analyze ]', expr, type(expr))
+        print("analyze ]", expr, type(expr))
 
 
 if __name__ == "__main__":

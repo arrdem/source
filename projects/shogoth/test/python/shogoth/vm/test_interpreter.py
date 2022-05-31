@@ -2,10 +2,10 @@
 Tests coverign the VM interpreter
 """
 
+from .fixtures import *  # noqa
+
 import pytest
 from shogoth.vm import *
-
-from .fixtures import * # noqa
 
 
 def test_true(vm):

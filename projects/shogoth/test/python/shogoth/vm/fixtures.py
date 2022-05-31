@@ -3,7 +3,6 @@
 import pytest
 from shogoth.vm import *
 
-import pytest
 
 @pytest.fixture
 def vm():

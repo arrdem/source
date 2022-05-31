@@ -3,7 +3,7 @@
 
 from typing import NamedTuple
 
-from shogoth.types import Function, FunctionRef
+from shogoth.types import FunctionRef
 
 
 class Opcode:

@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
 
+import pytest
 from shogoth.parser import parse
 
-import pytest
 
-
-@pytest.mark.parametrize('example', [
+@pytest.mark.parametrize("example", [
     "true",
     "false",
     "nil",
     "foo",
     '"this is a trivial string"',
-    r'/this is a trivial pattern/',
+    r"/this is a trivial pattern/",
     "[]",
     "[[]]",
     "[[[]]]",

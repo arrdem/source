@@ -2,4 +2,3 @@
 
 """A syntax analyzer for Shogoth."""
 
-from .impl import *

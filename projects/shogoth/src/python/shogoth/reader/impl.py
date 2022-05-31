@@ -3,6 +3,8 @@
 """The shogoth reader."""
 
 import sys
+
+
 assert sys.version_info > (3, 10, 0), "`match` support is required"
 
 import re
@@ -10,7 +12,12 @@ from typing import Any
 
 from lark import Token, Tree
 from shogoth.parser import parse
-from shogoth.types import Keyword, Symbol, List, Vec
+from shogoth.types import (
+    Keyword,
+    List,
+    Symbol,
+    Vec,
+)
 
 
 # Monkeypatching for py3.10 matching
