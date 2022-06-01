@@ -84,3 +84,22 @@ def test_callc(vm, stack, ret):
         Opcode.CALLC(1),
         Opcode.RETURN(1),
     ], stack = stack) == ret
+
+
+@pytest.mark.parametrize("stack,ret", [
+    [[False, False, False], [False]],
+    [[True,  False, False], [True]],
+    [[False, True,  False], [True]],
+    [[True,  True,  False], [True]],
+    [[True,  True,  True],  [False]],
+    [[False, True,  True],  [True]],
+    [[False, False, True],  [True]],
+])
+def test_closurec(vm, stack, ret):
+    assert vm.run([
+        Opcode.FUNREF(XOR3),
+        Opcode.CLOSUREF(1),
+        Opcode.CLOSUREC(1),
+        Opcode.CALLC(1),
+        Opcode.RETURN(1),
+    ], stack = stack) == ret

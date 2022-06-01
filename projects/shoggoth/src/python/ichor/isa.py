@@ -129,6 +129,7 @@ class Opcode:
         Further close over the closure at the top of the stack.
         This may produce nullary closures.
         """
+        nargs: int = 0
 
     class CALLC(t.NamedTuple):
         """(`CLOSURE<... A to ... B>`, ... A) -> (... B)

@@ -11,11 +11,12 @@ context (a virtual machine) which DOES have an easily introspected and serialize
 
 import sys
 
+
 assert sys.version_info > (3, 10, 0), "`match` support is required"
 
 from copy import deepcopy
 
-from .isa import FunctionRef, Opcode, Closure
+from .isa import Closure, FunctionRef, Opcode
 
 
 def rotate(l):
@@ -87,8 +88,9 @@ class Interpreter(object):
 
         stack = Stackframe(stack=stack)
         mod = self.bootstrap.copy()
-        mod.define_function(";<entry>;;", opcodes)
-        stack.ip = mod.functions[";<entry>;;"]
+        stack.ip = mod.functions[mod.define_function(";<main>;;", opcodes)]
+
+        print(mod)
 
         def _error(msg=None):
             # Note this is pretty expensive because we have to snapshot the stack BEFORE we do anything
@@ -207,6 +209,22 @@ class Interpreter(object):
                     c = Closure(
                         sig,
                         stack.stack[:n]
+                    )
+                    stack.drop(n)
+                    stack.push(c)
+
+                case Opcode.CLOSUREC(n):
+                    c = stack.pop()
+                    if not isinstance(c, Closure):
+                        _error("CLOSUREC requires a closure at top of stack")
+                    if n + len(c.frag) > len(c.funref.args):
+                        _error("CLOSUREC target violation; too many parameters provided")
+                    if n > len(stack):
+                        _error("Stack size violation")
+
+                    c = Closure(
+                        c.funref,
+                        stack.stack[:n] + c.frag
                     )
                     stack.drop(n)
                     stack.push(c)

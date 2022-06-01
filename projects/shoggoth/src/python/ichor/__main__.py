@@ -11,12 +11,13 @@ def main():
     vm = Interpreter(BOOTSTRAP)
     ret = vm.run(
         [
-            Opcode.FUNREF(XOR2),
+            Opcode.FUNREF(XOR3),
             Opcode.CLOSUREF(1),
+            Opcode.CLOSUREC(1),
             Opcode.CALLC(1),
             Opcode.RETURN(1),
         ],
-        stack = [True, False]
+        stack = [True, True, False]
     )
     print(ret)
 
