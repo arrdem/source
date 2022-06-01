@@ -75,3 +75,8 @@ class FunctionSignature(t.NamedTuple):
             cls.parse_list(args),
             cls.parse_list(ret)
         )
+
+
+class Closure(t.NamedTuple):
+    funref: FunctionRef
+    frag: t.List[t.Any]

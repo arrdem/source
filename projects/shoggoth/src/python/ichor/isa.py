@@ -1,26 +1,26 @@
 """The instruction set for Shogoth."""
 
 
-from typing import NamedTuple
+import typing as t
 
-from .typing import FunctionRef
+from .typing import *
 
 
 class Opcode:
     ####################################################################################################
     # Logic
     ####################################################################################################
-    class TRUE(NamedTuple):
+    class TRUE(t.NamedTuple):
         """() -> (bool)
         Push the constant TRUE onto the stack.
         """
 
-    class FALSE(NamedTuple):
+    class FALSE(t.NamedTuple):
         """() -> (bool)
         Push the constant FALSE onto the stack.
         """
 
-    class IF(NamedTuple):
+    class IF(t.NamedTuple):
         """(bool) -> ()
         Branch to another point if the top item of the stack is TRUE.
         Otherwise fall through.
@@ -33,21 +33,21 @@ class Opcode:
     ####################################################################################################
     # Stack manipulation
     ####################################################################################################
-    class DUP(NamedTuple):
+    class DUP(t.NamedTuple):
         """(A, B, ...) -> (A, B, ...)
         Duplicate the top N items of the stack.
         """
 
         nargs: int = 1
 
-    class ROT(NamedTuple):
+    class ROT(t.NamedTuple):
         """(A, B, ... Z) -> (Z, A, B, ...)
         Rotate the top N elements of the stack.
         """
 
         nargs: int = 2
 
-    class DROP(NamedTuple):
+    class DROP(t.NamedTuple):
         """(*) -> ()
         Drop the top N items of the stack.
         """
@@ -57,7 +57,7 @@ class Opcode:
     ####################################################################################################
     # Functional abstraction
     ####################################################################################################
-    class CALLS(NamedTuple):
+    class CALLS(t.NamedTuple):
         """(... A) -> (... B)
         Call [static]
 
@@ -74,7 +74,7 @@ class Opcode:
 
         funref: str
 
-    class RETURN(NamedTuple):
+    class RETURN(t.NamedTuple):
         """(... A) -> ()
         Return to the source of the last `CALL`.
         The returnee will see the top `nargs` values of the present stack appended to theirs.
@@ -87,7 +87,7 @@ class Opcode:
 
         nargs: int
 
-    class GOTO(NamedTuple):
+    class GOTO(t.NamedTuple):
         """() -> ()
         Branch to another point within the same bytecode segment.
         The target MUST be within the same module range as the current function.
@@ -97,14 +97,14 @@ class Opcode:
         target: int
         anywhere: bool = False
 
-    class FUNREF(NamedTuple):
+    class FUNREF(t.NamedTuple):
         """() -> (`FUNREF<... A to ... B>`)
         Construct a reference to a static codepoint.
         """
 
         funref: str
 
-    class CALLF(NamedTuple):
+    class CALLF(t.NamedTuple):
         """(`FUNREF<... A to ... B>`, ... A) -> (... B)
         Call [funref]
 
@@ -117,19 +117,20 @@ class Opcode:
 
         nargs: int = 0
 
-    class CLOSUREF(NamedTuple):
+    class CLOSUREF(t.NamedTuple):
         """(`FUNREF<A, ... B to ... C>`, A) -> (`CLOSURE<... B to ... C>`)
         Construct a closure over the function reference at the top of the stack.
         This may produce nullary closures.
         """
+        nargs: int = 0
 
-    class CLOSUREC(NamedTuple):
+    class CLOSUREC(t.NamedTuple):
         """(`CLOSURE<A, ... B to ... C>`, A) -> (`CLOSURE<... B to ... C>`)
         Further close over the closure at the top of the stack.
         This may produce nullary closures.
         """
 
-    class CALLC(NamedTuple):
+    class CALLC(t.NamedTuple):
         """(`CLOSURE<... A to ... B>`, ... A) -> (... B)
         Call [closure]
 
@@ -145,7 +146,7 @@ class Opcode:
     ####################################################################################################
     # Structures
     ####################################################################################################
-    class STRUCT(NamedTuple):
+    class STRUCT(t.NamedTuple):
         """(*) -> (T)
         Consume the top N items of the stack, producing a struct of the type `structref`.
 
@@ -155,14 +156,14 @@ class Opcode:
         structref: str
         nargs: int
 
-    class FLOAD(NamedTuple):
+    class FLOAD(t.NamedTuple):
         """(A) -> (B)
         Consume the struct reference at the top of the stack, producing the value of the referenced field.
         """
 
         fieldref: str
 
-    class FSTORE(NamedTuple):
+    class FSTORE(t.NamedTuple):
         """(A) -> (B)
         Consume the struct reference at the top of the stack, producing the value of the referenced field.
         """
@@ -172,7 +173,7 @@ class Opcode:
     ####################################################################################################
     # Arrays
     ####################################################################################################
-    class ARRAY(NamedTuple):
+    class ARRAY(t.NamedTuple):
         """(*) -> (ARRAY<Y>)
         Consume the top N items of the stack, producing an array of the type `typeref`.
         """
@@ -180,13 +181,13 @@ class Opcode:
         typeref: str
         nargs: int
 
-    class ALOAD(NamedTuple):
+    class ALOAD(t.NamedTuple):
         """(NAT, ARRAY<T>) -> (T)
         Consume a reference to an array and an index, producing the value at that index.
         FIXME: Or a fault/signal.
         """
 
-    class ASTORE(NamedTuple):
+    class ASTORE(t.NamedTuple):
         """(T, NAT, ARRAY<T>) -> (ARRAY<T>)
         Consume a value T, storing it at an index in the given array.
         Produces the updated array as the top of stack.
@@ -205,7 +206,7 @@ class Opcode:
     ####################################################################################################
 
 
-class Module(NamedTuple):
+class Module(t.NamedTuple):
     opcodes: list = []
     functions: dict = {}
     types: dict = {}

@@ -11,12 +11,11 @@ context (a virtual machine) which DOES have an easily introspected and serialize
 
 import sys
 
-
 assert sys.version_info > (3, 10, 0), "`match` support is required"
 
 from copy import deepcopy
 
-from .isa import FunctionRef, Opcode
+from .isa import FunctionRef, Opcode, Closure
 
 
 def rotate(l):
@@ -183,8 +182,8 @@ class Interpreter(object):
                     sig = stack.pop()
                     if not isinstance(sig, FunctionRef):
                         _error("CALLF requires a funref at top of stack")
-                    if not n == len(sig.args):
-                        _error("CALLF target violation; not enough arguments provided")
+                    if n != len(sig.args):
+                        _error("CALLF target violation; argument count missmatch")
                     if n > len(stack):
                         _error("Stack size violation")
 
@@ -195,6 +194,47 @@ class Interpreter(object):
 
                     stack = stack.call(sig, ip)
                     continue
+
+                case Opcode.CLOSUREF(n):
+                    sig = stack.pop()
+                    if not isinstance(sig, FunctionRef):
+                        _error("CLOSUREF requires a funref at top of stack")
+                    if not n <= len(sig.args):
+                        _error("CLOSUREF target violation; too many parameters provided")
+                    if n > len(stack):
+                        _error("Stack size violation")
+
+                    c = Closure(
+                        sig,
+                        stack.stack[:n]
+                    )
+                    stack.drop(n)
+                    stack.push(c)
+
+                case Opcode.CALLC(n):
+                    c = stack.pop()
+                    if not isinstance(c, Closure):
+                        _error("CALLC requires a closure at top of stack")
+                    if n + len(c.frag) != len(c.funref.args):
+                        _error("CALLC target vionation; argument count missmatch")
+                    if n > len(stack):
+                        _error("Stack size vionation")
+
+                    # Extract the function signature
+                    sig = c.funref
+
+                    # Push the closure's stack fragment
+                    stack.stack = c.frag + stack.stack
+
+                    # Perform a "normal" funref call
+                    try:
+                        ip = mod.functions[sig.raw]
+                    except KeyError:
+                        _error("Unknown target")
+
+                    stack = stack.call(sig, ip)
+                    continue
+
 
                 case _:
                     raise Exception(f"Unhandled interpreter state {op}")
