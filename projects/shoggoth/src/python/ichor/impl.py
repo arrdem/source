@@ -24,11 +24,12 @@ def rotate(l):
 
 
 class Stackframe(object):
-    def __init__(self, stack=None, name=None, ip=None, parent=None):
+    def __init__(self, stack=None, name=None, ip=None, parent=None, depth=0):
         self.stack = stack or []
         self.name = name or ";unknown;;"
         self.ip = ip or 0
         self.parent = parent
+        self.depth = depth
 
     def push(self, obj):
         self.stack.insert(0, obj)
@@ -37,15 +38,16 @@ class Stackframe(object):
         return self.stack.pop(0)
 
     def call(self, signature: FunctionRef, ip):
-        print(signature)
+        self.ip += 1
         nargs = len(signature.args)
         args, self.stack = self.stack[:nargs], self.stack[nargs:]
         return Stackframe(
-                stack=args,
-                name=signature.raw,
-                ip=ip,
-                parent=self
-            )
+            stack=args,
+            name=signature.raw,
+            ip=ip,
+            parent=self,
+            depth=self.depth+1
+        )
 
     def ret(self, nargs):
         self.parent.stack = self.stack[:nargs] + self.parent.stack
@@ -96,6 +98,8 @@ class Interpreter(object):
 
         while True:
             op = mod.opcodes[stack.ip]
+            # print("{0}{1: <50} {2}: {3}".format("  " * stack.depth, str(stack.stack), stack.ip, op))
+
             match op:
                 case Opcode.TRUE():
                     stack.push(True)
@@ -151,14 +155,15 @@ class Interpreter(object):
                     if (n > len(stack)):
                         _error("Stack size violation")
 
-                    if stack.parent:
-                        sig = FunctionRef.parse(stack.name)
-                        if (len(sig.ret) != n):
-                            _error("Signature violation")
-
-                        stack = stack.ret(n)
-                    else:
+                    if stack.depth == 0:
                         return stack[:n]
+
+                    sig = FunctionRef.parse(stack.name)
+                    if (len(sig.ret) != n):
+                        _error("Signature violation")
+
+                    stack = stack.ret(n)
+                    continue
 
                 case Opcode.GOTO(n, _):
                     if (n < 0):

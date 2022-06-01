@@ -10,3 +10,12 @@ py_project(
         py_requirement("flask"),
     ],
 )
+
+zapp_binary(
+    name="ichor",
+    main = "src/python/ichor/__main__.py",
+    shebang="/usr/bin/env python3",
+    deps = [
+        ":lib",
+    ],
+)

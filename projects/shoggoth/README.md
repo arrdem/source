@@ -4,6 +4,10 @@
 >
 > ~ Charlie Stross, "A Colder War"
 
+Shoggoth is a language designed to provide highly durable, portable agents.
+
+Shoggoth runs atop a custom platform named Ichor, which aims to trivialize providing these properties.
+
 ## License
 
 While the source for this project happens to be published no grant of rights is made.

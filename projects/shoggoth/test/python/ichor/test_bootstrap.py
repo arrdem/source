@@ -11,7 +11,7 @@ from ichor import *
     [[True], [False]],
 ])
 def test_not(vm, stack, ret):
-    assert vm.run([Opcode.CALLS(NOT)], stack = stack) == ret
+    assert vm.run([Opcode.CALLS(NOT1)], stack = stack) == ret
 
 
 @pytest.mark.parametrize("stack,ret", [
@@ -21,7 +21,7 @@ def test_not(vm, stack, ret):
     [[True, True], [True]],
 ])
 def test_or(vm, stack, ret):
-    assert vm.run([Opcode.CALLS(OR)], stack = stack) == ret
+    assert vm.run([Opcode.CALLS(OR2)], stack = stack) == ret
 
 
 @pytest.mark.parametrize("stack,ret", [
@@ -31,7 +31,7 @@ def test_or(vm, stack, ret):
     [[True, True], [True]],
 ])
 def test_and(vm, stack, ret):
-    assert vm.run([Opcode.CALLS(AND)], stack = stack) == ret
+    assert vm.run([Opcode.CALLS(AND2)], stack = stack) == ret
 
 
 @pytest.mark.parametrize("stack,ret", [
@@ -40,19 +40,31 @@ def test_and(vm, stack, ret):
     [[False, True], [True]],
     [[True, True], [False]],
 ])
-def test_xor(vm, stack, ret):
-    assert vm.run([Opcode.CALLS(XOR)], stack = stack) == ret
+def test_xor2(vm, stack, ret):
+    assert vm.run([Opcode.CALLS(XOR2)], stack = stack) == ret
+
+@pytest.mark.parametrize("stack,ret", [
+    [[False, False, False], [False]],
+    [[True,  False, False], [True]],
+    [[False, True,  False], [True]],
+    [[True,  True,  False], [True]],
+    [[True,  True,  True],  [False]],
+    [[False, True,  True],  [True]],
+    [[False, False, True],  [True]],
+])
+def test_xor3(vm, stack, ret):
+    assert vm.run([Opcode.CALLS(XOR3)], stack = stack) == ret
 
 
 @pytest.mark.parametrize("stack,ret", [
-    [[], [FunctionRef.parse(NOT)]]
+    [[], [FunctionRef.parse(NOT1)]]
 ])
 def test_funref(vm, stack, ret):
-    assert vm.run([Opcode.FUNREF(NOT), Opcode.RETURN(1)], stack = stack) == ret
+    assert vm.run([Opcode.FUNREF(NOT1), Opcode.RETURN(1)], stack = stack) == ret
 
 
 @pytest.mark.parametrize("stack,ret", [
     [[], [True]]
 ])
 def test_callf(vm, stack, ret):
-    assert vm.run([Opcode.FALSE(), Opcode.FUNREF(NOT), Opcode.CALLF(1)], stack = stack) == ret
+    assert vm.run([Opcode.FALSE(), Opcode.FUNREF(NOT1), Opcode.CALLF(1)], stack = stack) == ret

@@ -26,10 +26,6 @@ class ProductExpr(t.NamedTuple):
 ####################################################################################################
 ####################################################################################################
 
-class Function(t.NamedTuple):
-    """The type of a function; a subset of its signature."""
-
-
 class FunctionRef(t.NamedTuple):
     raw: str
     type_params: list
@@ -79,7 +75,3 @@ class FunctionSignature(t.NamedTuple):
             cls.parse_list(args),
             cls.parse_list(ret)
         )
-
-
-class Function(t.NamedTuple):
-    """The type of a function; a subset of its signature."""
