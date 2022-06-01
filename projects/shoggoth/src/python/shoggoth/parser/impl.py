@@ -60,6 +60,6 @@ COMMENT: /;.*?\n/
 
 
 def parse(input: str) -> Any:
-    '''Parse a string using the shogoth (lisp) gramar, returning an unmodified tree.'''
+    '''Parse a string using the shoggoth (lisp) gramar, returning an unmodified tree.'''
 
     return PARSER.parse(input)

@@ -6,7 +6,7 @@ from abc import ABC
 from dataclasses import dataclass
 import typing as t
 
-from shogoth.types import (
+from shoggoth.types import (
     Keyword,
     List,
     Symbol,
@@ -84,7 +84,7 @@ class FnExpr(Expr):
     body: Expr
 
 
-BOOTSTRAP = "lang.shogoth.v0.bootstrap"
+BOOTSTRAP = "lang.shoggoth.v0.bootstrap"
 SPECIALS = Namespace(Symbol(BOOTSTRAP), {
     Symbol("if*"): None,
     Symbol("let*"): None,
@@ -92,7 +92,7 @@ SPECIALS = Namespace(Symbol(BOOTSTRAP), {
 })
 
 
-GLOBALS = Namespace(Symbol("lang.shogoth.v0.core"), {
+GLOBALS = Namespace(Symbol("lang.shoggoth.v0.core"), {
 })
 
 

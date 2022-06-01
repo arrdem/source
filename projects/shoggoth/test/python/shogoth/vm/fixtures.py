@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import pytest
-from shogoth.vm import *
+from shoggoth.vm import *
 
 
 @pytest.fixture

@@ -1,4 +1,4 @@
-"""The public interface for shogoth's baked-in types."""
+"""The public interface for shoggoth's baked-in types."""
 
 
 import typing as t

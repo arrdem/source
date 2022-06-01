@@ -3,14 +3,14 @@
 from prompt_toolkit import PromptSession
 from prompt_toolkit.history import FileHistory
 from prompt_toolkit.styles import Style
-from shogoth.analyzer import (
+from shoggoth.analyzer import (
     Analyzer,
     GLOBALS,
     Namespace,
     SPECIALS,
 )
-from shogoth.reader import Reader
-from shogoth.types import Symbol
+from shoggoth.reader import Reader
+from shoggoth.types import Symbol
 from yaspin import Spinner, yaspin
 
 
@@ -31,7 +31,7 @@ def main():
     analyzer = Analyzer(SPECIALS, GLOBALS)
     ns = Namespace(Symbol("user"), {})
 
-    session = PromptSession(history=FileHistory(".shogoth.history"))
+    session = PromptSession(history=FileHistory(".shoggoth.history"))
 
     while True:
         try:

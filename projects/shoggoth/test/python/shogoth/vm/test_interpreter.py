@@ -5,7 +5,7 @@ Tests coverign the VM interpreter
 from .fixtures import *  # noqa
 
 import pytest
-from shogoth.vm import *
+from shoggoth.vm import *
 
 
 def test_true(vm):

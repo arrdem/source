@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-"""The shogoth reader."""
+"""The shoggoth reader."""
 
 import sys
 
@@ -11,8 +11,8 @@ import re
 from typing import Any
 
 from lark import Token, Tree
-from shogoth.parser import parse
-from shogoth.types import (
+from shoggoth.parser import parse
+from shoggoth.types import (
     Keyword,
     List,
     Symbol,

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import pytest
-from shogoth.parser import parse
+from shoggoth.parser import parse
 
 
 @pytest.mark.parametrize("example", [

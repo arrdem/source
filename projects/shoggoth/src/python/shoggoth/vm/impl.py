@@ -2,8 +2,8 @@
 
 """The Shogoth VM implementation.
 
-The whole point of shogoth is that program executions are checkpointable and restartable. This requires that rather than
-using a traditional recursive interpreter which is difficult to snapshot, interpretation in shogoth occur within a
+The whole point of shoggoth is that program executions are checkpointable and restartable. This requires that rather than
+using a traditional recursive interpreter which is difficult to snapshot, interpretation in shoggoth occur within a
 context (a virtual machine) which DOES have an easily introspected and serialized representation.
 
 ## The Shogoth VM Architecture

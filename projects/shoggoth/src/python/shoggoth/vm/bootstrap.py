@@ -6,13 +6,13 @@ Hopefully no "real" interpreter ever uses this code, since it's obviously replac
 
 from .isa import Module, Opcode
 
-from shogoth.types import *
+from shoggoth.types import *
 
 
 BOOTSTRAP = Module()
 
 NOT = BOOTSTRAP.define_function(
-    ";/lang/shogoth/v0/bootstrap/not;bool;bool",
+    ";/lang/shoggoth/v0/bootstrap/not;bool;bool",
     [
         Opcode.IF(target=3),
         Opcode.FALSE(),
@@ -23,7 +23,7 @@ NOT = BOOTSTRAP.define_function(
 )
 
 OR = BOOTSTRAP.define_function(
-    ";/lang/shogoth/v0/bootstrap/or;bool,bool;bool",
+    ";/lang/shoggoth/v0/bootstrap/or;bool,bool;bool",
     [
         Opcode.IF(target=3),
         Opcode.TRUE(),
@@ -37,7 +37,7 @@ OR = BOOTSTRAP.define_function(
 )
 
 AND = BOOTSTRAP.define_function(
-    ";/lang/shogoth/v0/bootstrap/and;bool,bool;bool",
+    ";/lang/shoggoth/v0/bootstrap/and;bool,bool;bool",
     [
         Opcode.IF(target=3),
         Opcode.IF(target=3),
@@ -50,7 +50,7 @@ AND = BOOTSTRAP.define_function(
 )
 
 XOR = BOOTSTRAP.define_function(
-    ";/lang/shogoth/v0/bootstrap/xor;bool,bool;bool",
+    ";/lang/shoggoth/v0/bootstrap/xor;bool,bool;bool",
     [
         Opcode.DUP(nargs=2),
         # !A && B
@@ -73,16 +73,16 @@ XOR = BOOTSTRAP.define_function(
 )
 
 TRUE = BOOTSTRAP.define_type(
-    "/lang/shogoth/v0/true",
+    "/lang/shoggoth/v0/true",
     ProductExpr([]),
 )
 
 FALSE = BOOTSTRAP.define_type(
-    "/lang/shogoth/v0/false",
+    "/lang/shoggoth/v0/false",
     ProductExpr([]),
 )
 
 BOOL = BOOTSTRAP.define_type(
-    "/lang/shogoth/v0/bool",
+    "/lang/shoggoth/v0/bool",
     SumExpr([TRUE, FALSE])
 )
