@@ -4,8 +4,8 @@ Tests coverign the VM interpreter
 
 from .fixtures import *  # noqa
 
-import pytest
 from ichor import *
+import pytest
 
 
 def test_true(vm):
@@ -86,10 +86,3 @@ def test_drop_too_many(vm):
 
     with pytest.raises(InterpreterError):
         vm.run([Opcode.TRUE(), Opcode.DROP(2)])
-
-
-def test_frames():
-    assert len(list(Stackframe().frames())) == 1
-    assert len(list(Stackframe(parent=Stackframe()).frames())) == 2
-    assert len(list(Stackframe(parent=Stackframe(parent=Stackframe())).frames())) == 3
-    assert len(list(Stackframe(parent=Stackframe(parent=Stackframe(parent=Stackframe()))).frames())) == 4

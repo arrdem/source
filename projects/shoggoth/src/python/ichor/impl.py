@@ -98,7 +98,7 @@ class Interpreter(object):
 
         while True:
             op = mod.opcodes[stack.ip]
-            # print("{0}{1: <50} {2}: {3}".format("  " * stack.depth, str(stack.stack), stack.ip, op))
+            print("{0}{1: <50} {2}: {3}".format("  " * stack.depth, str(stack.stack), stack.ip, op))
 
             match op:
                 case Opcode.TRUE():

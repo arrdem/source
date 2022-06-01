@@ -5,14 +5,13 @@ Hopefully no "real" interpreter ever uses this code, since it's obviously replac
 """
 
 from .isa import Module, Opcode
-
 from .typing import ProductExpr, SumExpr
 
 
 BOOTSTRAP = Module()
 
 NOT1 = BOOTSTRAP.define_function(
-    ";/lang/shoggoth/v0/bootstrap/not;bool;bool",
+    ";not;bool;bool",
     [
         Opcode.IF(target=3),
         Opcode.FALSE(),
@@ -23,7 +22,7 @@ NOT1 = BOOTSTRAP.define_function(
 )
 
 OR2 = BOOTSTRAP.define_function(
-    ";/lang/shoggoth/v0/bootstrap/or;bool,bool;bool",
+    ";or;bool,bool;bool",
     [
         Opcode.IF(target=3),
         Opcode.TRUE(),
@@ -37,7 +36,7 @@ OR2 = BOOTSTRAP.define_function(
 )
 
 OR3 = BOOTSTRAP.define_function(
-    ";/lang/shoggoth/v0/bootstrap/or;bool,bool,bool;bool",
+    ";or;bool,bool,bool;bool",
     [
         # A B C
         Opcode.CALLS(OR2),   # A|B C
@@ -47,7 +46,7 @@ OR3 = BOOTSTRAP.define_function(
 )
 
 AND2 = BOOTSTRAP.define_function(
-    ";/lang/shoggoth/v0/bootstrap/and;bool,bool;bool",
+    ";and;bool,bool;bool",
     [
         Opcode.IF(target=3),
         Opcode.IF(target=3),
@@ -60,7 +59,7 @@ AND2 = BOOTSTRAP.define_function(
 )
 
 AND3 = BOOTSTRAP.define_function(
-    ";/lang/shoggoth/v0/bootstrap/and;bool,bool,bool;bool",
+    ";and;bool,bool,bool;bool",
     [
         # A B C
         Opcode.CALLS(AND2),  # A&B C
@@ -70,7 +69,7 @@ AND3 = BOOTSTRAP.define_function(
 )
 
 XOR2 = BOOTSTRAP.define_function(
-    ";/lang/shoggoth/v0/bootstrap/xor;bool,bool;bool",
+    ";xor;bool,bool;bool",
     [
         Opcode.DUP(nargs=2),
         # !A && B
@@ -93,7 +92,7 @@ XOR2 = BOOTSTRAP.define_function(
 )
 
 XOR3 = BOOTSTRAP.define_function(
-    ";/lang/shoggoth/v0/bootstrap/xor;bool,bool,bool;bool",
+    ";xor;bool,bool,bool;bool",
     [
                                 # A B C
         Opcode.ROT(nargs=3),    # C A B
@@ -110,16 +109,16 @@ XOR3 = BOOTSTRAP.define_function(
 )
 
 TRUE = BOOTSTRAP.define_type(
-    "/lang/shoggoth/v0/true",
+    "true",
     ProductExpr([]),
 )
 
 FALSE = BOOTSTRAP.define_type(
-    "/lang/shoggoth/v0/false",
+    "false",
     ProductExpr([]),
 )
 
 BOOL = BOOTSTRAP.define_type(
-    "/lang/shoggoth/v0/bool",
+    "bool",
     SumExpr([TRUE, FALSE])
 )
