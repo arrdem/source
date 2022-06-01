@@ -12,18 +12,23 @@ class Opcode:
     ####################################################################################################
     class TRUE(t.NamedTuple):
         """() -> (bool)
+
         Push the constant TRUE onto the stack.
+
         """
 
     class FALSE(t.NamedTuple):
         """() -> (bool)
+
         Push the constant FALSE onto the stack.
+
         """
 
     class IF(t.NamedTuple):
         """(bool) -> ()
-        Branch to another point if the top item of the stack is TRUE.
-        Otherwise fall through.
+
+        Branch to another point if the top item of the stack is TRUE. Otherwise fall through.
+
         """
 
         target: int
@@ -33,23 +38,32 @@ class Opcode:
     ####################################################################################################
     # Stack manipulation
     ####################################################################################################
+    # https://wiki.laptop.org/go/Forth_stack_operators
+    # https://www.forth.com/starting-forth/2-stack-manipulation-operators-arithmetic/
+    # https://docs.oracle.com/javase/specs/jvms/se18/html/jvms-6.html#jvms-6.5.swap
     class DUP(t.NamedTuple):
         """(A, B, ...) -> (A, B, ...)
+
         Duplicate the top N items of the stack.
+
         """
 
         nargs: int = 1
 
     class ROT(t.NamedTuple):
         """(A, B, ... Z) -> (Z, A, B, ...)
+
         Rotate the top N elements of the stack.
+
         """
 
         nargs: int = 2
 
     class DROP(t.NamedTuple):
         """(*) -> ()
+
         Drop the top N items of the stack.
+
         """
 
         nargs: int = 1
@@ -59,6 +73,7 @@ class Opcode:
     ####################################################################################################
     class CALLS(t.NamedTuple):
         """(... A) -> (... B)
+
         Call [static]
 
         Branch to `target` pushing the current point onto the call stack.
@@ -70,28 +85,31 @@ class Opcode:
         .. note::
 
            CALLS is equvalent to `FUNREF; CALLF`
+
         """
 
         funref: str
 
     class RETURN(t.NamedTuple):
         """(... A) -> ()
-        Return to the source of the last `CALL`.
-        The returnee will see the top `nargs` values of the present stack appended to theirs.
-        All other values on the stack will be discarded.
+
+        Return to the source of the last `CALL`. The returnee will see the top `nargs` values of the present stack
+        appended to theirs. All other values on the stack will be discarded.
 
         Executing a `RETURN` pops (restores) the name and module path of the current function back to that of the caller.
 
         If the call stack is empty, `RETURN` will exit the interpreter.
+
         """
 
         nargs: int
 
     class GOTO(t.NamedTuple):
         """() -> ()
-        Branch to another point within the same bytecode segment.
-        The target MUST be within the same module range as the current function.
-        Branching does NOT update the name or module of the current function.
+
+        Branch to another point within the same bytecode segment. The target MUST be within the same module range as the
+        current function. Branching does NOT update the name or module of the current function.
+
         """
 
         target: int
@@ -99,13 +117,16 @@ class Opcode:
 
     class FUNREF(t.NamedTuple):
         """() -> (`FUNREF<... A to ... B>`)
+
         Construct a reference to a static codepoint.
+
         """
 
         funref: str
 
     class CALLF(t.NamedTuple):
         """(`FUNREF<... A to ... B>`, ... A) -> (... B)
+
         Call [funref]
 
         Make a dynamic call to the function reference at the top of stack.
@@ -113,28 +134,32 @@ class Opcode:
         A subsequent RETURN will return execution to the next point.
 
         Executing a `CALL` pushes the name and module path of the current function.
+
         """
 
         nargs: int = 0
 
     class CLOSUREF(t.NamedTuple):
         """(`FUNREF<A, ... B to ... C>`, A) -> (`CLOSURE<... B to ... C>`)
-        Construct a closure over the function reference at the top of the stack.
-        This may produce nullary closures.
+
+        Construct a closure over the function reference at the top of the stack. This may produce nullary closures.
+
         """
 
         nargs: int = 0
 
     class CLOSUREC(t.NamedTuple):
         """(`CLOSURE<A, ... B to ... C>`, A) -> (`CLOSURE<... B to ... C>`)
-        Further close over the closure at the top of the stack.
-        This may produce nullary closures.
+
+        Further close over the closure at the top of the stack. This may produce nullary closures.
+
         """
 
         nargs: int = 0
 
     class CALLC(t.NamedTuple):
         """(`CLOSURE<... A to ... B>`, ... A) -> (... B)
+
         Call [closure]
 
         Make a dynamic call to the closure at the top of stack.
@@ -142,6 +167,7 @@ class Opcode:
         A subsequent RETURN will return execution to the next point.
 
         Executing a `CALL` pushes the name and module path of the current function.
+
         """
 
         nargs: int = 0
@@ -151,6 +177,7 @@ class Opcode:
     ####################################################################################################
     class STRUCT(t.NamedTuple):
         """(*) -> (T)
+
         Consume the top N items of the stack, producing a struct of the type `structref`.
 
         The name and module path of the current function MUST match the name and module path of `structref`.
@@ -161,14 +188,19 @@ class Opcode:
 
     class FLOAD(t.NamedTuple):
         """(A) -> (B)
+
         Consume the struct reference at the top of the stack, producing the value of the referenced field.
+
         """
 
         fieldref: str
 
     class FSTORE(t.NamedTuple):
-        """(A) -> (B)
-        Consume the struct reference at the top of the stack, producing the value of the referenced field.
+        """(A, B) -> (A)
+
+        Consume the struct reference at the top of the stack and a value, producing a new copy of the struct in which
+        that field has been updated to the new value.
+
         """
 
         fieldref: str
@@ -178,22 +210,29 @@ class Opcode:
     ####################################################################################################
     class ARRAY(t.NamedTuple):
         """(*) -> (ARRAY<Y>)
+
         Consume the top N items of the stack, producing an array of the type `typeref`.
+
         """
 
         typeref: str
         nargs: int
 
     class ALOAD(t.NamedTuple):
-        """(NAT, ARRAY<T>) -> (T)
+        """(ARRAY<T>, NAT) -> (T)
+
         Consume a reference to an array and an index, producing the value at that index.
-        FIXME: Or a fault/signal.
+
+        FIXME: Or a signal/fault.
+
         """
 
     class ASTORE(t.NamedTuple):
-        """(T, NAT, ARRAY<T>) -> (ARRAY<T>)
+        """(ARRAY<T>, NAT, T) -> (ARRAY<T>)
+
         Consume a value T, storing it at an index in the given array.
         Produces the updated array as the top of stack.
+
         """
 
     ####################################################################################################
