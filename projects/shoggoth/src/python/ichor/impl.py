@@ -1,18 +1,10 @@
 #!/usr/bin/env python3
 
-"""The Shogoth VM implementation.
+"""The Ichor VM implementation.
 
-The whole point of shoggoth is that program executions are checkpointable and restartable. This requires that rather than
+The whole point of Shoggoth is that program executions are checkpointable and restartable. This requires that rather than
 using a traditional recursive interpreter which is difficult to snapshot, interpretation in shoggoth occur within a
 context (a virtual machine) which DOES have an easily introspected and serialized representation.
-
-## The Shogoth VM Architecture
-
-
-- NOT    [bool] -> [bool]
-- IF     [then: addr, else: addr, cond: bool] -> []
-- CALL   [procedure, n, ...] -> [...]
-- RETURN [n, ...]
 
 """
 

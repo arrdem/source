@@ -58,11 +58,28 @@ class Closure(t.NamedTuple):
     args: t.List[t.Any]
 
 
-# FIXME (arrdem 2022-05-30):
-#   Find a better name for this
-class Vec(list):
-    pass
+class FunctionSignature(t.NamedTuple):
+    raw: str
+    type_params: list
+    name: str
+    args: list
+    ret: list
+
+    @staticmethod
+    def parse_list(l):
+        return [e for e in l.split(",") if e]
+
+    @classmethod
+    def parse(cls, raw: str):
+        vars, name, args, ret = raw.split(";")
+        return cls(
+            raw,
+            cls.parse_list(vars),
+            name,
+            cls.parse_list(args),
+            cls.parse_list(ret)
+        )
 
 
-class List(list):
-    pass
+class Function(t.NamedTuple):
+    """The type of a function; a subset of its signature."""

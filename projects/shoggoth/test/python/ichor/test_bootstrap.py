@@ -3,7 +3,7 @@
 from .fixtures import *  # noqa
 
 import pytest
-from shoggoth.vm import *
+from ichor import *
 
 
 @pytest.mark.parametrize("stack,ret", [

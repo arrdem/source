@@ -6,7 +6,7 @@ Hopefully no "real" interpreter ever uses this code, since it's obviously replac
 
 from .isa import Module, Opcode
 
-from shoggoth.types import *
+from .typing import ProductExpr, SumExpr
 
 
 BOOTSTRAP = Module()
