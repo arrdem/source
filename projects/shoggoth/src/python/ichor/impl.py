@@ -236,7 +236,7 @@ class Interpreter(object):
                     if n + len(c.frag) != len(c.funref.args):
                         _error("CALLC target vionation; argument count missmatch")
                     if n > len(stack):
-                        _error("Stack size vionation")
+                        _error("Stack size violation")
 
                     # Extract the function signature
                     sig = c.funref
@@ -252,6 +252,23 @@ class Interpreter(object):
 
                     stack = stack.call(sig, ip)
                     continue
+
+                case Opcode.STRUCT(structref, n):
+                    if not (t := module.types.get(structref)):
+                        _error(f"STRUCT must reference a known type, {structref!r} is undefined")
+                    if n > len(stack):
+                        _error("Stack size violation")
+
+                    args = stack[:n]
+                    stack.drop(n)
+
+                    # FIXME: typecheck
+                    for arg, ftype in zip(args, t.children):
+                        pass
+
+                    inst = Struct(structref, [], dict(zip(t.field_names, args)))
+
+                    stack.push(inst)
 
 
                 case _:

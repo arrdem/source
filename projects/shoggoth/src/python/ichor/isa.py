@@ -175,19 +175,58 @@ class Opcode:
     ####################################################################################################
     # Structures
     ####################################################################################################
+
+    # FIXME: This lacks any sort of way to do dynamic field references
+
+    class IDENTIFIERC(t.NamedTuple):
+        """() -> (CONST)
+
+        An inline constant which produces an identifier to the stack.
+
+        Identifiers name functions, fields and types but are not strings.
+        They are a VM-internal naming structure with reference to the module.
+
+        """
+
+        val: str
+
+    class TYPEREF(t.NamedTuple):
+        """(IDENTIFIER) -> (TYPEREF)
+
+        Produces a TYPEREF to the type named by the provided IDENTIFIER.
+
+        """
+
+    class FIELDREF(t.NamedTuple):
+        """(IDENTIFIER, TYPEREF) -> (FIELDREF)
+
+
+        Produces a FIELDREF to the field named by the provided IDENTIFIER.
+        The FIELDREF must be within and with reference to a sum type.
+
+        """
+
+    class VARIANTREF(t.NamedTuple):
+        """(IDENTIFIER, TYPEREF) -> (VARIANTREF)
+
+        Produce a VARIANTREF to an 'arm' of the given variant type.
+
+        """
+
     class STRUCT(t.NamedTuple):
-        """(*) -> (T)
+        """(STRUCTREF<S>, ...) -> (S)
 
         Consume the top N items of the stack, producing a struct of the type `structref`.
 
         The name and module path of the current function MUST match the name and module path of `structref`.
+        The arity of this opcode MUST match the arity of the struct.
+        The signature of the struct MUST match the signature fo the top N of the stack.
         """
 
-        structref: str
-        nargs: int
+        nargs: int = 0
 
     class FLOAD(t.NamedTuple):
-        """(A) -> (B)
+        """(FIELDREF<f ⊢ T ∈ S>, S) -> (T)
 
         Consume the struct reference at the top of the stack, producing the value of the referenced field.
 
@@ -196,7 +235,7 @@ class Opcode:
         fieldref: str
 
     class FSTORE(t.NamedTuple):
-        """(A, B) -> (A)
+        """(FIELDREF<f ⊢ T ∈ S>, S, T) -> (S)
 
         Consume the struct reference at the top of the stack and a value, producing a new copy of the struct in which
         that field has been updated to the new value.
@@ -204,6 +243,35 @@ class Opcode:
         """
 
         fieldref: str
+
+    class VARIANT(t.NamedTuple):
+        """(VARIANTREF<a ⊢ A ⊂ B>, ...) -> (B)
+
+        Construct an instance of an 'arm' of a variant.
+        The type of the 'arm' is considered to be the type of the whole variant.
+
+        The name and module path of the current function MUST match the name and module path of `VARIANTREF`.
+        The arity of this opcode MUST match the arity of the arm.
+        The signature of the arm MUST match the signature fo the top N of the stack.
+        """
+
+        nargs: int = 0
+
+    class VTEST(t.NamedTuple):
+        """(VARIANTREF<a ⊢ A ⊂ B>, B) -> (bool)
+
+        Test whether B is a given arm of a variant A .
+
+        """
+
+    class VLOAD(t.NamedTuple):
+        """(VARIANTREF<a ⊢ A ⊂ B>, B) -> (A)
+
+        Load the value of the variant arm.
+        VLOAD errors (undefined) if B is not within the variant.
+        VLOAD errors (undefined) if the value in B is not an A - use VTEST as needed.
+
+        """
 
     ####################################################################################################
     # Arrays

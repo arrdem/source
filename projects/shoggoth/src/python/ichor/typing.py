@@ -22,6 +22,14 @@ class ProductExpr(t.NamedTuple):
     children: t.Mapping[str, t.Any]
 
 
+# FIXME: How exactly
+class StructExpr(t.NamedTuple):
+    name: str
+    type_params: list
+    field_names: t.List[str]
+    children: t.List[t.Any]
+
+
 ####################################################################################################
 ####################################################################################################
 ####################################################################################################
@@ -50,8 +58,10 @@ class FunctionRef(t.NamedTuple):
 
 
 class Closure(t.NamedTuple):
-    target: t.Union["Closure", FunctionRef]
-    args: t.List[t.Any]
+    # Note that a closure over a closure is equivalent to a single closure which extends the captured stack fragment, so
+    # there's no need for a union here as we can simply convert nested closures.
+    funref: FunctionRef
+    frag: t.List[t.Any]
 
 
 class FunctionSignature(t.NamedTuple):
@@ -77,6 +87,7 @@ class FunctionSignature(t.NamedTuple):
         )
 
 
-class Closure(t.NamedTuple):
-    funref: FunctionRef
-    frag: t.List[t.Any]
+class Struct(t.NamedTuple):
+    name: str
+    type_params: list
+    children: t.Mapping[str, t.Any]
