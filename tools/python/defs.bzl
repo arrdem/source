@@ -47,6 +47,7 @@ def py_pytest(name, srcs, deps, main=None, python_version=None, args=None, **kwa
         py_requirement("jedi"),
         py_requirement("pytest-pudb"),
         py_requirement("pytest-cov"),
+        py_requirement("pytest-timeout"),
     ] + deps))
 
     srcs = [f] + srcs
