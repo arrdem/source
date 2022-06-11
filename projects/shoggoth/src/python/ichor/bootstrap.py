@@ -72,13 +72,13 @@ AND3 = BOOTSTRAP.define_function(
         # A B C
         Opcode.IDENTIFIERC(AND2),
         Opcode.FUNREF(),
-        Opcode.SLOT(0),
-        Opcode.SLOT(1),
-        Opcode.SLOT(3),
-        Opcode.CALLF(2),  # A&B C
-        Opcode.SLOT(2),
-        Opcode.SLOT(3),
-        Opcode.CALLF(2),  # A&B&C
+        Opcode.SLOT(0),   # C <and2> A B C
+        Opcode.SLOT(1),   # B C <and2> A B C
+        Opcode.SLOT(3),   # <and2> B C <and2> A B C
+        Opcode.CALLF(2),  # B&C <and2> A B C
+        Opcode.SLOT(2),   # A B&C <and2> A B C
+        Opcode.SLOT(3),   # <and2> A B&C <and2> A B C
+        Opcode.CALLF(2),  # A&B&C <and2> A B C
         Opcode.RETURN(1),
     ],
 )
