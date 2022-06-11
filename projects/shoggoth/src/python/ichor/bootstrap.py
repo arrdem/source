@@ -39,8 +39,16 @@ OR3 = BOOTSTRAP.define_function(
     ";or;bool,bool,bool;bool",
     [
         # A B C
-        Opcode.CALLS(OR2),   # A|B C
-        Opcode.CALLS(OR2),   # A|B|C
+        Opcode.IDENTIFIERC(OR2),
+        Opcode.FUNREF(),
+        # FIXME: This could be tightened by using ROT maybe...
+        Opcode.SLOT(0),
+        Opcode.SLOT(1),
+        Opcode.SLOT(3),
+        Opcode.CALLF(2),   # A|B
+        Opcode.SLOT(2),
+        Opcode.SLOT(3),
+        Opcode.CALLF(2),   # A|B|C
         Opcode.RETURN(1),
     ]
 )
@@ -62,8 +70,15 @@ AND3 = BOOTSTRAP.define_function(
     ";and;bool,bool,bool;bool",
     [
         # A B C
-        Opcode.CALLS(AND2),  # A&B C
-        Opcode.CALLS(AND2),  # A&B&C
+        Opcode.IDENTIFIERC(AND2),
+        Opcode.FUNREF(),
+        Opcode.SLOT(0),
+        Opcode.SLOT(1),
+        Opcode.SLOT(3),
+        Opcode.CALLF(2),  # A&B C
+        Opcode.SLOT(2),
+        Opcode.SLOT(3),
+        Opcode.CALLF(2),  # A&B&C
         Opcode.RETURN(1),
     ],
 )
@@ -71,18 +86,30 @@ AND3 = BOOTSTRAP.define_function(
 XOR2 = BOOTSTRAP.define_function(
     ";xor;bool,bool;bool",
     [
+        Opcode.IDENTIFIERC(AND2),
+        Opcode.FUNREF(),
+        Opcode.IDENTIFIERC(NOT1),
+        Opcode.FUNREF(),
+
+        Opcode.SLOT(0),
+        Opcode.SLOT(1),
         Opcode.DUP(nargs=2),
+
         # !A && B
-        Opcode.CALLS(NOT1),
-        Opcode.CALLS(AND2),
-        Opcode.IF(target=6),
+        Opcode.SLOT(3),  # not
+        Opcode.CALLF(1),
+        Opcode.SLOT(2),  # and
+        Opcode.CALLF(2),
+        Opcode.IF(target=14),
         Opcode.TRUE(),
         Opcode.RETURN(1),
         # !B && A
         Opcode.ROT(2),
-        Opcode.CALLS(NOT1),
-        Opcode.CALLS(AND2),
-        Opcode.IF(target=12),
+        Opcode.SLOT(3),  # not
+        Opcode.CALLF(1),
+        Opcode.SLOT(2),  # and
+        Opcode.CALLF(2),
+        Opcode.IF(target=22),
         Opcode.TRUE(),
         Opcode.RETURN(1),
         Opcode.FALSE(),
@@ -94,16 +121,27 @@ XOR2 = BOOTSTRAP.define_function(
 XOR3 = BOOTSTRAP.define_function(
     ";xor;bool,bool,bool;bool",
     [
+        Opcode.IDENTIFIERC(XOR2),
+        Opcode.FUNREF(),
+        Opcode.IDENTIFIERC(OR2),
+        Opcode.FUNREF(),
+
+        Opcode.SLOT(0),
+        Opcode.SLOT(1),
+        Opcode.SLOT(2),
                                 # A B C
         Opcode.ROT(nargs=3),    # C A B
         Opcode.ROT(nargs=3),    # B C A
         Opcode.DUP(nargs=1),    # B B C A
         Opcode.ROT(nargs=4),    # A B B C
-        Opcode.CALLS(XOR2),     # A^B B C
+        Opcode.SLOT(3),
+        Opcode.CALLF(2),     # A^B B C
         Opcode.ROT(nargs=3),    # C A^B B
         Opcode.ROT(nargs=3),    # B C A^B
-        Opcode.CALLS(XOR2),     # B^C A^B
-        Opcode.CALLS(OR2),      # A^B|B^C
+        Opcode.SLOT(3),
+        Opcode.CALLF(2),     # B^C A^B
+        Opcode.SLOT(4),
+        Opcode.CALLF(2),      # A^B|B^C
         Opcode.RETURN(1),
     ]
 )

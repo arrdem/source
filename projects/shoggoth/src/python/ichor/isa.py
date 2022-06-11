@@ -10,6 +10,8 @@ class Opcode:
     ####################################################################################################
     # Logic
     ####################################################################################################
+
+    # FIXME: This should become an instantiation of the BOOL enum
     class TRUE(t.NamedTuple):
         """() -> (bool)
 
@@ -17,6 +19,7 @@ class Opcode:
 
         """
 
+    # FIXME: This should become an instantiation of the BOOL enum
     class FALSE(t.NamedTuple):
         """() -> (bool)
 
@@ -24,6 +27,7 @@ class Opcode:
 
         """
 
+    # FIXME: This should become a `VTEST` macro ... or may be replaceable
     class IF(t.NamedTuple):
         """(bool) -> ()
 
@@ -35,12 +39,23 @@ class Opcode:
 
     # not, and, or, xor etc. can all be functions given if.
 
+    class GOTO(t.NamedTuple):
+        """() -> ()
+
+        Branch to another point within the same bytecode segment. The target MUST be within the same module range as the
+        current function. Branching does NOT update the name or module of the current function.
+
+        """
+
+        target: int
+
     ####################################################################################################
     # Stack manipulation
     ####################################################################################################
     # https://wiki.laptop.org/go/Forth_stack_operators
     # https://www.forth.com/starting-forth/2-stack-manipulation-operators-arithmetic/
     # https://docs.oracle.com/javase/specs/jvms/se18/html/jvms-6.html#jvms-6.5.swap
+
     class DUP(t.NamedTuple):
         """(A, B, ...) -> (A, B, ...)
 
@@ -68,61 +83,38 @@ class Opcode:
 
         nargs: int = 1
 
-    ####################################################################################################
-    # Functional abstraction
-    ####################################################################################################
-    class CALLS(t.NamedTuple):
-        """(... A) -> (... B)
+    class SLOT(t.NamedTuple):
+        """(..., A) -> (A, ..., A)
 
-        Call [static]
-
-        Branch to `target` pushing the current point onto the call stack.
-        The callee will see a stack containg only the provided `nargs`.
-        A subsequent RETURN will return execution to the next point.
-
-        Executing a `CALL` pushes the name and module path of the current function.
-
-        .. note::
-
-           CALLS is equvalent to `FUNREF; CALLF`
-
-        """
-
-        funref: str
-
-    class RETURN(t.NamedTuple):
-        """(... A) -> ()
-
-        Return to the source of the last `CALL`. The returnee will see the top `nargs` values of the present stack
-        appended to theirs. All other values on the stack will be discarded.
-
-        Executing a `RETURN` pops (restores) the name and module path of the current function back to that of the caller.
-
-        If the call stack is empty, `RETURN` will exit the interpreter.
-
-        """
-
-        nargs: int
-
-    class GOTO(t.NamedTuple):
-        """() -> ()
-
-        Branch to another point within the same bytecode segment. The target MUST be within the same module range as the
-        current function. Branching does NOT update the name or module of the current function.
+        Copy the Nth (counting up from 0 at the bottom of the stack) item to the top of the stack.
+        Intended to allow users to emulate (immutable) frame local slots for reused values.
 
         """
 
         target: int
-        anywhere: bool = False
+
+    ####################################################################################################
+    # Functional abstraction
+    ####################################################################################################
+
+    class IDENTIFIERC(t.NamedTuple):
+        """() -> (IDENTIFIER)
+
+        An inline constant which produces an identifier to the stack.
+
+        Identifiers name functions, fields and types but are not strings.
+        They are a VM-internal naming structure with reference to the module.
+
+        """
+
+        val: str
 
     class FUNREF(t.NamedTuple):
-        """() -> (`FUNREF<... A to ... B>`)
+        """(IDENTIFIER) -> (`FUNREF<... A to ... B>`)
 
         Construct a reference to a static codepoint.
 
         """
-
-        funref: str
 
     class CALLF(t.NamedTuple):
         """(`FUNREF<... A to ... B>`, ... A) -> (... B)
@@ -138,6 +130,21 @@ class Opcode:
         """
 
         nargs: int = 0
+
+    class RETURN(t.NamedTuple):
+        """(... A) -> ()
+
+        Return to the source of the last `CALL`. The returnee will see the top `nargs` values of the present stack
+        appended to theirs. All other values on the stack will be discarded.
+
+        Executing a `RETURN` pops (restores) the name and module path of the current function back to that of the caller.
+
+        If the call stack is empty, `RETURN` will exit the interpreter.
+
+        """
+
+        nargs: int
+
 
     class CLOSUREF(t.NamedTuple):
         """(`FUNREF<A, ... B to ... C>`, A) -> (`CLOSURE<... B to ... C>`)
@@ -176,19 +183,7 @@ class Opcode:
     # Structures
     ####################################################################################################
 
-    # FIXME: This lacks any sort of way to do dynamic field references
-
-    class IDENTIFIERC(t.NamedTuple):
-        """() -> (CONST)
-
-        An inline constant which produces an identifier to the stack.
-
-        Identifiers name functions, fields and types but are not strings.
-        They are a VM-internal naming structure with reference to the module.
-
-        """
-
-        val: str
+    # FIXME: This lacks any sort of way to do dynamic type/field references
 
     class TYPEREF(t.NamedTuple):
         """(IDENTIFIER) -> (TYPEREF)
@@ -316,6 +311,10 @@ class Opcode:
     ####################################################################################################
 
 
+    class BREAK(t.NamedTuple):
+        pass
+
+
 class Module(t.NamedTuple):
     opcodes: list = []
     functions: dict = {}
@@ -339,7 +338,7 @@ class Module(t.NamedTuple):
                 assert start <= d < end
                 return Opcode.IF(d)
 
-            case Opcode.GOTO(t, anywhere=False):
+            case Opcode.GOTO(t):
                 d = t + start
                 assert start <= d < end
                 return Opcode.GOTO(d)

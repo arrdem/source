@@ -91,3 +91,7 @@ class Struct(t.NamedTuple):
     name: str
     type_params: list
     children: t.Mapping[str, t.Any]
+
+
+class Identifier(t.NamedTuple):
+    name: str

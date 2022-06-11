@@ -11,7 +11,12 @@ import pytest
     [[True], [False]],
 ])
 def test_not(vm, stack, ret):
-    assert vm.run([Opcode.CALLS(NOT1), Opcode.RETURN(1)], stack = stack) == ret
+    assert vm.run([
+        Opcode.IDENTIFIERC(NOT1),
+        Opcode.FUNREF(),
+        Opcode.CALLF(1),
+        Opcode.RETURN(1)
+    ], stack = stack) == ret
 
 
 @pytest.mark.parametrize("stack,ret", [
@@ -21,7 +26,12 @@ def test_not(vm, stack, ret):
     [[True, True], [True]],
 ])
 def test_or(vm, stack, ret):
-    assert vm.run([Opcode.CALLS(OR2), Opcode.RETURN(1)], stack = stack) == ret
+    assert vm.run([
+        Opcode.IDENTIFIERC(OR2),
+        Opcode.FUNREF(),
+        Opcode.CALLF(2),
+        Opcode.RETURN(1)
+    ], stack = stack) == ret
 
 
 @pytest.mark.parametrize("stack,ret", [
@@ -31,7 +41,12 @@ def test_or(vm, stack, ret):
     [[True, True], [True]],
 ])
 def test_and(vm, stack, ret):
-    assert vm.run([Opcode.CALLS(AND2), Opcode.RETURN(1)], stack = stack) == ret
+    assert vm.run([
+        Opcode.IDENTIFIERC(AND2),
+        Opcode.FUNREF(),
+        Opcode.CALLF(2),
+        Opcode.RETURN(1)
+    ], stack = stack) == ret
 
 
 @pytest.mark.parametrize("stack,ret", [
@@ -41,7 +56,12 @@ def test_and(vm, stack, ret):
     [[True, True], [False]],
 ])
 def test_xor2(vm, stack, ret):
-    assert vm.run([Opcode.CALLS(XOR2), Opcode.RETURN(1)], stack = stack) == ret
+    assert vm.run([
+        Opcode.IDENTIFIERC(XOR2),
+        Opcode.FUNREF(),
+        Opcode.CALLF(2),
+        Opcode.RETURN(1)
+    ], stack = stack) == ret
 
 
 @pytest.mark.parametrize("stack,ret", [
@@ -54,21 +74,36 @@ def test_xor2(vm, stack, ret):
     [[False, False, True],  [True]],
 ])
 def test_xor3(vm, stack, ret):
-    assert vm.run([Opcode.CALLS(XOR3), Opcode.RETURN(1)], stack = stack) == ret
+    assert vm.run([
+        Opcode.IDENTIFIERC(XOR3),
+        Opcode.FUNREF(),
+        Opcode.CALLF(3),
+        Opcode.RETURN(1)
+    ], stack = stack) == ret
 
 
 @pytest.mark.parametrize("stack,ret", [
     [[], [FunctionRef.parse(NOT1)]]
 ])
 def test_funref(vm, stack, ret):
-    assert vm.run([Opcode.FUNREF(NOT1), Opcode.RETURN(1)], stack = stack) == ret
+    assert vm.run([
+        Opcode.IDENTIFIERC(NOT1),
+        Opcode.FUNREF(),
+        Opcode.RETURN(1)
+    ], stack = stack) == ret
 
 
 @pytest.mark.parametrize("stack,ret", [
     [[], [True]]
 ])
 def test_callf(vm, stack, ret):
-    assert vm.run([Opcode.FALSE(), Opcode.FUNREF(NOT1), Opcode.CALLF(1), Opcode.RETURN(1)], stack = stack) == ret
+    assert vm.run([
+        Opcode.FALSE(),
+        Opcode.IDENTIFIERC(NOT1),
+        Opcode.FUNREF(),
+        Opcode.CALLF(1),
+        Opcode.RETURN(1)
+    ], stack = stack) == ret
 
 
 @pytest.mark.parametrize("stack,ret", [
@@ -79,7 +114,8 @@ def test_callf(vm, stack, ret):
 ])
 def test_callc(vm, stack, ret):
     assert vm.run([
-        Opcode.FUNREF(XOR2),
+        Opcode.IDENTIFIERC(XOR2),
+        Opcode.FUNREF(),
         Opcode.CLOSUREF(1),
         Opcode.CALLC(1),
         Opcode.RETURN(1),
@@ -97,7 +133,8 @@ def test_callc(vm, stack, ret):
 ])
 def test_closurec(vm, stack, ret):
     assert vm.run([
-        Opcode.FUNREF(XOR3),
+        Opcode.IDENTIFIERC(XOR3),
+        Opcode.FUNREF(),
         Opcode.CLOSUREF(1),
         Opcode.CLOSUREC(1),
         Opcode.CALLC(1),

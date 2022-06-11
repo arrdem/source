@@ -11,12 +11,14 @@ context (a virtual machine) which DOES have an easily introspected and serialize
 
 import sys
 
+from ichor.typing import Identifier
+
 
 assert sys.version_info > (3, 10, 0), "`match` support is required"
 
 from copy import deepcopy
 
-from .isa import Closure, FunctionRef, Opcode
+from .isa import Closure, FunctionRef, Opcode, Identifier
 
 
 def rotate(l):
@@ -120,6 +122,13 @@ class Interpreter(object):
                         stack.ip = target
                         continue
 
+                case Opcode.GOTO(n):
+                    if (n < 0):
+                        _error("Illegal branch target")
+
+                    stack.ip = n
+                    continue
+
                 case Opcode.DUP(n):
                     if (n > len(stack)):
                         _error("Stack size violation")
@@ -138,45 +147,26 @@ class Interpreter(object):
 
                     stack.drop(n)
 
-                case Opcode.CALLS(dest):
-                    try:
-                        sig = FunctionRef.parse(dest)
-                    except:
-                        _error("Invalid target")
-
-                    try:
-                        ip = mod.functions[dest]
-                    except KeyError:
-                        _error("Unknown target")
-
-                    stack = stack.call(sig, ip)
-                    continue
-
-                case Opcode.RETURN(n):
-                    if (n > len(stack)):
-                        _error("Stack size violation")
-
-                    if stack.depth == 0:
-                        return stack[:n]
-
-                    sig = FunctionRef.parse(stack.name)
-                    if (len(sig.ret) != n):
-                        _error("Signature violation")
-
-                    stack = stack.ret(n)
-                    continue
-
-                case Opcode.GOTO(n, _):
+                case Opcode.SLOT(n):
                     if (n < 0):
-                        _error("Illegal branch target")
+                        _error("SLOT must have a positive reference")
+                    if (n > len(stack.stack) - 1):
+                        _error("SLOT reference out of range")
+                    stack.push(stack.stack[len(stack) - n - 1])
 
-                    stack.ip = n
-                    continue
+                case Opcode.IDENTIFIERC(name):
+                    if not (name in mod.functions or name in mod.types):
+                        _error("IDENTIFIERC references unknown entity")
 
-                case Opcode.FUNREF(funref):
+                    stack.push(Identifier(name))
+
+                case Opcode.FUNREF():
+                    id = stack.pop()
+                    if not isinstance(id, Identifier):
+                        _error("FUNREF consumes an IDENTIFIER")
                     try:
                         # FIXME: Verify this statically
-                        stack.push(FunctionRef.parse(funref))
+                        stack.push(FunctionRef.parse(id.name))
                     except:
                         _error("Invalid function ref")
 
@@ -195,6 +185,20 @@ class Interpreter(object):
                         _error("Unknown target")
 
                     stack = stack.call(sig, ip)
+                    continue
+
+                case Opcode.RETURN(n):
+                    if (n > len(stack)):
+                        _error("Stack size violation")
+
+                    if stack.depth == 0:
+                        return stack[:n]
+
+                    sig = FunctionRef.parse(stack.name)
+                    if (len(sig.ret) != n):
+                        _error("Signature violation")
+
+                    stack = stack.ret(n)
                     continue
 
                 case Opcode.CLOSUREF(n):
