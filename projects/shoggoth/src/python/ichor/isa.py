@@ -192,52 +192,12 @@ class Opcode:
 
         """
 
-    class FIELDREF(t.NamedTuple):
-        """(IDENTIFIER, TYPEREF) -> (FIELDREF)
-
-
-        Produces a FIELDREF to the field named by the provided IDENTIFIER.
-        The FIELDREF must be within and with reference to a sum type.
-
-        """
-
     class VARIANTREF(t.NamedTuple):
         """(IDENTIFIER, TYPEREF) -> (VARIANTREF)
 
         Produce a VARIANTREF to an 'arm' of the given variant type.
 
         """
-
-    class STRUCT(t.NamedTuple):
-        """(STRUCTREF<S>, ...) -> (S)
-
-        Consume the top N items of the stack, producing a struct of the type `structref`.
-
-        The name and module path of the current function MUST match the name and module path of `structref`.
-        The arity of this opcode MUST match the arity of the struct.
-        The signature of the struct MUST match the signature fo the top N of the stack.
-        """
-
-        nargs: int = 0
-
-    class FLOAD(t.NamedTuple):
-        """(FIELDREF<f ⊢ T ∈ S>, S) -> (T)
-
-        Consume the struct reference at the top of the stack, producing the value of the referenced field.
-
-        """
-
-        fieldref: str
-
-    class FSTORE(t.NamedTuple):
-        """(FIELDREF<f ⊢ T ∈ S>, S, T) -> (S)
-
-        Consume the struct reference at the top of the stack and a value, producing a new copy of the struct in which
-        that field has been updated to the new value.
-
-        """
-
-        fieldref: str
 
     class VARIANT(t.NamedTuple):
         """(VARIANTREF<a ⊢ A ⊂ B>, ...) -> (B)
@@ -268,50 +228,8 @@ class Opcode:
 
         """
 
-    ####################################################################################################
-    # Arrays
-    ####################################################################################################
-    class ARRAY(t.NamedTuple):
-        """(*) -> (ARRAY<Y>)
-
-        Consume the top N items of the stack, producing an array of the type `typeref`.
-
-        """
-
-        typeref: str
-        nargs: int
-
-    class ALOAD(t.NamedTuple):
-        """(ARRAY<T>, NAT) -> (T)
-
-        Consume a reference to an array and an index, producing the value at that index.
-
-        FIXME: Or a signal/fault.
-
-        """
-
-    class ASTORE(t.NamedTuple):
-        """(ARRAY<T>, NAT, T) -> (ARRAY<T>)
-
-        Consume a value T, storing it at an index in the given array.
-        Produces the updated array as the top of stack.
-
-        """
-
-    ####################################################################################################
-    # Naturals
-    ####################################################################################################
-
-    ####################################################################################################
-    # Integers
-    ####################################################################################################
-
-    ####################################################################################################
-    # Ratios
-    ####################################################################################################
-
-
     class BREAK(t.NamedTuple):
+        """Abort the interpreter."""
         pass
 
 
@@ -347,10 +265,6 @@ class Module(t.NamedTuple):
                 return i
 
     def define_function(self, name, opcodes):
-        # FIXME: This is way way WAAAAAAY too minimal. Lots of other stuff goes on a "function."
-        # For instance how to install handlers?
-        # How to consume capabilities?
-
         try:
             sig = FunctionRef.parse(name)
             assert sig.name
@@ -364,8 +278,8 @@ class Module(t.NamedTuple):
         return name
 
     def define_type(self, name, signature):
-        # FIXME: What in TARNATION is this going to do
-        pass
+        self.types[name] = signature
+        return name
 
     def __str__(self):
         b = []

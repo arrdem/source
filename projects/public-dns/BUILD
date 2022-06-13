@@ -1,6 +1,7 @@
 zapp_binary(
     name = "updater",
     main = "src/python/arrdem/updater/__main__.py",
+    shebang = "/usr/bin/env python3",
     imports = [
         "src/python",
     ],
