@@ -4,20 +4,21 @@
 ichor entrypoint
 """
 
-from . import *
+from . import Opcode, Interpreter, BOOTSTRAP, XOR3
 
 
 def main():
     vm = Interpreter(BOOTSTRAP)
     ret = vm.run(
         [
-            Opcode.FUNREF(XOR3),
+            Opcode.IDENTIFIERC(XOR3),
+            Opcode.FUNREF(),
             Opcode.CLOSUREF(1),
             Opcode.CLOSUREC(1),
             Opcode.CALLC(1),
             Opcode.RETURN(1),
         ],
-        stackframe = [True, True, False]
+        stack = [True, True, False]
     )
     print(ret)
 

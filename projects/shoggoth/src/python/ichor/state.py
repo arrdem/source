@@ -6,6 +6,7 @@
 import typing as t
 
 from ichor.isa import Opcode
+from lark import Lark
 
 
 class Identifier(t.NamedTuple):
@@ -34,6 +35,28 @@ class FunctionSignature(t.NamedTuple):
             cls.parse_list(ret)
         )
 
+GRAMMAR = r"""
+fun: constraints ";" name ";" arguments ";" ret
+
+arguments: (type ","?)*
+ret: (type ","?)*
+constraints: (constraint ","?)*
+constraint: type
+
+var: constraints ";" name ";" arms
+arms: (arm ("," arms)?)?
+arm: name "(" bindings ")"
+
+bindings: (binding ","?)*
+binding: name ":" type
+
+type: NAME
+name: NAME
+NAME: /[^;,:⊢]+/
+"""
+
+FUNC = Lark(GRAMMAR, start="fun")
+
 
 class FunctionRef(t.NamedTuple):
     raw: str
@@ -60,6 +83,22 @@ class FunctionRef(t.NamedTuple):
 
 class Function(t.NamedTuple):
     name: str
+    arguments: t.List[str]
+    returns: t.List[str]
+    instructions: t.List[Opcode]
+    typevars: t.List[t.Any] = []
+    typeconstraints: t.List[t.Any] = []
+    metadata: dict = {}
+
+
+VAR = Lark(GRAMMAR, start="var")
+
+class Type(t.NamedTuple):
+    name: str
+    constructors: t.List[t.Tuple[str, t.List[str]]]
+    typevars: t.List[t.Any] = []
+    typeconstraints: t.List[t.Any] = []
+    metadata: dict = {}
 
 
 class Closure(t.NamedTuple):
