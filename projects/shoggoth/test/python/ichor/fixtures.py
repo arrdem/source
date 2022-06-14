@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from ichor import *
+from ichor import Interpreter, BOOTSTRAP
 import pytest
 
 

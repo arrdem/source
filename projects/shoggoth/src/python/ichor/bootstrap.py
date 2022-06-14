@@ -4,8 +4,8 @@ Some utterly trivial functions and types that allow me to begin testing the VM.
 Hopefully no "real" interpreter ever uses this code, since it's obviously replaceable.
 """
 
-from .isa import Module, Opcode
-from .typing import ProductExpr, SumExpr
+from ichor.isa import Opcode
+from ichor.state import Module
 
 
 BOOTSTRAP = Module()

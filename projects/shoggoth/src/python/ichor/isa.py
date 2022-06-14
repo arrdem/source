@@ -3,8 +3,6 @@
 
 import typing as t
 
-from .typing import *
-
 
 class Opcode:
     ####################################################################################################
@@ -231,61 +229,3 @@ class Opcode:
     class BREAK(t.NamedTuple):
         """Abort the interpreter."""
         pass
-
-
-class Module(t.NamedTuple):
-    opcodes: list = []
-    functions: dict = {}
-    types: dict = {}
-    constants: dict = {}
-
-    def copy(self):
-        return Module(
-            self.opcodes.copy(),
-            self.functions.copy(),
-            self.types.copy(),
-            self.constants.copy(),
-        )
-
-    @staticmethod
-    def translate(start: int, end: int, i: "Opcode"):
-        # FIXME: Consolidate bounds checks somehow
-        match i:
-            case Opcode.IF(t):
-                d = t + start
-                assert start <= d < end
-                return Opcode.IF(d)
-
-            case Opcode.GOTO(t):
-                d = t + start
-                assert start <= d < end
-                return Opcode.GOTO(d)
-
-            case _:
-                return i
-
-    def define_function(self, name, opcodes):
-        try:
-            sig = FunctionRef.parse(name)
-            assert sig.name
-        except:
-            raise ValueError("Illegal name provided")
-
-        start = len(self.opcodes)
-        self.functions[name] = start
-        for op in opcodes:
-            self.opcodes.append(self.translate(start, start + len(opcodes), op))
-        return name
-
-    def define_type(self, name, signature):
-        self.types[name] = signature
-        return name
-
-    def __str__(self):
-        b = []
-        marks = {v: k for k, v in self.functions.items()}
-        for i, o in zip(range(1<<64), self.opcodes):
-            if(i in marks):
-                b.append(f"{marks[i]}:")
-            b.append(f"{i: >10}: {o}")
-        return "\n".join(b)
