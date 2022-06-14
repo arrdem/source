@@ -12,7 +12,7 @@ context (a virtual machine) which DOES have an easily introspected and serialize
 from copy import deepcopy
 
 from ichor.isa import Opcode
-from ichor.typing import Closure, FunctionRef, Identifier
+from ichor.state import Closure, FunctionRef, Identifier, Module
 
 
 def rotate(l):
@@ -76,7 +76,7 @@ class InterpreterError(Exception):
 
 class Interpreter(object):
     """A shit simple instruction pointer based interpreter."""
-    def __init__(self, bootstrap_module):
+    def __init__(self, bootstrap_module: Module):
         self.bootstrap = bootstrap_module
 
     def run(self, opcodes, stack=[]):
@@ -94,7 +94,7 @@ class Interpreter(object):
             raise InterpreterError(mod, deepcopy(stackframe), msg)
 
         while True:
-            op = mod.opcodes[stackframe.ip]
+            op = mod.codepage[stackframe.ip]
             print("{0}{1: <50} {2}: {3}".format("  " * stackframe.depth, str(stackframe.stack), stackframe.ip, op))
 
             match op:

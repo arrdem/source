@@ -17,7 +17,7 @@ def main():
             Opcode.CALLC(1),
             Opcode.RETURN(1),
         ],
-        stack = [True, True, False]
+        stackframe = [True, True, False]
     )
     print(ret)
 
