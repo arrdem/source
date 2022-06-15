@@ -44,7 +44,6 @@ def py_pytest(name, srcs, deps, main=None, python_version=None, args=None, **kwa
 
     deps = sets.to_list(sets.make([
         py_requirement("pytest"),
-        py_requirement("jedi"),
         py_requirement("pytest-pudb"),
         py_requirement("pytest-cov"),
         py_requirement("pytest-timeout"),
@@ -52,7 +51,7 @@ def py_pytest(name, srcs, deps, main=None, python_version=None, args=None, **kwa
 
     srcs = [f] + srcs
 
-    t = py_test(
+    py_test(
       name = name,
       srcs = srcs,
       main = f,
@@ -62,11 +61,8 @@ def py_pytest(name, srcs, deps, main=None, python_version=None, args=None, **kwa
       **kwargs,
     )
 
-    # FIXME (arrdem 2020-09-27):
-    #   This really needs to be a py_image_test.
-    #   Not clear how to achieve that.
-    # zapp_binary(
-    #   name = name + ".hermetic",
+    # zapp_test(
+    #   name = name + ".zapp",
     #   main = f,
     #   args = args,
     #   srcs = srcs,
@@ -76,7 +72,9 @@ def py_pytest(name, srcs, deps, main=None, python_version=None, args=None, **kwa
     #   **kwargs,
     # )
 
-    return t
+    # FIXME (arrdem 2020-09-27):
+    #   Generate a py_image_test.
+    #   Not clear how to achieve that.
 
 
 def py_unittest(srcs=[], **kwargs):
