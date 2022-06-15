@@ -10,9 +10,10 @@ context (a virtual machine) which DOES have an easily introspected and serialize
 
 
 from copy import deepcopy
+import typing as t
 
 from ichor.isa import Opcode
-from ichor.state import Closure, FunctionRef, Identifier, Module
+from ichor.state import Closure, FunctionRef, Identifier, Module, Function
 
 
 def rotate(l):
@@ -20,7 +21,10 @@ def rotate(l):
 
 
 class Stackframe(object):
-    def __init__(self, stack=None, name=None, ip=None, parent=None, depth=0):
+    def __init__(self,
+                 stack=None,
+                 fun: t.Optional[Function] = None,
+                 ip=None, parent=None, depth=0):
         self.stack = stack or []
         self.name = name or ";unknown;;"
         self.ip = ip or 0
@@ -33,13 +37,13 @@ class Stackframe(object):
     def pop(self):
         return self.stack.pop(0)
 
-    def call(self, signature: FunctionRef, ip) -> "Stackframe":
+    def call(self, fun: Function, ip) -> "Stackframe":
         self.ip += 1
-        nargs = len(signature.args)
+        nargs = len(fun.arguments)
         args, self.stack = self.stack[:nargs], self.stack[nargs:]
         return Stackframe(
             stack=args,
-            name=signature.raw,
+            name=fun.signature,
             ip=ip,
             parent=self,
             depth=self.depth+1
@@ -84,7 +88,7 @@ class Interpreter(object):
 
         stackframe = Stackframe(stack=stack)
         mod = self.bootstrap.copy()
-        stackframe.ip = mod.functions[mod.define_function(";<main>;;", opcodes)]
+        stackframe.ip = mod.labels[mod.define_function(";<main>;;", opcodes)]
 
         print(mod)
 
@@ -168,17 +172,18 @@ class Interpreter(object):
                     sig = stackframe.pop()
                     if not isinstance(sig, FunctionRef):
                         _error("CALLF requires a funref at top of stack")
-                    if n != len(sig.args):
+                    fun = mod.functions[sig.name]
+                    if n != len(fun.arguments):
                         _error("CALLF target violation; argument count missmatch")
                     if n > len(stackframe):
                         _error("Stack size violation")
 
                     try:
-                        ip = mod.functions[sig.raw]
+                        ip = mod.codepage[sig.raw]
                     except KeyError:
                         _error("Unknown target")
 
-                    stackframe = stackframe.call(sig, ip)
+                    stackframe = stackframe.call(fun, ip)
                     continue
 
                 case Opcode.RETURN(n):

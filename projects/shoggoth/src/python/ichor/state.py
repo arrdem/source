@@ -30,8 +30,9 @@ binding: name ":" type
 
 type: NAME
 name: NAME
-NAME: /[^;,:⊢()<>\[\]{}|]+/
+NAME: /[^;,:⊢(){}|]+/
 """
+
 
 class FuncT(Transformer):
     @v_args(inline=True)
@@ -64,26 +65,11 @@ FUNC = Lark(GRAMMAR, start="fun", parser='lalr', transformer=FuncT())
 
 
 class FunctionRef(t.NamedTuple):
-    raw: str
-    type_params: list
     name: str
-    args: list
-    ret: list
-
-    @staticmethod
-    def parse_list(l):
-        return [e for e in l.split(",") if e]
 
     @classmethod
     def parse(cls, raw: str):
-        vars, name, args, ret = raw.split(";")
-        return cls(
-            raw,
-            cls.parse_list(vars),
-            name,
-            cls.parse_list(args),
-            cls.parse_list(ret)
-        )
+        return cls(raw)
 
 
 class Function(t.NamedTuple):
@@ -97,7 +83,16 @@ class Function(t.NamedTuple):
 
     @classmethod
     def build(cls, name: str, instructions: t.List[Opcode]):
-        pass
+        constraints, name, args, rets = FUNC.parse(name)
+        # FIXME: Constraints probably needs some massaging
+        # FIXME: Need to get typevars from somewhere
+        # They both probably live in the same list
+        return cls(name, args, rets, instructions, typeconstraints=constraints)
+
+    @property
+    def signature(self):
+        # FIXME: This should be more meaningful - likely including a type and code fingerprint
+        return f"{self.name};{len(self.arguments)};{len(self.returns)}"
 
 
 class VarT(FuncT):
@@ -126,12 +121,21 @@ class VarT(FuncT):
 
 VAR = Lark(GRAMMAR, start="var", parser='lalr', transformer=VarT())
 
+
 class Type(t.NamedTuple):
     name: str
     constructors: t.List[t.Tuple[str, t.List[str]]]
     typevars: t.List[t.Any] = []
     typeconstraints: t.List[t.Any] = []
     metadata: dict = {}
+
+    @classmethod
+    def build(cls, name: str):
+        constraints, name, arms = VAR.parse(name)
+        # FIXME: Constraints probably needs some massaging
+        # FIXME: Need to get typevars from somewhere
+        # They both probably live in the same list
+        return cls(name, arms, typeconstraints=constraints)
 
 
 class Closure(t.NamedTuple):
@@ -148,15 +152,17 @@ class Struct(t.NamedTuple):
 
 
 class Module(t.NamedTuple):
+    functions: t.Dict[str, Function] = {}
+    labels: t.Dict[str, int] = {}
     codepage: list = []
-    functions: dict = {}
-    types: dict = {}
+    types: t.Dict[str, Type] = {}
     constants: dict = {}
 
     def copy(self) -> "Module":
         return Module(
-            self.codepage.copy(),
             self.functions.copy(),
+            self.labels.copy(),
+            self.codepage.copy(),
             self.types.copy(),
             self.constants.copy(),
         )
@@ -184,18 +190,12 @@ class Module(t.NamedTuple):
         Side-effects the codepage and name table.
 
         """
-
-        try:
-            sig = FunctionRef.parse(name)
-            assert sig.name
-        except:
-            raise ValueError("Illegal name provided")
-
-        start = len(self.codepage)
-        self.functions[name] = start
+        func = Function.build(name, opcodes)
+        self.functions[func.signature] = func
+        self.labels[func.signature] = start = len(self.codepage)
         for op in opcodes:
             self.codepage.append(self.translate(start, start + len(opcodes), op))
-        return name
+        return func.signature
 
     def define_type(self, name, signature):
         self.types[name] = signature
@@ -203,9 +203,9 @@ class Module(t.NamedTuple):
 
     def __str__(self):
         b = []
-        marks = {v: k for k, v in self.functions.items()}
+        marks = {v: k for k, v in self.labels.items()}
         for i, o in zip(range(1<<64), self.codepage):
             if(i in marks):
                 b.append(f"{marks[i]}:")
-                b.append(f"{i: >10}: {o}")
+            b.append(f"{i: >10}: {o}")
         return "\n".join(b)
