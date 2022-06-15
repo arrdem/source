@@ -203,9 +203,19 @@ class Module(t.NamedTuple):
 
     def __str__(self):
         b = []
+        b.append("functions:")
+        for sig, fun in self.functions.items():
+            b.append(f"  {sig!r}:")
+            b.append(f"    name: {fun.name}")
+            b.append(f"    typeconstraints: {fun.typeconstraints}")
+            b.append(f"    arguments: {fun.arguments}")
+            b.append(f"    returns: {fun.returns}")
+            b.append(f"    ip: {self.labels[fun.signature]}")
+
+        b.append("codepage:")
         marks = {v: k for k, v in self.labels.items()}
         for i, o in zip(range(1<<64), self.codepage):
             if(i in marks):
-                b.append(f"{marks[i]}:")
-            b.append(f"{i: >10}: {o}")
+                b.append(f"  {marks[i]!r}:")
+            b.append(f"  {i: >10}: {o}")
         return "\n".join(b)
