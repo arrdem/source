@@ -6,34 +6,12 @@
 import typing as t
 
 from ichor.isa import Opcode
-from lark import Lark
+from lark import Lark, Transformer, v_args, Token
 
 
 class Identifier(t.NamedTuple):
     name: str
 
-
-class FunctionSignature(t.NamedTuple):
-    raw: str
-    type_params: list
-    name: str
-    args: list
-    ret: list
-
-    @staticmethod
-    def parse_list(l):
-        return [e for e in l.split(",") if e]
-
-    @classmethod
-    def parse(cls, raw: str):
-        vars, name, args, ret = raw.split(";")
-        return cls(
-            raw,
-            cls.parse_list(vars),
-            name,
-            cls.parse_list(args),
-            cls.parse_list(ret)
-        )
 
 GRAMMAR = r"""
 fun: constraints ";" name ";" arguments ";" ret
@@ -44,7 +22,7 @@ constraints: (constraint ","?)*
 constraint: type
 
 var: constraints ";" name ";" arms
-arms: (arm ("," arms)?)?
+arms: (arm ","?)+
 arm: name "(" bindings ")"
 
 bindings: (binding ","?)*
@@ -52,10 +30,37 @@ binding: name ":" type
 
 type: NAME
 name: NAME
-NAME: /[^;,:⊢]+/
+NAME: /[^;,:⊢()<>\[\]{}|]+/
 """
 
-FUNC = Lark(GRAMMAR, start="fun")
+class FuncT(Transformer):
+    @v_args(inline=True)
+    def fun(self, constraints, name, arguments, ret):
+        return (constraints, name, arguments, ret)
+
+    def constraints(self, args):
+        return (*args,)
+
+    def arguments(self, args):
+        return tuple(args)
+
+    def ret(self, args):
+        return tuple(args)
+
+    @v_args(inline=True)
+    def NAME(self, name: Token):
+        return name.value
+
+    @v_args(inline=True)
+    def name(self, name):
+        return name
+
+    @v_args(inline=True)
+    def type(self, name):
+        return name
+
+
+FUNC = Lark(GRAMMAR, start="fun", parser='lalr', transformer=FuncT())
 
 
 class FunctionRef(t.NamedTuple):
@@ -90,8 +95,36 @@ class Function(t.NamedTuple):
     typeconstraints: t.List[t.Any] = []
     metadata: dict = {}
 
+    @classmethod
+    def build(cls, name: str, instructions: t.List[Opcode]):
+        pass
 
-VAR = Lark(GRAMMAR, start="var")
+
+class VarT(FuncT):
+    @v_args(inline=True)
+    def var(self, constraints, name, arms):
+        return (constraints, name, arms)
+
+    @v_args(inline=True)
+    def constraint(self, name):
+        return name
+
+    def arms(self, arms):
+        return tuple(arms)
+
+    def binding(self, binding):
+        return tuple(binding)
+
+    def bindings(self, bindings):
+        return tuple(bindings)
+
+    @v_args(inline=True)
+    def arm(self, name, bindings):
+        return (name, bindings)
+
+
+
+VAR = Lark(GRAMMAR, start="var", parser='lalr', transformer=VarT())
 
 class Type(t.NamedTuple):
     name: str
