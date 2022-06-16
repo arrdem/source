@@ -137,6 +137,10 @@ class Type(t.NamedTuple):
         # They both probably live in the same list
         return cls(name, arms, typeconstraints=constraints)
 
+    @property
+    def signature(self):
+        return self.name
+
 
 class Closure(t.NamedTuple):
     # Note that a closure over a closure is equivalent to a single closure which extends the captured stack fragment, so
@@ -197,9 +201,10 @@ class Module(t.NamedTuple):
             self.codepage.append(self.translate(start, start + len(opcodes), op))
         return func.signature
 
-    def define_type(self, name, signature):
-        self.types[name] = signature
-        return name
+    def define_type(self, name):
+        type = Type.build(name)
+        self.types[type.signature] = type
+        return type.signature
 
     def __str__(self):
         b = []

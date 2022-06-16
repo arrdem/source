@@ -10,8 +10,12 @@ from ichor.state import Module
 
 BOOTSTRAP = Module()
 
+BOOL = BOOTSTRAP.define_type(
+    ";bool;true(),false()",
+)
+
 NOT1 = BOOTSTRAP.define_function(
-    ";not;bool;bool",
+    f";not;{BOOL};{BOOL}",
     [
         Opcode.IF(target=3),
         Opcode.FALSE(),
@@ -22,7 +26,7 @@ NOT1 = BOOTSTRAP.define_function(
 )
 
 OR2 = BOOTSTRAP.define_function(
-    ";or;bool,bool;bool",
+    f";or;{BOOL},{BOOL};{BOOL}",
     [
         Opcode.IF(target=3),
         Opcode.TRUE(),
@@ -36,7 +40,7 @@ OR2 = BOOTSTRAP.define_function(
 )
 
 OR3 = BOOTSTRAP.define_function(
-    ";or;bool,bool,bool;bool",
+    f";or;{BOOL},{BOOL},{BOOL};{BOOL}",
     [
         # A B C
         Opcode.IDENTIFIERC(OR2),
@@ -54,7 +58,7 @@ OR3 = BOOTSTRAP.define_function(
 )
 
 AND2 = BOOTSTRAP.define_function(
-    ";and;bool,bool;bool",
+    f";and;{BOOL},{BOOL};{BOOL}",
     [
         Opcode.IF(target=3),
         Opcode.IF(target=3),
@@ -67,7 +71,7 @@ AND2 = BOOTSTRAP.define_function(
 )
 
 AND3 = BOOTSTRAP.define_function(
-    ";and;bool,bool,bool;bool",
+    f";and;{BOOL},{BOOL},{BOOL};{BOOL}",
     [
         # A B C
         Opcode.IDENTIFIERC(AND2),
@@ -84,7 +88,7 @@ AND3 = BOOTSTRAP.define_function(
 )
 
 XOR2 = BOOTSTRAP.define_function(
-    ";xor;bool,bool;bool",
+    f";xor;{BOOL},{BOOL};{BOOL}",
     [
         Opcode.IDENTIFIERC(AND2),
         Opcode.FUNREF(),
@@ -119,7 +123,7 @@ XOR2 = BOOTSTRAP.define_function(
 )
 
 XOR3 = BOOTSTRAP.define_function(
-    ";xor;bool,bool,bool;bool",
+    f";xor;{BOOL},{BOOL},{BOOL};{BOOL}",
     [
         Opcode.IDENTIFIERC(XOR2),
         Opcode.FUNREF(),
@@ -144,12 +148,4 @@ XOR3 = BOOTSTRAP.define_function(
         Opcode.CALLF(2),      # A^B|B^C
         Opcode.RETURN(1),
     ]
-)
-
-BOOL = BOOTSTRAP.define_type(
-    ";bool",
-    {
-        ";true;": [],
-        ";false;": [],
-    },
 )
