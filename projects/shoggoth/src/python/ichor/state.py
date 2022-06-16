@@ -208,6 +208,15 @@ class Module(t.NamedTuple):
 
     def __str__(self):
         b = []
+        b.append("types:")
+        for sig, type in self.types.items():
+            b.append(f"  {sig!r}:")
+            b.append(f"    name: {type.name}")
+            b.append(f"    typeconstraints: {type.typeconstraints}")
+            b.append(f"    arms:")
+            for arm in type.constructors:
+                b.append(f"    - {arm}")
+
         b.append("functions:")
         for sig, fun in self.functions.items():
             b.append(f"  {sig!r}:")
