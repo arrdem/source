@@ -5,37 +5,7 @@ import typing as t
 
 
 class Opcode:
-    ####################################################################################################
-    # Logic
-    ####################################################################################################
-
-    # FIXME: This should become an instantiation of the BOOL enum
-    class TRUE(t.NamedTuple):
-        """() -> (bool)
-
-        Push the constant TRUE onto the stack.
-
-        """
-
-    # FIXME: This should become an instantiation of the BOOL enum
-    class FALSE(t.NamedTuple):
-        """() -> (bool)
-
-        Push the constant FALSE onto the stack.
-
-        """
-
-    # FIXME: This should become a `VTEST` macro ... or may be replaceable
-    class IF(t.NamedTuple):
-        """(bool) -> ()
-
-        Branch to another point if the top item of the stack is TRUE. Otherwise fall through.
-
-        """
-
-        target: int
-
-    # not, and, or, xor etc. can all be functions given if.
+    # Note that there's no IF, TRUE or FALSE required if bool is a builtin.
 
     class GOTO(t.NamedTuple):
         """() -> ()
@@ -211,11 +181,15 @@ class Opcode:
         nargs: int = 0
 
     class VTEST(t.NamedTuple):
-        """(VARIANTREF<a ⊢ A ⊂ B>, B) -> (bool)
+        """(VARIANTREF<a ⊢ A ⊂ B>, B) -> ()
 
         Test whether B is a given arm of a variant A .
+        If it is, branch to the given target.
+        Otherwise fall through.
 
         """
+
+        target: int
 
     class VLOAD(t.NamedTuple):
         """(VARIANTREF<a ⊢ A ⊂ B>, B) -> (A)
