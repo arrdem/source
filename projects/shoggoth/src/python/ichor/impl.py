@@ -13,7 +13,7 @@ from copy import deepcopy
 import typing as t
 
 from ichor.isa import Opcode
-from ichor.state import Closure, FunctionRef, Identifier, Module, Function
+from ichor.state import Closure, FunctionRef, Identifier, Module, Function, Type, TypeRef, VariantRef, Variant
 
 
 def rotate(l):
@@ -120,22 +120,65 @@ class Interpreter(object):
             print("{0}{1: <50} {2}: {3}".format("  " * stackframe.depth, str(stackframe._stack), stackframe._ip, op))
 
             match op:
-                case Opcode.TRUE():
-                    stackframe.push(True)
+                case Opcode.IDENTIFIERC(name):
+                    if not (name in mod.functions or name in mod.types):
+                        _error("IDENTIFIERC references unknown entity")
 
-                case Opcode.FALSE():
-                    stackframe.push(False)
+                    stackframe.push(Identifier(name))
 
-                case Opcode.IF(target):
-                    if len(stackframe) < 1:
+                case Opcode.TYPEREF():
+                    id = stackframe.pop()
+                    if not isinstance(id, Identifier):
+                        _error("TYPEREF consumes an identifier")
+                    if not id.name in mod.types:
+                        _error("TYPEREF must be given a valid type identifier")
+
+                    stackframe.push(TypeRef(id.name))
+
+                case Opcode.VARIANTREF():
+                    id: Identifier = stackframe.pop()
+                    if not isinstance(id, Identifier):
+                        _error("VARIANTREF consumes an identifier and a typeref")
+
+                    t: TypeRef = stackframe.pop()
+                    if not isinstance(id, TypeRef):
+                        _error("VARIANTREF consumes an identifier and a typeref")
+
+                    type = mod.types[t.name]
+                    if id.name not in type.constructors:
+                        _error(f"VARIANTREF given {id.name!r} which does not name a constructor within {type!r}")
+
+                    stackframe.push(VariantRef(t, id.name))
+
+                case Opcode.VARIANT(n):
+                    armref: VariantRef = stackframe.pop()
+                    if not isinstance(armref, VariantRef):
+                        _error("VARIANT must be given a valid constructor reference")
+
+                    ctor = mod.types[armref.type.name].constructors[armref.arm]
+                    if n != len(ctor):
+                        _error("VARIANT given n-args inconsistent with the type constructor")
+
+                    if n > len(stackframe):
                         _error("Stack size violation")
 
-                    val = stackframe.pop()
-                    if val not in [True, False]:
-                        _error("Type violation")
+                    # FIXME: Where does type variable to type binding occur?
+                    # Certainly needs to be AT LEAST here, where we also need to be doing some typechecking
+                    v = Variant(armref.type.name, armref.arm, tuple(stackframe._stack[:n]))
+                    stackframe.drop(n)
+                    stackframe.push(v)
 
-                    if val is False:
-                        stackframe.goto(target)
+                case Opcode.VTEST(n):
+                    armref: VariantRef = stackframe.pop()
+                    if not isinstance(armref, VariantRef):
+                        _error("VTEST must be given a variant reference")
+
+                    inst: Variant = stackframe.pop()
+                    if not isinstance(inst, Variant):
+                        _error("VTEST must be given an instance of a variant")
+
+                    if inst.type == armref.type.name and inst.variant == armref.arm:
+                        stackframe.goto(n)
                         continue
 
                 case Opcode.GOTO(n):
@@ -168,12 +211,6 @@ class Interpreter(object):
                     if (n > len(stackframe) - 1):
                         _error("SLOT reference out of range")
                     stackframe.slot(n)
-
-                case Opcode.IDENTIFIERC(name):
-                    if not (name in mod.functions or name in mod.types):
-                        _error("IDENTIFIERC references unknown entity")
-
-                    stackframe.push(Identifier(name))
 
                 case Opcode.FUNREF():
                     id = stackframe.pop()

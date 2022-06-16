@@ -95,7 +95,7 @@ class Function(t.NamedTuple):
         return f"{self.name};{len(self.arguments)};{len(self.returns)}"
 
 
-class VarT(FuncT):
+class TypeT(FuncT):
     @v_args(inline=True)
     def var(self, constraints, name, arms):
         return (constraints, name, arms)
@@ -119,27 +119,42 @@ class VarT(FuncT):
 
 
 
-VAR = Lark(GRAMMAR, start="var", parser='lalr', transformer=VarT())
+TYPE = Lark(GRAMMAR, start="var", parser='lalr', transformer=TypeT())
+
+
+class TypeRef(t.NamedTuple):
+    name: str
+
+
+class VariantRef(t.NamedTuple):
+    type: TypeRef
+    arm: str
 
 
 class Type(t.NamedTuple):
     name: str
-    constructors: t.List[t.Tuple[str, t.List[str]]]
+    constructors: t.Dict[str, t.List[str]]
     typevars: t.List[t.Any] = []
     typeconstraints: t.List[t.Any] = []
     metadata: dict = {}
 
     @classmethod
     def build(cls, name: str):
-        constraints, name, arms = VAR.parse(name)
+        constraints, name, arms = TYPE.parse(name)
         # FIXME: Constraints probably needs some massaging
         # FIXME: Need to get typevars from somewhere
         # They both probably live in the same list
-        return cls(name, arms, typeconstraints=constraints)
+        return cls(name, dict(arms), typeconstraints=constraints)
 
     @property
     def signature(self):
         return self.name
+
+
+class Variant(t.NamedTuple):
+    type: str
+    variant: str
+    fields: t.Tuple[t.Any]
 
 
 class Closure(t.NamedTuple):
