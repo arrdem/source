@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from ichor.state import FUNC, VAR
+from ichor.state import FUNC, TYPE
 
 import pytest
 
@@ -18,5 +18,5 @@ def test_func_parses(sig, parse):
     (";bool;true(),false()", ((), "bool", (("true", ()), ("false", ())))),
     ("A,B;pair;pair(a:A,b:B)", (("A", "B"), "pair", (("pair", (("a", "A"), ("b", "B"))),))),
 ])
-def test_var_parses(sig, parse):
-    assert VAR.parse(sig) == parse
+def test_type_parses(sig, parse):
+    assert TYPE.parse(sig) == parse

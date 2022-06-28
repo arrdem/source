@@ -11,78 +11,10 @@ context (a virtual machine) which DOES have an easily introspected and serialize
 
 from copy import deepcopy
 import typing as t
+from textwrap import indent
 
 from ichor.isa import Opcode
-from ichor.state import Closure, FunctionRef, Identifier, Module, Function, Type, TypeRef, VariantRef, Variant
-
-
-def rotate(l):
-    return [l[-1]] + l[:-1]
-
-
-class Stackframe(object):
-    def __init__(self,
-                 fun: Function,
-                 ip: int,
-                 stack: t.Optional[t.List[t.Any]] = None,
-                 parent: t.Optional["Stackframe"] = None):
-        self._fun = fun
-        self._ip = ip
-        self._stack = stack or []
-        self._parent = parent
-
-    def push(self, obj):
-        self._stack.insert(0, obj)
-
-    def pop(self):
-        return self._stack.pop(0)
-
-    def call(self, fun: Function, ip) -> "Stackframe":
-        assert isinstance(fun, Function)
-        assert isinstance(ip, int)
-        self._ip += 1
-        nargs = len(fun.arguments)
-        args, self._stack = self._stack[:nargs], self._stack[nargs:]
-        return Stackframe(
-            fun,
-            ip,
-            stack=args,
-            parent=self,
-        )
-
-    def ret(self, nargs) -> "Stackframe":
-        assert nargs >= 0
-        assert isinstance(self._parent, Stackframe)
-        self._parent._stack = self._stack[:nargs] + self._parent._stack
-        return self._parent
-
-    def dup(self, nargs):
-        self._stack = self._stack[:nargs] + self._stack
-
-    def drop(self, nargs):
-        self._stack = self._stack[nargs:]
-
-    def rot(self, nargs):
-        self._stack = rotate(self._stack[:nargs]) + self._stack[nargs:]
-
-    def slot(self, n):
-        self.push(self._stack[len(self) - n - 1])
-
-    def goto(self, target: int):
-        self._ip = target
-
-    @property
-    def depth(self):
-        if self._parent == None:
-            return 0
-        else:
-            return self._parent.depth + 1
-
-    def __getitem__(self, key):
-        return self._stack.__getitem__(key)
-
-    def __len__(self):
-        return len(self._stack)
+from ichor.state import Closure, FunctionRef, Identifier, Module, Function, Type, TypeRef, VariantRef, Variant, Stackframe
 
 
 class InterpreterError(Exception):
@@ -107,6 +39,7 @@ class Interpreter(object):
         main_fun = mod.functions[main]
         main_ip = mod.labels[main]
         stackframe = Stackframe(main_fun, main_ip, stack)
+        clock: int = 0
 
         print(mod)
 
@@ -115,13 +48,26 @@ class Interpreter(object):
             # And the stack object isn't immutable or otherwise designed for cheap snapshotting
             raise InterpreterError(mod, deepcopy(stackframe), msg)
 
+        def _debug():
+            b = []
+            b.append(f"clock {clock}:")
+            b.append("  stack:")
+            for offset, it in zip(range(len(stackframe), 0, -1), stackframe):
+                b.append(f"    {offset: <3} {it}")
+            b.append(f"  op: {op}")
+            print(indent("\n".join(b), "  " * stackframe.depth))
+
+
         while True:
             op = mod.codepage[stackframe._ip]
-            print("{0}{1: <50} {2}: {3}".format("  " * stackframe.depth, str(stackframe._stack), stackframe._ip, op))
+            _debug()
+            clock += 1
 
             match op:
                 case Opcode.IDENTIFIERC(name):
-                    if not (name in mod.functions or name in mod.types):
+                    if not (name in mod.functions
+                            or name in mod.types
+                            or any(name in t.constructors for t in mod.types.values())):
                         _error("IDENTIFIERC references unknown entity")
 
                     stackframe.push(Identifier(name))
@@ -141,7 +87,7 @@ class Interpreter(object):
                         _error("VARIANTREF consumes an identifier and a typeref")
 
                     t: TypeRef = stackframe.pop()
-                    if not isinstance(id, TypeRef):
+                    if not isinstance(t, TypeRef):
                         _error("VARIANTREF consumes an identifier and a typeref")
 
                     type = mod.types[t.name]
@@ -164,7 +110,7 @@ class Interpreter(object):
 
                     # FIXME: Where does type variable to type binding occur?
                     # Certainly needs to be AT LEAST here, where we also need to be doing some typechecking
-                    v = Variant(armref.type.name, armref.arm, tuple(stackframe._stack[:n]))
+                    v = Variant(armref.type.name, armref.arm, tuple(stackframe[:n]))
                     stackframe.drop(n)
                     stackframe.push(v)
 
@@ -265,7 +211,7 @@ class Interpreter(object):
 
                     c = Closure(
                         sig,
-                        stackframe._stack[:n]
+                        stackframe[:n]
                     )
                     stackframe.drop(n)
                     stackframe.push(c)
@@ -282,7 +228,7 @@ class Interpreter(object):
 
                     c = Closure(
                         c.funref,
-                        stackframe._stack[:n] + c.frag
+                        stackframe[:n] + c.frag
                     )
                     stackframe.drop(n)
                     stackframe.push(c)
@@ -300,7 +246,7 @@ class Interpreter(object):
                     # Extract the function signature
 
                     # Push the closure's stack fragment
-                    stackframe._stack = c.frag + stackframe._stack
+                    stackframe._stack = stackframe._stack.extendleft(c.frag)
 
                     # Perform a "normal" funref call
                     try:

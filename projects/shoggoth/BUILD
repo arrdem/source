@@ -4,6 +4,7 @@ py_project(
     main_deps = [
         py_requirement("prompt_toolkit"),
         py_requirement("yaspin"),
+        py_requirement("pyrsistent"),
     ],
     lib_deps = [
         py_requirement("lark"),

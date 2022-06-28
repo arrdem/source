@@ -2,10 +2,11 @@
 
 """The core VM/interpreter model."""
 
-
 import typing as t
 
 from ichor.isa import Opcode
+
+from pyrsistent import pdeque, PDeque
 from lark import Lark, Transformer, v_args, Token
 
 
@@ -154,7 +155,7 @@ class Type(t.NamedTuple):
 class Variant(t.NamedTuple):
     type: str
     variant: str
-    fields: t.Tuple[t.Any]
+    fields: t.Tuple
 
 
 class Closure(t.NamedTuple):
@@ -190,10 +191,10 @@ class Module(t.NamedTuple):
     def translate(start: int, end: int, i: Opcode):
         # FIXME: Consolidate bounds checks somehow
         match i:
-            case Opcode.IF(t):
+            case Opcode.VTEST(t):
                 d = t + start
                 assert start <= d < end
-                return Opcode.IF(d)
+                return Opcode.VTEST(d)
 
             case Opcode.GOTO(t):
                 d = t + start
@@ -248,3 +249,75 @@ class Module(t.NamedTuple):
                 b.append(f"  {marks[i]!r}:")
             b.append(f"  {i: >10}: {o}")
         return "\n".join(b)
+
+
+def rotate(l):
+    return [l[-1]] + l[:-1]
+
+
+class Stackframe(object):
+    def __init__(self,
+                 fun: Function,
+                 ip: int,
+                 stack: t.Optional[t.List[t.Any]] = None,
+                 parent: t.Optional["Stackframe"] = None):
+        self._fun = fun
+        self._ip = ip
+        self._stack: t.List = stack or []
+        self._parent = parent
+
+    def push(self, obj):
+        self._stack.append(obj)
+
+    def pop(self):
+        return self._stack.pop()
+
+    def dup(self, nargs):
+        self._stack.extend(self._stack[-nargs:])
+
+    def drop(self, nargs):
+        self._stack = self._stack[:-nargs]
+
+    def rot(self, nargs):
+        self._stack[nargs:].extend(rotate(self._stack[:nargs]))
+
+    def slot(self, n):
+        self.push(self._stack[n])
+
+    def call(self, fun: Function, ip) -> "Stackframe":
+        assert isinstance(fun, Function)
+        assert isinstance(ip, int)
+        self._ip += 1
+        nargs = len(fun.arguments)
+        args, self._stack = self._stack[:nargs], self._stack[nargs:]
+        return Stackframe(
+            fun,
+            ip,
+            stack=args,
+            parent=self,
+        )
+
+    def ret(self, nargs) -> "Stackframe":
+        assert nargs >= 0
+        assert isinstance(self._parent, Stackframe)
+        self._parent._stack.extend(self._stack[:nargs])
+        return self._parent
+
+    def goto(self, target: int):
+        self._ip = target
+
+    @property
+    def depth(self):
+        if self._parent == None:
+            return 0
+        else:
+            return self._parent.depth + 1
+
+    def __getitem__(self, key):
+        return self._stack.__getitem__(key)
+
+    def __len__(self):
+        return len(self._stack)
+
+    def __iter__(self):
+        return iter(self._stack)

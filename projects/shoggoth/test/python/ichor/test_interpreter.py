@@ -8,60 +8,34 @@ from ichor import *
 import pytest
 
 
-def test_true(vm):
-    assert vm.run([Opcode.TRUE(), Opcode.RETURN(1)]) == [True]
-
-
-def test_false(vm):
-    assert vm.run([Opcode.FALSE(), Opcode.RETURN(1)]) == [False]
-
-
 def test_return(vm):
-    assert vm.run([Opcode.FALSE(), Opcode.RETURN(0)]) == []
-    assert vm.run([Opcode.TRUE(), Opcode.FALSE(), Opcode.RETURN(1)]) == [False]
-    assert vm.run([Opcode.TRUE(), Opcode.FALSE(), Opcode.RETURN(2)]) == [False, True]
+    assert vm.run([Opcode.RETURN(0)], stack=[TRUE, FALSE]) == []
+    assert vm.run([Opcode.RETURN(1)], stack=[TRUE, FALSE]) == [TRUE]
+    assert vm.run([Opcode.RETURN(2)], stack=[TRUE, FALSE]) == [TRUE, FALSE]
 
 
 def test_dup(vm):
-    assert vm.run([
-        Opcode.TRUE(),
-        Opcode.FALSE(),
-        Opcode.DUP(1),
-        Opcode.RETURN(3)
-    ]) == [False, False, True]
-
-    assert vm.run([
-        Opcode.TRUE(),
-        Opcode.FALSE(),
-        Opcode.DUP(2),
-        Opcode.RETURN(4)
-    ]) == [False, True, False, True]
+    assert vm.run([Opcode.DUP(1), Opcode.RETURN(3)], stack=[FALSE, TRUE]) == [FALSE, TRUE, TRUE]
+    assert vm.run([Opcode.DUP(2), Opcode.RETURN(4)], stack=[FALSE, TRUE]) == [FALSE, TRUE, FALSE, TRUE]
 
 
 def test_rot(vm):
     assert vm.run([
-        Opcode.TRUE(),
-        Opcode.FALSE(),
         Opcode.ROT(2),
         Opcode.RETURN(2)
-    ]) == [True, False]
+    ], stack=[FALSE, TRUE]) == [TRUE, FALSE]
 
     assert vm.run([
-        Opcode.FALSE(),
-        Opcode.TRUE(),
-        Opcode.FALSE(),
         Opcode.ROT(3),
         Opcode.RETURN(3)
-    ]) == [False, False, True]
+    ], stack=[FALSE, TRUE, FALSE]) == [FALSE, FALSE, TRUE]
 
 
 def test_drop(vm):
     assert vm.run([
-        Opcode.TRUE(),
-        Opcode.FALSE(),
         Opcode.DROP(1),
         Opcode.RETURN(1)
-    ]) == [True]
+    ], stack=[TRUE, FALSE]) == [TRUE]
 
 
 def test_dup_too_many(vm):
