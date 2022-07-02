@@ -15,7 +15,7 @@ mapping: "{" kv* "}"
 kv: expr expr
 quote: "'" expr
 
-atom: keyword | pattern | num | string | true | false | nil | symbol
+atom: keyword | pattern | num | string | bool | nil | symbol
 num: hex | octal | bin | int | float
 
 keyword: ":" SYMBOL
@@ -30,9 +30,12 @@ STRING: /".*?"/
 pattern: PATTERN
 PATTERN: /\/.*?\//
 
-true: /true/
-false: /false/
-nil: /nil/
+bool: TRUE | FALSE
+TRUE: /true/
+FALSE: /false/
+
+nil: NIL
+NIL: /nil/
 
 // NOTE: order-prescidence matters here, 0x, 0b, 0o etc. require lookahead
 

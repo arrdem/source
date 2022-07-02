@@ -86,7 +86,7 @@ class FnExpr(Expr):
 
 BOOTSTRAP = "lang.shoggoth.v0.bootstrap"
 SPECIALS = Namespace(Symbol(BOOTSTRAP), {
-    Symbol("if*"): None,
+    Symbol("if*"): None, # FIXME: This isn't really if anymore, it's MATCH or TEST. Something. Unless bool is in bootstrap.
     Symbol("let*"): None,
     Symbol("fn*"): None,
 })
@@ -110,31 +110,36 @@ class Analyzer:
         def _analyze(e):
             return self.analyze(module, e)
 
-        if isinstance(expr, (int, float, str, Keyword)):
-            return ConstExpr(expr)
+        match expr:
+            case int() | float() | str():
+                return ConstExpr(expr)
 
-        if isinstance(expr, Vec):
-            return ListExpr([self.analyze(module, e) for e in expr])
+            case Keyword():
+                raise ValueError()
 
-        if isinstance(expr, List) and len(expr) > 1 and isinstance(expr[0], Symbol):
-            if (target := self.resolve(module, expr[0])):
-                match target:
-                    case Symbol("if*", BOOTSTRAP):
-                        assert len(expr) == 4
-                        return IfExpr(_analyze(expr[1]), _analyze(expr[2]), _analyze(expr[3]))
+            case List() if len(expr) > 1 and isinstance(expr[0], Symbol):
+                if (target := self.resolve(module, expr[0])):
+                    match target:
+                        case Symbol("if*", BOOTSTRAP):
+                            assert len(expr) == 4
+                            return IfExpr(_analyze(expr[1]), _analyze(expr[2]), _analyze(expr[3]))
 
-                    case Symbol("let*", BOOTSTRAP):
-                        assert len(expr) == 3
-                        return LetExpr([(name, _analyze(e)) for name, e in expr[1]], _analyze(expr[2]))
+                        case Symbol("let*", BOOTSTRAP):
+                            assert len(expr) == 3
+                            return LetExpr([(name, _analyze(e)) for name, e in expr[1]], _analyze(expr[2]))
 
-                    case Symbol("fn*", BOOTSTRAP):
-                        assert len(expr) == 3
-                        return FnExpr(expr[1], _analyze(expr[2]))
+                        case Symbol("fn*", BOOTSTRAP):
+                            assert len(expr) == 3
+                            return FnExpr(expr[1], _analyze(expr[2]))
 
-                    # FIXME: Macros go here? Or is macroexpansion separate?
+                        # FIXME: Macros go here? Or is macroexpansion separate?
 
-                    case _:
-                        return InvokeExpr(_analyze(target), [_analyze(e) for e in expr[1:]])
+                        case _:
+                            pass
 
+                return InvokeExpr(_analyze(target), [_analyze(e) for e in expr[1:]])
+
+            case List():
+                return ListExpr([self.analyze(module, e) for e in expr])
 
         raise ValueError(f"Unable to analyze {expr!r} ({type(expr)})")
