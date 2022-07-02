@@ -6,6 +6,7 @@ Hopefully no "real" interpreter ever uses this code, since it's obviously replac
 
 from ichor.isa import Opcode
 from ichor.state import Module, Variant
+from ichor.assembler import FuncBuilder
 
 
 BOOTSTRAP = Module()
