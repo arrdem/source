@@ -6,12 +6,7 @@ from abc import ABC
 from dataclasses import dataclass
 import typing as t
 
-from shoggoth.types import (
-    Keyword,
-    List,
-    Symbol,
-    Vec,
-)
+from shoggoth.types import Keyword, List, Symbol
 
 
 @dataclass

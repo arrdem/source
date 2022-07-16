@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 from ichor import FuncBuilder, isa
-
 import pytest
+
 
 @pytest.fixture
 def builder() -> FuncBuilder:

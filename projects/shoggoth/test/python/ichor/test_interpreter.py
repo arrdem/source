@@ -4,7 +4,12 @@ Tests coverign the VM interpreter
 
 from .fixtures import *  # noqa
 
-from ichor import isa, InterpreterError, TRUE, FALSE
+from ichor import (
+    FALSE,
+    InterpreterError,
+    isa,
+    TRUE,
+)
 import pytest
 
 

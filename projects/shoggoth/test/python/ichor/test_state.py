@@ -3,8 +3,6 @@
 """Tests covering the Ichor ISA and state model."""
 
 from ichor.impl import Stackframe
-from ichor.state import *
-
 import pytest
 
 

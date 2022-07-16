@@ -10,11 +10,19 @@ context (a virtual machine) which DOES have an easily introspected and serialize
 
 
 from copy import deepcopy
-import typing as t
 from textwrap import indent
 
 from ichor import isa
-from ichor.state import Closure, FunctionRef, Identifier, Module, Function, Type, TypeRef, VariantRef, Variant, Stackframe
+from ichor.state import (
+    Closure,
+    FunctionRef,
+    Identifier,
+    Module,
+    Stackframe,
+    TypeRef,
+    Variant,
+    VariantRef,
+)
 
 
 class InterpreterError(Exception):

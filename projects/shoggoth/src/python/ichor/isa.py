@@ -2,7 +2,6 @@
 
 from abc import ABC
 from dataclasses import dataclass
-import typing as t
 
 
 @dataclass
@@ -239,4 +238,3 @@ class VLOAD(Opcode):
 @dataclass
 class BREAK(Opcode):
     """Abort the interpreter."""
-    pass

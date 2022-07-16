@@ -17,10 +17,9 @@ from . import (
 from .v0 import PackageV0, ProfileV0
 from .v1 import PackageV1, ProfileV1
 
-from vfs import Vfs
-
 import click
 from toposort import toposort_flatten
+from vfs import Vfs
 
 
 log = logging.getLogger(__name__)

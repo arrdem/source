@@ -5,9 +5,7 @@
 import typing as t
 
 from ichor import isa
-
-from pyrsistent import pdeque, PDeque
-from lark import Lark, Transformer, v_args, Token
+from lark import Lark, Token, Transformer, v_args
 
 
 class Identifier(t.NamedTuple):
@@ -62,7 +60,7 @@ class FuncT(Transformer):
         return name
 
 
-FUNC = Lark(GRAMMAR, start="fun", parser='lalr', transformer=FuncT())
+FUNC = Lark(GRAMMAR, start="fun", parser="lalr", transformer=FuncT())
 
 
 class FunctionRef(t.NamedTuple):
@@ -120,7 +118,7 @@ class TypeT(FuncT):
 
 
 
-TYPE = Lark(GRAMMAR, start="var", parser='lalr', transformer=TypeT())
+TYPE = Lark(GRAMMAR, start="var", parser="lalr", transformer=TypeT())
 
 
 class TypeRef(t.NamedTuple):

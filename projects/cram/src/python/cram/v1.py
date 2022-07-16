@@ -11,9 +11,8 @@ from typing import List, Optional, Union
 
 from .common import Package, sh, stow
 
-from vfs import Vfs
-
 import toml
+from vfs import Vfs
 
 
 def tempf(name):

@@ -6,7 +6,6 @@ Hopefully no "real" interpreter ever uses this code, since it's obviously replac
 
 from ichor import isa
 from ichor.state import Module, Variant
-from ichor.assembler import FuncBuilder
 
 
 BOOTSTRAP = Module()
@@ -15,8 +14,8 @@ BOOL = BOOTSTRAP.define_type(
     ";bool;true(),false()",
 )
 
-TRUE = Variant(BOOL, 'true', ())
-FALSE = Variant(BOOL, 'false', ())
+TRUE = Variant(BOOL, "true", ())
+FALSE = Variant(BOOL, "false", ())
 
 NOT1 = BOOTSTRAP.define_function(
     f";not;{BOOL};{BOOL}",

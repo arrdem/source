@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
-from ichor import Interpreter, BOOTSTRAP
-
+from ichor import BOOTSTRAP, Interpreter
 import pytest
 
 

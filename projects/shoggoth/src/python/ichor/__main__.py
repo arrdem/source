@@ -4,7 +4,13 @@
 ichor entrypoint
 """
 
-from . import Opcode, Interpreter, BOOTSTRAP, XOR3, NOT1, TRUE, FALSE
+from . import (
+    BOOTSTRAP,
+    Interpreter,
+    NOT1,
+    Opcode,
+    TRUE,
+)
 
 
 def main():

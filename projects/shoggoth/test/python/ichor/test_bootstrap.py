@@ -2,7 +2,7 @@
 
 from .fixtures import *  # noqa
 
-from ichor import isa, TRUE, FALSE, NOT1
+from ichor import FALSE, isa, NOT1, TRUE
 import pytest
 
 

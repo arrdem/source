@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
 
-from dataclasses import dataclass
 from random import choices
 from string import ascii_lowercase, digits
-from typing import Generator, List, Union, Optional, Sequence
+from typing import List, Optional, Sequence, Union
 
 from ichor import isa
 
 
 def gensym(prefix = None) -> isa.Label:
-    frag = ''.join(choices(ascii_lowercase + digits, k=8))
+    frag = "".join(choices(ascii_lowercase + digits, k=8))
     return isa.Label(f"{prefix or 'gensym'}_{frag}")
 
 
