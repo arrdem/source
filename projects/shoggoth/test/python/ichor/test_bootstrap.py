@@ -2,7 +2,7 @@
 
 from .fixtures import *  # noqa
 
-from ichor import *
+from ichor import isa, TRUE, FALSE, NOT1
 import pytest
 
 
@@ -12,10 +12,10 @@ import pytest
 ])
 def test_not(vm, stack, ret):
     assert vm.run([
-        Opcode.IDENTIFIERC(NOT1),
-        Opcode.FUNREF(),
-        Opcode.CALLF(1),
-        Opcode.RETURN(1)
+        isa.IDENTIFIERC(NOT1),
+        isa.FUNREF(),
+        isa.CALLF(1),
+        isa.RETURN(1)
     ], stack = stack) == ret
 
 
@@ -27,10 +27,10 @@ def test_not(vm, stack, ret):
 # ])
 # def test_or(vm, stack, ret):
 #     assert vm.run([
-#         Opcode.IDENTIFIERC(OR2),
-#         Opcode.FUNREF(),
-#         Opcode.CALLF(2),
-#         Opcode.RETURN(1)
+#         isa.IDENTIFIERC(OR2),
+#         isa.FUNREF(),
+#         isa.CALLF(2),
+#         isa.RETURN(1)
 #     ], stack = stack) == ret
 
 
@@ -42,10 +42,10 @@ def test_not(vm, stack, ret):
 # ])
 # def test_and(vm, stack, ret):
 #     assert vm.run([
-#         Opcode.IDENTIFIERC(AND2),
-#         Opcode.FUNREF(),
-#         Opcode.CALLF(2),
-#         Opcode.RETURN(1)
+#         isa.IDENTIFIERC(AND2),
+#         isa.FUNREF(),
+#         isa.CALLF(2),
+#         isa.RETURN(1)
 #     ], stack = stack) == ret
 
 
@@ -57,10 +57,10 @@ def test_not(vm, stack, ret):
 # ])
 # def test_xor2(vm, stack, ret):
 #     assert vm.run([
-#         Opcode.IDENTIFIERC(XOR2),
-#         Opcode.FUNREF(),
-#         Opcode.CALLF(2),
-#         Opcode.RETURN(1)
+#         isa.IDENTIFIERC(XOR2),
+#         isa.FUNREF(),
+#         isa.CALLF(2),
+#         isa.RETURN(1)
 #     ], stack = stack) == ret
 
 
@@ -75,10 +75,10 @@ def test_not(vm, stack, ret):
 # ])
 # def test_xor3(vm, stack, ret):
 #     assert vm.run([
-#         Opcode.IDENTIFIERC(XOR3),
-#         Opcode.FUNREF(),
-#         Opcode.CALLF(3),
-#         Opcode.RETURN(1)
+#         isa.IDENTIFIERC(XOR3),
+#         isa.FUNREF(),
+#         isa.CALLF(3),
+#         isa.RETURN(1)
 #     ], stack = stack) == ret
 
 
@@ -87,9 +87,9 @@ def test_not(vm, stack, ret):
 # ])
 # def test_funref(vm, stack, ret):
 #     assert vm.run([
-#         Opcode.IDENTIFIERC(NOT1),
-#         Opcode.FUNREF(),
-#         Opcode.RETURN(1)
+#         isa.IDENTIFIERC(NOT1),
+#         isa.FUNREF(),
+#         isa.RETURN(1)
 #     ], stack = stack) == ret
 
 
@@ -98,10 +98,10 @@ def test_not(vm, stack, ret):
 # ])
 # def test_callf(vm, stack, ret):
 #     assert vm.run([
-#         Opcode.IDENTIFIERC(NOT1),
-#         Opcode.FUNREF(),
-#         Opcode.CALLF(1),
-#         Opcode.RETURN(1)
+#         isa.IDENTIFIERC(NOT1),
+#         isa.FUNREF(),
+#         isa.CALLF(1),
+#         isa.RETURN(1)
 #     ], stack = stack) == ret
 
 
@@ -113,11 +113,11 @@ def test_not(vm, stack, ret):
 # ])
 # def test_callc(vm, stack, ret):
 #     assert vm.run([
-#         Opcode.IDENTIFIERC(XOR2),
-#         Opcode.FUNREF(),
-#         Opcode.CLOSUREF(1),
-#         Opcode.CALLC(1),
-#         Opcode.RETURN(1),
+#         isa.IDENTIFIERC(XOR2),
+#         isa.FUNREF(),
+#         isa.CLOSUREF(1),
+#         isa.CALLC(1),
+#         isa.RETURN(1),
 #     ], stack = stack) == ret
 
 
@@ -132,10 +132,10 @@ def test_not(vm, stack, ret):
 # ])
 # def test_closurec(vm, stack, ret):
 #     assert vm.run([
-#         Opcode.IDENTIFIERC(XOR3),
-#         Opcode.FUNREF(),
-#         Opcode.CLOSUREF(1),
-#         Opcode.CLOSUREC(1),
-#         Opcode.CALLC(1),
-#         Opcode.RETURN(1),
+#         isa.IDENTIFIERC(XOR3),
+#         isa.FUNREF(),
+#         isa.CLOSUREF(1),
+#         isa.CLOSUREC(1),
+#         isa.CALLC(1),
+#         isa.RETURN(1),
 #     ], stack = stack) == ret

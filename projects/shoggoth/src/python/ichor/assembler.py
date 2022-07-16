@@ -3,33 +3,42 @@
 from dataclasses import dataclass
 from random import choices
 from string import ascii_lowercase, digits
-from typing import List
+from typing import Generator, List, Union, Optional, Sequence
 
-from ichor.isa import Opcode
+from ichor import isa
 
 
-@dataclass
-class Label(object):
-    name: str
+def gensym(prefix = None) -> isa.Label:
+    frag = ''.join(choices(ascii_lowercase + digits, k=8))
+    return isa.Label(f"{prefix or 'gensym'}_{frag}")
 
-    def __hash__(self):
-        return hash(self.name)
 
 class FuncBuilder(object):
     def __init__(self) -> None:
         self._opcodes = []
 
-    def write(self, op: Opcode):
+    def _write(self, op):
         self._opcodes.append(op)
 
-    def make_label(self, prefix=""):
-        frag = ''.join(choices(ascii_lowercase + digits, k=8))
-        return Label(f"{prefix or 'gensym'}_{frag}")
+    def write(self, op: Union[isa.Opcode, isa.Label, Sequence[isa.Opcode]]):
 
-    def set_label(self, label: Label):
-        self._opcodes.append(label)
+        def flatten(o):
+            for e in o:
+                if isinstance(e, (isa.Opcode, isa.Label)):
+                    yield e
+                else:
+                    yield from flatten(e)
 
-    def build(self) -> List[Opcode]:
+        if isinstance(op, (isa.Opcode, isa.Label)):
+            self._opcodes.append(op)
+        else:
+            for e in op:
+                self.write(e)
+
+    def make_label(self, prefix: Optional[str] = ""):
+        return gensym(prefix)
+
+    def build(self) -> List[isa.Opcode]:
         """Assemble the written body into fully resolved opcodes."""
 
         # The trivial two-pass assembler. First pass removes labels from the
@@ -39,8 +48,8 @@ class FuncBuilder(object):
         unassembled = []
         for op in self._opcodes:
             match op:
-                case Label(_) as l:
-                    assert l not in labels  # Label marks must be unique.
+                case isa.Label(_) as l:
+                    assert l not in labels  # isa.Label marks must be unique.
                     labels[l] = len(unassembled)
                 case o:
                     unassembled.append(o)
@@ -50,13 +59,36 @@ class FuncBuilder(object):
         assembled = []
         for op in unassembled:
             match op:
-                case Opcode.GOTO(Label(_) as l):
-                    assembled.append(Opcode.GOTO(labels[l]))
+                case isa.GOTO(isa.Label(_) as l):
+                    assembled.append(isa.GOTO(labels[l]))
 
-                case Opcode.VTEST(Label(_) as l):
-                    assembled.append(Opcode.VTEST(labels[l]))
+                case isa.VTEST(isa.Label(_) as l):
+                    assembled.append(isa.VTEST(labels[l]))
 
                 case o:
                     assembled.append(o)
 
         return assembled
+
+
+def assemble(builder_cls=FuncBuilder, /, **opcodes: List[isa.Opcode]) -> List[isa.Opcode]:
+    builder = builder_cls()
+    for o in opcodes:
+        builder.write(o)
+    return builder.build()
+
+
+class LocalBuilder(FuncBuilder):
+    def __init__(self):
+        super().__init__()
+        self._stack = 0
+        self._labels = {}
+
+    def _write(self, op):
+        pass
+
+    def write_local(self, label: isa.Label):
+        pass
+
+    def get_local(self, label: isa.Label):
+        pass

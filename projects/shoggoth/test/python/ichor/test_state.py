@@ -70,3 +70,15 @@ def test_stackframe_slot(frame):
 
     frame.slot(2)
     assert frame.pop() == 2
+
+
+def test_stackframe_rot(frame):
+    frame.push(0)
+    frame.push(1)
+    frame.push(2)
+    frame.push(3)
+    frame.push(4)
+
+    frame.rot(2)
+    assert frame.pop() == 3
+    assert frame.pop() == 4

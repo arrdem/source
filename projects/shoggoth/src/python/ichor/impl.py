@@ -13,7 +13,7 @@ from copy import deepcopy
 import typing as t
 from textwrap import indent
 
-from ichor.isa import Opcode
+from ichor import isa
 from ichor.state import Closure, FunctionRef, Identifier, Module, Function, Type, TypeRef, VariantRef, Variant, Stackframe
 
 
@@ -52,7 +52,7 @@ class Interpreter(object):
             b = []
             b.append(f"clock {clock}:")
             b.append("  stack:")
-            for offset, it in zip(range(len(stackframe), 0, -1), stackframe):
+            for offset, it in zip(range(0, len(stackframe), 1), stackframe):
                 b.append(f"    {offset: <3} {it}")
             b.append(f"  op: {op}")
             print(indent("\n".join(b), "  " * stackframe.depth))
@@ -64,7 +64,7 @@ class Interpreter(object):
             clock += 1
 
             match op:
-                case Opcode.IDENTIFIERC(name):
+                case isa.IDENTIFIERC(name):
                     if not (name in mod.functions
                             or name in mod.types
                             or any(name in t.constructors for t in mod.types.values())):
@@ -72,7 +72,7 @@ class Interpreter(object):
 
                     stackframe.push(Identifier(name))
 
-                case Opcode.TYPEREF():
+                case isa.TYPEREF():
                     id = stackframe.pop()
                     if not isinstance(id, Identifier):
                         _error("TYPEREF consumes an identifier")
@@ -81,7 +81,7 @@ class Interpreter(object):
 
                     stackframe.push(TypeRef(id.name))
 
-                case Opcode.VARIANTREF():
+                case isa.VARIANTREF():
                     id: Identifier = stackframe.pop()
                     if not isinstance(id, Identifier):
                         _error("VARIANTREF consumes an identifier and a typeref")
@@ -96,7 +96,7 @@ class Interpreter(object):
 
                     stackframe.push(VariantRef(t, id.name))
 
-                case Opcode.VARIANT(n):
+                case isa.VARIANT(n):
                     armref: VariantRef = stackframe.pop()
                     if not isinstance(armref, VariantRef):
                         _error("VARIANT must be given a valid constructor reference")
@@ -114,7 +114,7 @@ class Interpreter(object):
                     stackframe.drop(n)
                     stackframe.push(v)
 
-                case Opcode.VTEST(n):
+                case isa.VTEST(n):
                     armref: VariantRef = stackframe.pop()
                     if not isinstance(armref, VariantRef):
                         _error("VTEST must be given a variant reference")
@@ -127,38 +127,38 @@ class Interpreter(object):
                         stackframe.goto(n)
                         continue
 
-                case Opcode.GOTO(n):
+                case isa.GOTO(n):
                     if (n < 0):
                         _error("Illegal branch target")
                     stackframe.goto(n)
                     continue
 
-                case Opcode.DUP(n):
+                case isa.DUP(n):
                     if (n > len(stackframe)):
                         _error("Stack size violation")
 
                     stackframe.dup(n)
 
-                case Opcode.ROT(n):
+                case isa.ROT(n):
                     if (n > len(stackframe)):
                         _error("Stack size violation")
 
                     stackframe.rot(n)
 
-                case Opcode.DROP(n):
+                case isa.DROP(n):
                     if (n > len(stackframe)):
                         _error("Stack size violation")
 
                     stackframe.drop(n)
 
-                case Opcode.SLOT(n):
+                case isa.SLOT(n):
                     if (n < 0):
                         _error("SLOT must have a positive reference")
                     if (n > len(stackframe) - 1):
                         _error("SLOT reference out of range")
                     stackframe.slot(n)
 
-                case Opcode.FUNREF():
+                case isa.FUNREF():
                     id = stackframe.pop()
                     if not isinstance(id, Identifier):
                         _error("FUNREF consumes an IDENTIFIER")
@@ -168,7 +168,7 @@ class Interpreter(object):
                     except:
                         _error("Invalid function ref")
 
-                case Opcode.CALLF(n):
+                case isa.CALLF(n):
                     sig = stackframe.pop()
                     if not isinstance(sig, FunctionRef):
                         _error("CALLF requires a funref at top of stack")
@@ -186,7 +186,7 @@ class Interpreter(object):
                     stackframe = stackframe.call(fun, ip)
                     continue
 
-                case Opcode.RETURN(n):
+                case isa.RETURN(n):
                     if (n > len(stackframe)):
                         _error("Stack size violation")
 
@@ -199,7 +199,7 @@ class Interpreter(object):
                     stackframe = stackframe.ret(n)
                     continue
 
-                case Opcode.CLOSUREF(n):
+                case isa.CLOSUREF(n):
                     sig = stackframe.pop()
                     if not isinstance(sig, FunctionRef):
                         _error("CLOSUREF requires a funref at top of stack")
@@ -216,7 +216,7 @@ class Interpreter(object):
                     stackframe.drop(n)
                     stackframe.push(c)
 
-                case Opcode.CLOSUREC(n):
+                case isa.CLOSUREC(n):
                     c = stackframe.pop()
                     if not isinstance(c, Closure):
                         _error("CLOSUREC requires a closure at top of stack")
@@ -233,7 +233,7 @@ class Interpreter(object):
                     stackframe.drop(n)
                     stackframe.push(c)
 
-                case Opcode.CALLC(n):
+                case isa.CALLC(n):
                     c = stackframe.pop()
                     if not isinstance(c, Closure):
                         _error("CALLC requires a closure at top of stack")
@@ -246,7 +246,7 @@ class Interpreter(object):
                     # Extract the function signature
 
                     # Push the closure's stack fragment
-                    stackframe._stack = stackframe._stack.extendleft(c.frag)
+                    stackframe._stack = c.frag + stackframe._stack
 
                     # Perform a "normal" funref call
                     try:

@@ -4,7 +4,7 @@
 
 import typing as t
 
-from ichor.isa import Opcode
+from ichor import isa
 
 from pyrsistent import pdeque, PDeque
 from lark import Lark, Transformer, v_args, Token
@@ -77,13 +77,13 @@ class Function(t.NamedTuple):
     name: str
     arguments: t.List[str]
     returns: t.List[str]
-    instructions: t.List[Opcode]
+    instructions: t.List[isa.Opcode]
     typevars: t.List[t.Any] = []
     typeconstraints: t.List[t.Any] = []
     metadata: dict = {}
 
     @classmethod
-    def build(cls, name: str, instructions: t.List[Opcode]):
+    def build(cls, name: str, instructions: t.List[isa.Opcode]):
         constraints, name, args, rets = FUNC.parse(name)
         # FIXME: Constraints probably needs some massaging
         # FIXME: Need to get typevars from somewhere
@@ -188,18 +188,18 @@ class Module(t.NamedTuple):
         )
 
     @staticmethod
-    def translate(start: int, end: int, i: Opcode):
+    def translate(start: int, end: int, i: isa.Opcode):
         # FIXME: Consolidate bounds checks somehow
         match i:
-            case Opcode.VTEST(t):
+            case isa.VTEST(t):
                 d = t + start
                 assert start <= d < end
-                return Opcode.VTEST(d)
+                return isa.VTEST(d)
 
-            case Opcode.GOTO(t):
+            case isa.GOTO(t):
                 d = t + start
                 assert start <= d < end
-                return Opcode.GOTO(d)
+                return isa.GOTO(d)
 
             case _:
                 return i
@@ -279,7 +279,10 @@ class Stackframe(object):
         self._stack = self._stack[:-nargs]
 
     def rot(self, nargs):
-        self._stack[nargs:].extend(rotate(self._stack[:nargs]))
+        frag = self._stack[-nargs:]
+        base = self._stack[:-nargs]
+        rotated = rotate(frag)
+        self._stack = base + rotated
 
     def slot(self, n):
         self.push(self._stack[n])
