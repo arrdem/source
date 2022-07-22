@@ -34,6 +34,9 @@ def stow(fs: Vfs, src_dir: Path, dest_dir: Path, skip=[]):
         if src in skip:
             continue
 
+        elif src.name.endswith(".gitkeep"):
+            continue
+
         dest = dest_root / src.relative_to(src_root)
         if src.is_dir():
             fs.mkdir(dest)
