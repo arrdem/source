@@ -176,7 +176,7 @@ def cli():
 @click.option("--execute/--dry-run", default=False)
 @click.option("--state-file", default=".cram.log", type=Path)
 @click.option("--optimize/--no-optimize", default=True)
-@click.option("--require", type=str, multiple=True, default=[f"hosts.d/{os.uname()[1]}", "profiles.d/default"])
+@click.option("--require", type=str, multiple=True, default=[f"hosts.d/{os.uname()[1].split('.')[0]}", "profiles.d/default"])
 @click.option("--exec-idempotent/--exec-always", "exec_idempotent", default=True)
 @click.argument("confdir", type=Path)
 @click.argument("destdir", type=Path)
